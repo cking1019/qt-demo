@@ -21,7 +21,6 @@ public:
     ~RTMController();
     void init();
     void initSocket();
-    void removeConnectionBySocket();
     // 注册请求,0x1
     void sendRegister();
     // 对时请求,0x3
@@ -32,11 +31,11 @@ public:
     // 确定对时,0x4
     void recvRequestTime(QByteArray buff);
 private:
-    NebulaController* pNebulaController;
-    QTimer* pRecvTimer;
-    QTimer* pSendTimer;
-    QTimer* pRequestTimer;
     QTcpSocket* pTcpSocket;
+    NebulaController* pNebulaController;
+    QTimer* pRequestTimer;
+    QTimer* pReconnectTimer;
+    
     // 包的序列号
     qint32 packIdx;
     // 模块ID
@@ -51,7 +50,6 @@ signals:
     void signals_msg();
 
 public slots:
-    void sendTime2Ctl();
     void onReadData();
 };
 

@@ -55,6 +55,14 @@ struct ModuleRegister {
     uint32_t isAsku      : 1; // 控制和管理标志
 };
 
+// 0x02
+struct ServerRegister
+{
+    uint32_t idxModule    : 8;  // 综合体中的模块号
+    uint32_t errorConnect : 8;  // 注册错误状态
+    uint32_t reserve      : 16; // 备用字段（未使用）
+};
+
 // 0x03
 struct ModuleTimeControl {
     uint32_t timeRequest1     : 32; // 查询时间戳小字节
@@ -69,14 +77,6 @@ struct ModuleGeoLocation {
     float    xLat;              // 模块站点坐标
     float    yLong;
     float    zHeight;
-};
-
-// 0x02
-struct ServerRegister
-{
-    uint32_t idxModule    : 8;  // 综合体中的模块号
-    uint32_t errorConnect : 8;  // 注册错误状态
-    uint32_t reserve      : 16; // 备用字段（未使用）
 };
 
 // 0x04
