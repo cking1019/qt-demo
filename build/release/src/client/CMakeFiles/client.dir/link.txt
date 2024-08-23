@@ -1,0 +1,3 @@
+D:\dev\cmake\bin\cmake.exe -E rm -f CMakeFiles\client.dir/objects.a
+D:\dev\lang\mingw64\bin\ar.exe qc CMakeFiles\client.dir/objects.a @CMakeFiles\client.dir\objects1.rsp
+D:\dev\lang\mingw64\bin\c++.exe -O3 -DNDEBUG -Wl,--whole-archive CMakeFiles\client.dir/objects.a -Wl,--no-whole-archive -o C:\Users\Demo\Desktop\qt-demo\release\client.exe -Wl,--out-implib,libclient.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\client.dir\linkLibs.rsp

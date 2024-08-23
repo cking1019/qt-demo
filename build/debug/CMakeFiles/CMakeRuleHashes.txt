@@ -1,0 +1,4 @@
+# Hashes of file build rules.
+0d62e6b00b50f5a4f30ab2021417dad4 CMakeFiles/Qt-Demo
+804aaec2c0497f3a1ec840e3ded9538b src/client/CMakeFiles/client_autogen
+fa70625c77141dca03727113e8fd1bfd src/server/CMakeFiles/server_autogen

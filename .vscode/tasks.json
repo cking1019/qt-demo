@@ -1,0 +1,32 @@
+{
+    "version": "2.0.0",
+    "options": {
+        "cwd": "${workspaceFolder}/build/release"
+    },
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "boost",
+            "command": "boost",
+            "args": []
+        },
+        {
+            "type": "shell",
+            "label": "build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "command": "build",
+            "args": []
+        },
+        {
+            "label": "Build",
+            "dependsOrder": "sequence", // 按照列出的顺序执行任务依赖项
+            "dependsOn": [
+                "boost",
+                "build"
+            ]
+        }
+    ],
+}

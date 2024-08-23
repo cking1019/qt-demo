@@ -1,0 +1,99 @@
+{
+	"BUILD_DIR" : "C:/Users/Demo/Desktop/qt-demo/build/debug/src/client/client_autogen",
+	"CMAKE_BINARY_DIR" : "C:/Users/Demo/Desktop/qt-demo/build/debug",
+	"CMAKE_CURRENT_BINARY_DIR" : "C:/Users/Demo/Desktop/qt-demo/build/debug/src/client",
+	"CMAKE_CURRENT_SOURCE_DIR" : "C:/Users/Demo/Desktop/qt-demo/src/client",
+	"CMAKE_EXECUTABLE" : "D:/dev/cmake/bin/cmake.exe",
+	"CMAKE_LIST_FILES" : [ "C:/Users/Demo/Desktop/qt-demo/src/client/CMakeLists.txt" ],
+	"CMAKE_SOURCE_DIR" : "C:/Users/Demo/Desktop/qt-demo",
+	"DEP_FILE" : "",
+	"DEP_FILE_RULE_NAME" : "",
+	"HEADERS" : 
+	[
+		[
+			"C:/Users/Demo/Desktop/qt-demo/src/client/CommonBase.hpp",
+			"MU",
+			"EWIEGA46WW/moc_CommonBase.cpp",
+			null
+		],
+		[
+			"C:/Users/Demo/Desktop/qt-demo/src/client/NebulaController.hpp",
+			"MU",
+			"EWIEGA46WW/moc_NebulaController.cpp",
+			null
+		],
+		[
+			"C:/Users/Demo/Desktop/qt-demo/src/client/RTMController.hpp",
+			"MU",
+			"EWIEGA46WW/moc_RTMController.cpp",
+			null
+		]
+	],
+	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
+	"INCLUDE_DIR" : "C:/Users/Demo/Desktop/qt-demo/build/debug/src/client/client_autogen/include",
+	"MOC_COMPILATION_FILE" : "C:/Users/Demo/Desktop/qt-demo/build/debug/src/client/client_autogen/mocs_compilation.cpp",
+	"MOC_DEFINITIONS" : [ "QT_CORE_LIB", "QT_NETWORK_LIB" ],
+	"MOC_DEPEND_FILTERS" : 
+	[
+		[
+			"Q_PLUGIN_METADATA",
+			"[\n][ \t]*Q_PLUGIN_METADATA[ \t]*\\([^\\)]*FILE[ \t]*\"([^\"]+)\""
+		]
+	],
+	"MOC_INCLUDES" : 
+	[
+		"C:/Users/Demo/Desktop/qt-demo/src/client",
+		"D:/dev/qt/include",
+		"D:/dev/qt/include/QtCore",
+		"D:/dev/qt/mkspecs/win32-g++",
+		"D:/dev/qt/include/QtNetwork",
+		"D:/dev/lang/mingw64/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++",
+		"D:/dev/lang/mingw64/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/x86_64-w64-mingw32",
+		"D:/dev/lang/mingw64/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/backward",
+		"D:/dev/lang/mingw64/lib/gcc/x86_64-w64-mingw32/8.1.0/include",
+		"D:/dev/lang/mingw64/lib/gcc/x86_64-w64-mingw32/8.1.0/include-fixed",
+		"D:/dev/lang/mingw64/x86_64-w64-mingw32/include"
+	],
+	"MOC_MACRO_NAMES" : [ "Q_OBJECT", "Q_GADGET", "Q_NAMESPACE", "Q_NAMESPACE_EXPORT" ],
+	"MOC_OPTIONS" : [],
+	"MOC_PATH_PREFIX" : false,
+	"MOC_PREDEFS_CMD" : 
+	[
+		"D:/dev/lang/mingw64/bin/c++.exe",
+		"-dM",
+		"-E",
+		"-c",
+		"D:/dev/cmake/share/cmake-3.27/Modules/CMakeCXXCompilerABI.cpp"
+	],
+	"MOC_PREDEFS_FILE" : "C:/Users/Demo/Desktop/qt-demo/build/debug/src/client/client_autogen/moc_predefs.h",
+	"MOC_RELAXED_MODE" : false,
+	"MOC_SKIP" : [],
+	"MULTI_CONFIG" : false,
+	"PARALLEL" : 6,
+	"PARSE_CACHE_FILE" : "C:/Users/Demo/Desktop/qt-demo/build/debug/src/client/CMakeFiles/client_autogen.dir/ParseCache.txt",
+	"QT_MOC_EXECUTABLE" : "D:/dev/qt/bin/moc.exe",
+	"QT_UIC_EXECUTABLE" : "",
+	"QT_VERSION_MAJOR" : 5,
+	"QT_VERSION_MINOR" : 15,
+	"SETTINGS_FILE" : "C:/Users/Demo/Desktop/qt-demo/build/debug/src/client/CMakeFiles/client_autogen.dir/AutogenUsed.txt",
+	"SOURCES" : 
+	[
+		[ "C:/Users/Demo/Desktop/qt-demo/src/client/ClientMain.cpp", "MU", null ],
+		[ "C:/Users/Demo/Desktop/qt-demo/src/client/CommonBase.cpp", "MU", null ],
+		[
+			"C:/Users/Demo/Desktop/qt-demo/src/client/NebulaController.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/Demo/Desktop/qt-demo/src/client/RTMController.cpp",
+			"MU",
+			null
+		]
+	],
+	"UIC_OPTIONS" : [],
+	"UIC_SEARCH_PATHS" : [],
+	"UIC_SKIP" : [],
+	"UIC_UI_FILES" : [],
+	"VERBOSITY" : 0
+}

@@ -1,0 +1,1 @@
+-I"C:/Users/Demo/Desktop/qt-demo/build/debug/src/client/client_autogen/include" -I"C:/Users/Demo/Desktop/qt-demo/src/client" -isystem D:/dev/qt/include -isystem D:/dev/qt/include/QtCore -isystem "D:/dev/qt/./mkspecs/win32-g++" -isystem D:/dev/qt/include/QtNetwork
