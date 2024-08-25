@@ -24,7 +24,6 @@ void RTMController::init() {
     this->m_iStampResult = 0;
     this->m_iN = 1;
     
-    connect(this, &RTMController::signals_msg,  this, &RTMController::onReadData);
     // 定时再次请求连接
     connect(this->pRequestTimer, &QTimer::timeout, this, &RTMController::sendRequestTime);
     // 实时接收来自服务器的数据
@@ -63,6 +62,7 @@ void RTMController::initSocket() {
 // 接收数据
 void RTMController::onReadData() {
     QByteArray buff = this->pTcpSocket->readAll();
+    qDebug() << buff.toHex();
     qDebug() << "received data from server: " << buff.toHex();
     GenericHeader genericHeader;
     memcpy(&genericHeader, buff.data(), sizeof(GenericHeader));
@@ -96,7 +96,7 @@ void RTMController::sendRegister() {
     moduleRegister.versProgMaj = 0x0;
     moduleRegister.isInfo = 0x0;
     moduleRegister.versProgMin = 0x0;
-    moduleRegister.isAsku = 0x0;
+    moduleRegister.isAsku = 0x1;
 
     char* data = (char*)malloc(sizeof(GenericHeader) + sizeof(ModuleRegister));
     memcpy(data, &genericHeader, sizeof(genericHeader));
@@ -112,14 +112,14 @@ void RTMController::sendRegister() {
 void RTMController::recvRegister(QByteArray buff) {
     ServerRegister serverRegister;
     memcpy(&serverRegister, buff.data() + sizeof(GenericHeader), sizeof(ServerRegister));
-    switch(serverRegister.errorConnect) {
-        case 0x1: qDebug() << "execeed the limited number of same type device"; break;
-        case 0x2: qDebug() << "try to reconnect same device"; break;
-        case 0x3: qDebug() << "don't support the device type"; break;
-        case 0x4: qDebug() << "don't support the prototal version"; break;
-        case 0x5: qDebug() << "module id is not be supported"; break;
-        case 0x6: 
-        case 0x7: qDebug() << "unknown error"; break;
+    switch(serverRegister.errorConnect & 0xff) {
+        case 0x1:  qDebug() << "execeed the limited number of same type device"; break;
+        case 0x2:  qDebug() << "try to reconnect same device"; break;
+        case 0x4:  qDebug() << "don't support the device type"; break;
+        case 0x8:  qDebug() << "don't support the prototal version"; break;
+        case 0x10: qDebug() << "module id is not be supported"; break;
+        case 0x20: 
+        case 0x40: qDebug() << "unknown error"; break;
         case 0x0: {
             serverRegister.errorConnect = 0x0;
             this->m_moduleIdx = serverRegister.idxModule;
@@ -149,7 +149,6 @@ void RTMController::sendRequestTime() {
     genericHeader.checkSum = CommonBase::calcChcekSum((char*)&genericHeader, sizeof(genericHeader) - 2);
     ModuleTimeControl moduleTimeControl;
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    qint64 timestamp2 = QDateTime::currentSecsSinceEpoch();
     moduleTimeControl.timeRequest1 = timestamp & 0xFFFFFFFF;
     moduleTimeControl.timeRequest2 = (timestamp >> 32) & 0xFFFFFFFF;
 
@@ -167,8 +166,7 @@ void RTMController::sendRequestTime() {
 // 0x4,确定时间请求
 void RTMController::recvRequestTime(QByteArray buff) {
     ServerTimeControl serverTimeControl;
-    
-    memcpy(&serverTimeControl, buff.data(), sizeof(ServerTimeControl));
+    memcpy(&serverTimeControl, buff.data() + sizeof(GenericHeader), sizeof(serverTimeControl));
     quint64 timeStampRcv = QDateTime::currentMSecsSinceEpoch();
     quint64 timeStampReq = ((quint64)serverTimeControl.timeRequest2 << 32) | serverTimeControl.timeRequest1;
     quint64 timeStampAns = ((quint64)serverTimeControl.timeAnswer2 << 32) | serverTimeControl.timeAnswer1;

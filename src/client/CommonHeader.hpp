@@ -88,4 +88,29 @@ struct ServerTimeControl {
 };
 
 
+// 0x40
+struct ServerStart {
+    uint32_t flag;
+};
+
+// 0x41
+struct ServerClose {
+    uint32_t flag;
+};
+
+// 0x42
+struct ServerRestart {
+    uint32_t flag;
+};
+
+// 0x43
+struct ServerReset {
+    uint32_t flag;
+};
+
+// 0x44
+struct ServerUpdate {
+    uint32_t flag;
+};
+
 #endif // _COMMONHEADER_H_

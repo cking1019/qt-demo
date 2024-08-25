@@ -21,6 +21,7 @@ public:
     ~RTMController();
     void init();
     void initSocket();
+
     // 注册请求,0x1
     void sendRegister();
     // 对时请求,0x3
@@ -31,9 +32,13 @@ public:
     // 确定对时,0x4
     void recvRequestTime(QByteArray buff);
 private:
+    // Tcp Socket网络传输
     QTcpSocket* pTcpSocket;
+    // nebula通信控制器
     NebulaController* pNebulaController;
+    // 请求时间定时器
     QTimer* pRequestTimer;
+    // 再次连接定时器器
     QTimer* pReconnectTimer;
     
     // 包的序列号
@@ -50,6 +55,7 @@ signals:
     void signals_msg();
 
 public slots:
+    // 接收服务器数据
     void onReadData();
 };
 

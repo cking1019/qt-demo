@@ -1,5 +1,6 @@
 #include <QCoreApplication>
 #include "RTMController.hpp"
+#include "CommonHeader.hpp"
 
 int main(int argc, char *argv[])
 {
