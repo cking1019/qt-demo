@@ -4,6 +4,7 @@ project(Qt-Demo)
 message("-- 正在构建: "${PROJECT_NAME})
 message("-- CMake命令: "${CMAKE_COMMAND})
 
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)

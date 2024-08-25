@@ -18,12 +18,20 @@ void RTMController::init() {
     this->pRequestTimer = new QTimer();
     this->pReconnectTimer = new QTimer();
 
-    this->packIdx = 0;
-    this->m_moduleIdx = 0;
     this->m_iConnectHostFlag = 0;
     this->m_iStampResult = 0;
     this->m_iN = 1;
-    
+
+    this->genericHeader.sender = 0x564950;
+    this->genericHeader.moduleId = 0;
+    this->genericHeader.vMajor = 0x02;
+    this->genericHeader.vMinor = 0x02;
+    this->genericHeader.packIdx = 0;
+    this->genericHeader.dataSize = 0;
+    this->genericHeader.isAsku = 1;
+    this->genericHeader.packType = 0;
+    this->genericHeader.checkSum = 0;
+
     // 定时再次请求连接
     connect(this->pRequestTimer, &QTimer::timeout, this, &RTMController::sendRequestTime);
     // 实时接收来自服务器的数据
@@ -62,11 +70,9 @@ void RTMController::initSocket() {
 // 接收数据
 void RTMController::onReadData() {
     QByteArray buff = this->pTcpSocket->readAll();
-    qDebug() << buff.toHex();
     qDebug() << "received data from server: " << buff.toHex();
     GenericHeader genericHeader;
     memcpy(&genericHeader, buff.data(), sizeof(GenericHeader));
-    qDebug() << "received data from server: " << genericHeader.sender;
     switch (genericHeader.packType)
     {
         case 0x2: this->recvRegister(buff); break;
@@ -77,34 +83,48 @@ void RTMController::onReadData() {
 
 // 0x1,发送注册消息
 void RTMController::sendRegister() {
-    GenericHeader genericHeader;
-    genericHeader.sender = 0x564950;
-    genericHeader.moduleId = 0x0;
-    genericHeader.vMajor = 0x2;
-    genericHeader.vMinor = 0x2;
-    genericHeader.packIdx = this->packIdx;
-    genericHeader.dataSize = sizeof(ModuleRegister);
-    genericHeader.isAsku = 0x1;
-    genericHeader.packType = 0x1;
-    genericHeader.checkSum = CommonBase::calcChcekSum((char*)&genericHeader, sizeof(genericHeader) - 2);
+    this->genericHeader.dataSize = sizeof(ModuleRegister);
+    this->genericHeader.packType = 0x1;
+    this->genericHeader.checkSum = CommonBase::calcChcekSum((char*)&this->genericHeader, sizeof(this->genericHeader) - 2);
 
     ModuleRegister moduleRegister;
     moduleRegister.idManuf = 0x1;
     moduleRegister.serialNum = 0x0;
-    moduleRegister.versHardMaj = 0x0;
-    moduleRegister.versHardMin = 0x0;
+    moduleRegister.versHardMaj = this->genericHeader.vMajor;
+    moduleRegister.versHardMin = this->genericHeader.vMinor;
     moduleRegister.versProgMaj = 0x0;
     moduleRegister.isInfo = 0x0;
     moduleRegister.versProgMin = 0x0;
-    moduleRegister.isAsku = 0x1;
+    moduleRegister.isAsku = this->genericHeader.isAsku;
 
     char* data = (char*)malloc(sizeof(GenericHeader) + sizeof(ModuleRegister));
     memcpy(data, &genericHeader, sizeof(genericHeader));
-    memcpy(data + sizeof(genericHeader), &moduleRegister, sizeof(moduleRegister));
-    qint64 cnt = this->pTcpSocket->write(data, sizeof(genericHeader) + sizeof(moduleRegister));
+    memcpy(data + sizeof(this->genericHeader), &moduleRegister, sizeof(moduleRegister));
+    this->pTcpSocket->write(data);
 
     this->pTcpSocket->flush();
-    this->packIdx += 1;
+    this->genericHeader.packIdx += 1;
+    free(data);
+}
+
+// 0x3,发送时间请求
+void RTMController::sendRequestTime() {
+    this->genericHeader.dataSize = sizeof(ModuleTimeControl);
+    this->genericHeader.packType = 0x3;
+    this->genericHeader.checkSum = CommonBase::calcChcekSum((char*)&this->genericHeader, sizeof(this->genericHeader) - 2);
+    
+    ModuleTimeControl moduleTimeControl;
+    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
+    moduleTimeControl.timeRequest1 = timestamp & 0xFFFFFFFF;
+    moduleTimeControl.timeRequest2 = (timestamp >> 32) & 0xFFFFFFFF;
+
+    char* data = (char*)malloc(sizeof(GenericHeader) + sizeof(ModuleTimeControl));
+    memcpy(data, &genericHeader, sizeof(genericHeader));
+    memcpy(data + sizeof(genericHeader), &moduleTimeControl, sizeof(moduleTimeControl));
+    this->pTcpSocket->write(data);
+
+    this->pTcpSocket->flush();
+    this->genericHeader.packIdx++;
     free(data);
 }
 
@@ -121,8 +141,7 @@ void RTMController::recvRegister(QByteArray buff) {
         case 0x20: 
         case 0x40: qDebug() << "unknown error"; break;
         case 0x0: {
-            serverRegister.errorConnect = 0x0;
-            this->m_moduleIdx = serverRegister.idxModule;
+            this->genericHeader.moduleId = serverRegister.idxModule;
             this->m_iConnectHostFlag = 1;
             // 注册成功后发起心跳机制，每秒发送一次
             this->pRequestTimer->start(1000);
@@ -133,35 +152,6 @@ void RTMController::recvRegister(QByteArray buff) {
         }
     }
 }
-
-
-// 0x3,发送时间请求
-void RTMController::sendRequestTime() {
-    GenericHeader genericHeader;
-    genericHeader.sender = 0x564950;
-    genericHeader.moduleId = 0x0;
-    genericHeader.vMajor = 0x2;
-    genericHeader.vMinor = 0x2;
-    genericHeader.packIdx = this->packIdx;
-    genericHeader.dataSize = sizeof(ModuleRegister);
-    genericHeader.isAsku = 0x1;
-    genericHeader.packType = 0x1;
-    genericHeader.checkSum = CommonBase::calcChcekSum((char*)&genericHeader, sizeof(genericHeader) - 2);
-    ModuleTimeControl moduleTimeControl;
-    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    moduleTimeControl.timeRequest1 = timestamp & 0xFFFFFFFF;
-    moduleTimeControl.timeRequest2 = (timestamp >> 32) & 0xFFFFFFFF;
-
-    char* data = (char*)malloc(sizeof(GenericHeader) + sizeof(ModuleTimeControl));
-    memcpy(data, &genericHeader, sizeof(genericHeader));
-    memcpy(data + sizeof(genericHeader), &moduleTimeControl, sizeof(moduleTimeControl));
-    qint64 cnt = this->pTcpSocket->write(data, sizeof(genericHeader) + sizeof(moduleTimeControl));
-
-    this->pTcpSocket->flush();
-    this->packIdx++;
-    free(data);
-}
-
 
 // 0x4,确定时间请求
 void RTMController::recvRequestTime(QByteArray buff) {
