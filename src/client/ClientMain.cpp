@@ -1,12 +1,12 @@
 #include <QCoreApplication>
-#include "RTMController.hpp"
+#include "CommonBase.hpp"
 #include "CommonHeader.hpp"
 
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-    RTMController rtmController;
-    rtmController.init();
+    CommonBase commonBase;
+    commonBase.init();
 
     return a.exec();
 }
