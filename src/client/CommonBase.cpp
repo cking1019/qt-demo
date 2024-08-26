@@ -8,6 +8,18 @@ qint16 calcChcekSum(const char* sMess,int nCnt) {
     return nSum;
 }
 
+// 将结构体转换为十六进制字符串
+template<typename T>
+QString structToHexString(const T &myStruct) {
+    // 计算结构体的大小
+    size_t size = sizeof(myStruct);
+    // 创建一个字节数组
+    QByteArray byteArray(size, 0);
+    // 将结构体内容复制到字节数组
+    memcpy(byteArray.data(), &myStruct, size);
+    // 将字节数组转换为十六进制字符串
+    return byteArray.toHex();
+}
 
 CommonBase::CommonBase(QObject *parent):QObject(parent){
 }
@@ -79,16 +91,18 @@ void CommonBase::initSocket() {
 // 接收数据
 void CommonBase::onReadData() {
     QByteArray buff = this->pTcpSocket->readAll();
-    qDebug() << "received data from server: " << buff.toHex();
-    GenericHeader genericHeader;
-    qint16 headerLen = sizeof(GenericHeader);
-    memcpy(&genericHeader, buff.data(), headerLen);
+    memcpy(&this->genericHeader, buff.data(), sizeof(GenericHeader));
+    qDebug() << "received data from server: " << buff.toHex() << ", the size of pkg: " << buff.size() 
+             << ", the type of pkg: " << this->genericHeader.packType;
     switch (genericHeader.packType)
     {
         case 0x2: this->recvRegister(buff); break;
         case 0x4: this->recvRequestTime(buff); break;
         case 0x46: this->recvRequestModuleFigure(buff); break;
-        default:break;
+        default: {
+            qDebug() << "this is unknown pkg 0x" << this->genericHeader.packType;
+            break;
+        }
     }
 }
 
@@ -97,6 +111,7 @@ void CommonBase::sendRegister() {
     this->genericHeader.dataSize = sizeof(ModuleRegister);
     this->genericHeader.packType = 0x1;
     this->genericHeader.checkSum = calcChcekSum((char*)&this->genericHeader, sizeof(GenericHeader) - 2);
+    qDebug() << structToHexString(this->genericHeader);
 
     ModuleRegister moduleRegister;
     moduleRegister.idManuf = 0x1;
@@ -108,38 +123,16 @@ void CommonBase::sendRegister() {
     moduleRegister.versProgMin = 0x0;
     moduleRegister.isAsku = this->genericHeader.isAsku;
 
-    qint16 headerLen = sizeof(GenericHeader);
-    qint16 bodyLen = sizeof(ModuleRegister);
-    char* data = (char*)malloc(headerLen + bodyLen);
-    memcpy(data, &this->genericHeader, headerLen);
-    memcpy(data + headerLen, &moduleRegister, bodyLen);
-    QByteArray byteArray(reinterpret_cast<const char*>(&data), headerLen + bodyLen);
+    qint16 len1 = sizeof(GenericHeader);
+    qint16 len2 = sizeof(ModuleRegister);
+    char* data = (char*)malloc(len1 + len2);
+    memcpy(data, &this->genericHeader, len1);
+    memcpy(data + len1, &moduleRegister, len2);
+    QByteArray byteArray(data, len1 + len2);
     qDebug() << "send register to server: " << byteArray.toHex();
-    this->pTcpSocket->write(data, headerLen + bodyLen);
+    this->pTcpSocket->write(byteArray, len1 + len2);
     this->pTcpSocket->flush();
     this->genericHeader.packIdx += 1;
-    free(data);
-}
-
-// 0x3,发送时间请求
-void CommonBase::sendRequestTime() {
-    this->genericHeader.dataSize = sizeof(ModuleTimeControl);
-    this->genericHeader.packType = 0x3;
-    this->genericHeader.checkSum = calcChcekSum((char*)&this->genericHeader, sizeof(GenericHeader) - 2);
-    
-    ModuleTimeControl moduleTimeControl;
-    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    moduleTimeControl.timeRequest1 = timestamp & 0xFFFFFFFF;
-    moduleTimeControl.timeRequest2 = (timestamp >> 32) & 0xFFFFFFFF;
-
-    qint16 headerLen = sizeof(GenericHeader);
-    qint16 bodyLen = sizeof(ModuleTimeControl);
-    char* data = (char*)malloc(headerLen + bodyLen);
-    memcpy(data, &genericHeader, headerLen);
-    memcpy(data + headerLen, &moduleTimeControl, bodyLen);
-    this->pTcpSocket->write(data, headerLen + bodyLen);
-    this->pTcpSocket->flush();
-    this->genericHeader.packIdx++;
     free(data);
 }
 
@@ -157,7 +150,7 @@ void CommonBase::recvRegister(QByteArray buff) {
         case 0x40: qDebug() << "unknown error"; break;
         case 0x0: {
             this->genericHeader.moduleId = serverRegister.idxModule;
-            this->m_iConnectHostFlag = 1;
+            this->m_iConnectHostFlag = true;
             // 注册成功后发起心跳机制，每秒发送一次
             this->pRequestTimer->start(1000);
             qDebug() << "heartbeat detection";
@@ -168,8 +161,31 @@ void CommonBase::recvRegister(QByteArray buff) {
     }
 }
 
+// 0x3,发送时间请求
+void CommonBase::sendRequestTime() {
+    this->genericHeader.dataSize = sizeof(ModuleTimeControl);
+    this->genericHeader.packType = 0x3;
+    this->genericHeader.checkSum = calcChcekSum((char*)&this->genericHeader, sizeof(GenericHeader) - 2);
+    
+    ModuleTimeControl moduleTimeControl;
+    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
+    moduleTimeControl.timeRequest1 = timestamp & 0xFFFFFFFF;
+    moduleTimeControl.timeRequest2 = (timestamp >> 32) & 0xFFFFFFFF;
+
+    qint16 len1 = sizeof(GenericHeader);
+    qint16 len2 = sizeof(ModuleTimeControl);
+    char* data = (char*)malloc(len1 + len2);
+    memcpy(data, &genericHeader, len1);
+    memcpy(data + len1, &moduleTimeControl, len2);
+    this->pTcpSocket->write(data, len1 + len2);
+    this->pTcpSocket->flush();
+    this->genericHeader.packIdx++;
+    free(data);
+}
+
 // 0x4,确定时间请求
 void CommonBase::recvRequestTime(QByteArray buff) {
+    qDebug() << "recv time request and begin to check the time.";
     ServerTimeControl serverTimeControl;
     memcpy(&serverTimeControl, buff.data() + sizeof(GenericHeader), sizeof(serverTimeControl));
     quint64 timeStampRcv = QDateTime::currentMSecsSinceEpoch();
@@ -184,18 +200,18 @@ void CommonBase::recvRequestTime(QByteArray buff) {
     this->m_iStampResult = timeOut + this->m_iStampResult;
 }
 
-// 收到请求模块模块原理图,0x46
+// 0x46,收到请求模块模块原理图
 void CommonBase::recvRequestModuleFigure(QByteArray buff) {
     this->sendModuleFigure();
 }
 
-// 发送模块图,0x20
+// 0x20,发送模块图
 void CommonBase::sendModuleFigure() {
     // 读取配置文件
     QSettings *relayConfig = new QSettings(RELAY_PATH, QSettings::IniFormat);
     relayConfig->setIniCodec(QTextCodec::codecForName("utf-8"));
 
-    QString Dev0x20Config = relayConfig->value(QString("DetectDev1/Dev0x20Config")).toString();
+    QString Dev0x20Config = relayConfig->value("DetectDev1/Dev0x20Config").toString();
     QFile file(Dev0x20Config);
     QString jsonContent;
     if(file.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -210,11 +226,11 @@ void CommonBase::sendModuleFigure() {
     this->genericHeader.packIdx++;
     this->genericHeader.checkSum = calcChcekSum((char*)&this->genericHeader, sizeof(this->genericHeader) - 2);
 
-    char data[1024];
-    qint16 headerLen = sizeof(GenericHeader);
-    qint16 bodyLen = jsonContent.size();
-    memcpy(data, &this->genericHeader, headerLen);
-    memcpy(data + headerLen, jsonContent.data(), bodyLen);
-    this->pTcpSocket->write(data, headerLen + bodyLen);
+    qint16 len1 = sizeof(GenericHeader);
+    qint16 len2 = jsonContent.size();
+    char data[len1 + len2];
+    memcpy(data, &this->genericHeader, len1);
+    memcpy(data + len1, jsonContent.data(), len2);
+    this->pTcpSocket->write(data, len1 + len2);
     this->pTcpSocket->flush();
 }

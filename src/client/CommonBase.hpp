@@ -80,7 +80,7 @@ private:
     // 再次连接定时器器
     QTimer* pReconnectTimer;
     // 连接主机标识
-    int m_iConnectHostFlag;
+    bool m_iConnectHostFlag;
     // 时间差结果
     qint64 m_iStampResult;
     // 时间间隔
