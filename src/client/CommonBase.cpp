@@ -55,9 +55,6 @@ void CommonBase::init() {
 
     // 定时再次请求连接
     connect(this->pRequestTimer, &QTimer::timeout, this, &CommonBase::sendRequestTime);
-    // 实时接收来自服务器的数据
-    connect(this->pTcpSocket, &QTcpSocket::readyRead, this, &CommonBase::onReadData);
-
     // 初始化socket
     this->initSocket();
 }
@@ -73,9 +70,11 @@ void CommonBase::initSocket() {
     });
     // 成功连接
     connect(this->pTcpSocket, &QTcpSocket::connected, [&](){
-        qDebug() << "Connected to host!";
+        // 实时接收来自服务器的数据
+        connect(this->pTcpSocket, &QTcpSocket::readyRead, this, &CommonBase::onReadData);
         this->pReconnectTimer->stop();
         this->sendRegister();
+        qDebug() << "Connected to host!";
     });
     // 断开连接
     connect(this->pTcpSocket, &QTcpSocket::disconnected, [=]() {

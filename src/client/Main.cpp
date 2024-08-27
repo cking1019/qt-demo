@@ -1,6 +1,5 @@
 #include <QCoreApplication>
 #include "CommonBase.hpp"
-#include "CommonHeader.hpp"
 
 int main(int argc, char *argv[])
 {
