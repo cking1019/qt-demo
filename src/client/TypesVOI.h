@@ -200,6 +200,7 @@ struct OTrapProhibit
     quint32 isOn:1;
     quint32 reserve:31;
 };
+// 0x822
 struct OBearingMark
 {
     OHeader o_Header;
@@ -941,6 +942,7 @@ struct ORTRDiap { // диапазон сканирования
         return ((f_Freq == oOth.f_Freq) && (f_DelFreq == oOth.f_DelFreq));
     }
 };
+// 0x823
 //---------------------------------------------------------
 struct OSubRezhRTR20 { // часть кодограммы текущих настроек РТР
     // 1
@@ -968,6 +970,7 @@ struct OSubRezhREB20 { // фиксированная часть кодограм
     float f_PGain; // коэффициент усиления мощности в процентах???
 
 };
+// 0x825
 //---------------------------------------------------------
 struct OSubPosobilRTR22 { // возможности РТР
    // 1
@@ -980,6 +983,7 @@ struct OSubPosobilRTR22 { // возможности РТР
    // 3
    float f_EpsSize; // ШДН антенны РТР по углу места
   };
+// 0x828
 //---------------------------------------------------------
 struct OBanIRI { // запрещенный ИРИ
   // 1
@@ -996,6 +1000,7 @@ struct OBanIRI { // запрещенный ИРИ
       n_Numb = nNumb;
     }
   };
+// 0x829
 //---------------------------------------------------------
 struct OSubRadioTime {
     // 1 - 2

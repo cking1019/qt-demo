@@ -7,3 +7,4 @@ lib/
 test/
 leetcode/
 release/
+.VSCodeCounter/

@@ -1,5 +1,10 @@
 #include "CommonModule.hpp"
 
+
+
+namespace NEBULA
+{
+
 // 计算包头校验和
 quint16 calcChcekSum(const char* sMess,int nCnt) {
     quint16 nSum = 0;
@@ -7,9 +12,6 @@ quint16 calcChcekSum(const char* sMess,int nCnt) {
     for(int i = 0; i < nCnt; i++) nSum += *pb++;
     return nSum;
 }
-
-namespace NEBULA
-{
 
 CommonModule::CommonModule(QObject *parent):QObject(parent){
     // LOGI("this is a test");

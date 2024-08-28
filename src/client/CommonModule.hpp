@@ -21,6 +21,8 @@ using namespace std;
 
 namespace NEBULA
 {
+quint16 calcChcekSum(const char* sMess,int nCnt);
+
 struct Cfg{
     QString serverAddress;
     QString moduleAddress;
@@ -98,10 +100,11 @@ public:
     void recvCustomizedParam(QByteArray buff);
     // 模块配置文件
     Cfg cfg;
-private:
     // Socket网络传输
     QTcpSocket* pTcpSocket;
-    
+    // 公共包头
+    GenericHeader genericHeader;
+private:
     // 再次连接定时器器
     QTimer* pReconnectTimer;
     // 定时发送请求时间0x3
@@ -118,8 +121,7 @@ private:
     // 时间间隔
     quint64 m_iN;
 
-    // 公共包头
-    GenericHeader genericHeader;
+    
 
 signals:
     void signals_msg();

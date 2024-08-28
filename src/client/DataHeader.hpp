@@ -189,5 +189,74 @@ struct ServerUpdate {
     uint32_t flag;
 };
 
+// 0x822
+struct OBearingMark
+{
+    GenericHeader o_Header;
+    quint32 idxCeilVOI:16;
+    quint32 iReserve:16;
+    quint32 idxCeilSPP;
+    quint32 idxPoint:8;
+    quint32 typeCeilSPP:8;
+    quint32 typeChannel:8;
+    quint32 typeSignal:8;
+    quint32 timePel1;
+    quint32 timePel2;
+    float azim;
+    float elev;
+    float range;
+    float freqMhz;
+    float dFreqMhz;
+    float Pow_dBm;
+    float SNR_dB;
+};
+
+// 0x823
+struct OSubRezhRTR20 {
+    // 1
+    quint32 n_Cnt:8;
+    quint32 n_Reserv:24;
+    // 2
+    float f_CurAz;
+};
+
+// 0x825
+struct OSubPosobilRTR22 {
+   quint32 n_IsRotate:1;
+   quint32 n_MaxTask:7;
+   quint32 n_MaxSubDiap:8;
+   quint32 n_Rezerv:16;
+   float f_AzSize;
+   float f_EpsSize;
+};
+
+// 0x828
+struct OBanIRI {
+  float f_Freq;
+  float f_DelFreq;
+  uint n_Numb;
+  OBanIRI() {
+    f_Freq = f_DelFreq = 0.f;
+    n_Numb = 0;
+  }
+  OBanIRI(uint nNumb, float fFreq, float fDelFreq) {
+      f_Freq = fFreq;
+      f_DelFreq = fDelFreq;
+      n_Numb = nNumb;
+  }
+};
+
+// 0x829
+struct OSubRadioTime {
+    qint64 n_Time;
+    quint32 n_Num:24;
+    quint32 n_Type:8;
+    float f_FrBegin;
+    float f_FrStep;
+    uint n_Cnt;
+};
+
+
+
 #pragma pack(pop)
 #endif // _COMMONHEADER_H_
