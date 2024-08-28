@@ -68,13 +68,13 @@ struct ServerRegister
     uint32_t reserve      : 16; // 备用字段（未使用）
 };
 
-// 0x03
+// 0x3
 struct ModuleTimeControl {
     uint32_t timeRequest1     : 32; // 查询时间戳小字节
     uint32_t timeRequest2     : 32; // 请求时间戳高级字节
 };
 
-// 0x04
+// 0x4
 struct ServerTimeControl {
     uint64_t timeRequest1     : 64; // 查询时间戳小字节
     // uint32_t timeRequest2     : 32; // 请求时间戳高级字节
@@ -82,7 +82,7 @@ struct ServerTimeControl {
     // uint32_t timeAnswer2      : 32; // 响应时间戳高级字节
 };
 
-// 0x05
+// 0x5
 struct ModuleGeoLocation {
     uint32_t typeData     : 3;  // 定位数据类型
     uint32_t isValid      : 1;  // 数据可靠性状况
@@ -114,6 +114,15 @@ struct OCPStatus
     quint32 isNewStatus : 1;
     quint32 isNewValue  : 1;
     quint32 reserve     : 14;
+};
+
+// 0x23,控制指令
+struct OReqCtl{
+    GenericHeader o_Header;
+    quint32 n_TimeReq1;
+    quint32 n_TimeReq2;
+    quint32 n_id_Com:16;
+    quint32 n_code:16;
 };
 
 // 0x24,设备状态

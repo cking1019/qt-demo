@@ -28,6 +28,7 @@ struct Cfg{
     qint16 modulePort;
     QString module0x20Cfg;
 };
+
 class CommonModule : public QObject
 {
     Q_OBJECT
@@ -39,7 +40,6 @@ public:
     void initSocket();
     // 发送0x21和0x22
     void sendCPandNPStatus();
-
 
     // 0x1,请求注册
     void sendRegister();
@@ -56,6 +56,10 @@ public:
     void sendModuleCPStatus();
     // 0x24,发送模块状态
     void sendModuleStatus();
+    // 0x23,发送控制命令
+    void sendControlledOrder();
+    // 0x27,发生扩展命令
+    void sendExtendedOrder(QString msg);
     
     // 0x25,发送消息日志
     void sendLogMsg(QString msg);
@@ -82,6 +86,12 @@ public:
     void recvNote4Operator(QByteArray buff);
     // 0x46,收到请求模块模块原理图
     void recvRequestModuleFigure(QByteArray buff);
+    // 0x47,收到设置语言
+    void recvSettingLang(QByteArray buff);
+    // 0x48,收到无线电与卫星导航
+    void recvRadioAndSatellite(QByteArray buff);
+    // 0x49,收到设置时间
+    void recvSettingTime(QByteArray buff);
     // 0x4A,收到设置模块坐标
     void recvModuleLocation(QByteArray buff);
     // 0x4B,收到设置自定义参数
@@ -98,6 +108,8 @@ private:
     QTimer* pRequestTimer;
     // 定时发送0x21、0x22
     QTimer* pCPandNPTimer;
+    // 定时发送0x24
+    QTimer* pModuleStatueTimer;
 
     // 连接主机标识
     bool m_iConnectHostFlag;
@@ -118,5 +130,5 @@ public slots:
 };
 
 
-}
+};
 #endif // _CommonModule_H_

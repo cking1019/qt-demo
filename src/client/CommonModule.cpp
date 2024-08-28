@@ -20,6 +20,7 @@ CommonModule::~CommonModule(){
     if(this->pRequestTimer != nullptr)     delete this->pRequestTimer; 
     if(this->pReconnectTimer != nullptr)   delete this->pReconnectTimer; 
     if(this->pCPandNPTimer != nullptr)     delete this->pCPandNPTimer; 
+    if(this->pModuleStatueTimer != nullptr)     delete this->pModuleStatueTimer; 
 }
 
 // 初始化成员变量
@@ -29,6 +30,7 @@ void CommonModule::startup() {
     this->pRequestTimer = new QTimer();
     this->pReconnectTimer = new QTimer();
     this->pCPandNPTimer = new QTimer();
+    this->pModuleStatueTimer = new QTimer();
 
     this->m_iConnectHostFlag = false;
     this->m_iStampResult = 0;
@@ -48,15 +50,12 @@ void CommonModule::startup() {
     connect(this->pRequestTimer, &QTimer::timeout, this, &CommonModule::sendRequestTime);
     // 定时发送CP和NP
     connect(this->pCPandNPTimer, &QTimer::timeout, this, &CommonModule::sendCPandNPStatus);
-    // 初始化socket
-    this->initSocket();
+    // 定时发送模块状态
+    connect(this->pModuleStatueTimer, &QTimer::timeout, this, &CommonModule::sendModuleStatus);
 }
 
 // 初始化socket
 void CommonModule::initSocket() {
-    qDebug() << "server address is " << this->cfg.serverAddress;
-    qDebug() << "server port is " << this->cfg.serverPort;
-
     // 尝试连接
     connect(this->pReconnectTimer, &QTimer::timeout, [=](){
         if(this->pTcpSocket->state() == QAbstractSocket::UnconnectedState) {
@@ -85,6 +84,7 @@ void CommonModule::initSocket() {
         // 断开连接后，停止发送CP与NP
         this->pCPandNPTimer->stop();
     });
+    // 每秒发送一次连接请求
     this->pReconnectTimer->start(1000);
 }
 
@@ -100,16 +100,24 @@ void CommonModule::onReadData() {
     qDebug() << "=======================================";
     // LOGI("received data from server: " + buff.toHex());
     switch (genericHeader.packType) {
-        case 0x2: this->recvRegister(buff); break;
-        case 0x4: this->recvRequestTime(buff); break;
+        case 0x2:  this->recvRegister(buff); break;
+        case 0x4:  this->recvRequestTime(buff); break;
+        case 0x40: this->recvStart(buff); break;
+        case 0x41: this->recvStop(buff); break;
+        case 0x42: this->recvRestart(buff); break;
+        case 0x43: this->recvReset(buff); break;
+        case 0x44: this->recvUpdate(buff); break;
+        case 0x45: this->recvNote4Operator(buff); break;
         case 0x46: this->recvRequestModuleFigure(buff); break;
-        case 0x40: this->recvStart(buff);break;
-        case 0x41: this->recvStop(buff);break;
-        case 0x42: this->recvRestart(buff);break;
-        case 0x43: this->recvReset(buff);break;
-        case 0x44: this->recvUpdate(buff);break;
+        case 0x47: this->recvSettingLang(buff); break;
+        case 0x48: this->recvRadioAndSatellite(buff); break;
+        case 0x49: this->recvSettingTime(buff); break;
+        case 0x4A: this->recvModuleLocation(buff); break;
+        case 0x4B: this->recvCustomizedParam(buff); break;
         default: {
             qDebug() << "this is unknown pkg 0x" << this->genericHeader.packType;
+            this->sendLogMsg("this is unknown pkg");
+            this->sendNote2Operator("this is unknown pkg");
             break;
         }
     }
@@ -169,6 +177,12 @@ void CommonModule::recvRegister(QByteArray buff) {
             this->pCPandNPTimer->start(5000);
             // 注册成功后立刻发送模块原理图
             this->sendModuleFigure();
+            // 注册成功后立刻发送模块位置
+            this->sendModuleLocation();
+            // 注册成功发送日志
+            this->sendLogMsg("register successfully");
+            // 注册成果发送给操作员
+            this->sendNote2Operator("register successfully");
             break;
         }
         default: {
@@ -198,7 +212,6 @@ void CommonModule::sendRequestTime() {
     qDebug() << "send register to server: " << byteArray.toHex();
     this->pTcpSocket->write(byteArray, len1 + len2);
     this->pTcpSocket->flush();
-    this->genericHeader.packIdx++;
     free(data);
 }
 
@@ -335,6 +348,7 @@ void CommonModule::sendModuleStatus() {
     oTimeReq.n_TimeReq1 = timestamp & 0xFFFFFFFF;
     oTimeReq.n_TimeReq2 = (timestamp >> 32) & 0xFFFFFFFF;
     oTimeReq.o_Header = this->genericHeader;
+    
     // 消息体
     OModuleStatus oModuleStatus;
     oModuleStatus.status = 1;
@@ -359,6 +373,85 @@ void CommonModule::sendModuleStatus() {
     memcpy(data + len1, &oModuleStatus, len2);
     QByteArray byteArray(data, len1 + len2);
     qDebug() << "send module status: " << byteArray.toHex();
+    this->pTcpSocket->write(byteArray, len1 + len2);
+    this->pTcpSocket->flush();
+    free(data);
+}
+
+// 0x23,发送控制命令
+void CommonModule::sendControlledOrder() {
+    this->genericHeader.packType = 0x23;
+    this->genericHeader.dataSize = sizeof(OReqCtl);
+    this->genericHeader.packIdx++;
+    this->genericHeader.checkSum = calcChcekSum((char*)&this->genericHeader, sizeof(this->genericHeader) - 2);
+
+    // 消息头
+    OTimeReq oTimeReq;
+    quint64 timestamp = QDateTime::currentMSecsSinceEpoch();
+    oTimeReq.n_TimeReq1 = timestamp & 0xFFFFFFFF;
+    oTimeReq.n_TimeReq2 = (timestamp >> 32) & 0xFFFFFFFF;
+    oTimeReq.o_Header = this->genericHeader;
+
+    // 消息体
+    OReqCtl oReqCtl;
+    oReqCtl.n_id_Com = 0x1;
+    oReqCtl.n_code = 0;
+    oReqCtl.o_Header = this->genericHeader;
+    switch(oReqCtl.n_code) {
+        case 0: qDebug() << "no error";break;
+        case 1: qDebug() << "be execiting order";break;
+        case 2: qDebug() << "incorrect number of parmeters";break;
+        case 6: {
+            qDebug() << "unknow type of message";
+            this->sendExtendedOrder("unknow type of message");
+            return;
+        }
+    }
+
+    quint8 len1 = sizeof(oTimeReq);
+    quint8 len2 = sizeof(OReqCtl);
+    char* data = (char*)malloc(len1 + len2);
+    memcpy(data, &oTimeReq, len1);
+    memcpy(data + len1, &oReqCtl, len2);
+    QByteArray byteArray(data, len1 + len2);
+    qDebug() << "send controlled order: " << byteArray.toHex();
+    this->pTcpSocket->write(byteArray, len1 + len2);
+    this->pTcpSocket->flush();
+    free(data);
+}
+
+// 0x27,发生扩展命令
+void CommonModule::sendExtendedOrder(QString msg) {
+    this->genericHeader.packType = 0x27;
+    this->genericHeader.dataSize = sizeof(OModuleStatus);
+    this->genericHeader.packIdx++;
+    this->genericHeader.checkSum = calcChcekSum((char*)&this->genericHeader, sizeof(this->genericHeader) - 2);
+
+    // 消息头
+    OTimeReq oTimeReq;
+    quint64 timestamp = QDateTime::currentMSecsSinceEpoch();
+    oTimeReq.n_TimeReq1 = timestamp & 0xFFFFFFFF;
+    oTimeReq.n_TimeReq2 = (timestamp >> 32) & 0xFFFFFFFF;
+    oTimeReq.o_Header = this->genericHeader;
+
+    // 消息体
+    OReqCtl oReqCtl;
+    oReqCtl.n_id_Com = 0x1;
+    oReqCtl.n_code = 0;
+    oReqCtl.o_Header = this->genericHeader;
+
+    // 0x23失败原因
+    QByteArray utf8Bytes = msg.toUtf8();
+
+    quint8 len1 = sizeof(oTimeReq);
+    quint8 len2 = sizeof(OReqCtl);
+    quint8 len3 = sizeof(utf8Bytes);
+    char* data = (char*)malloc(len1 + len2);
+    memcpy(data, &oTimeReq, len1);
+    memcpy(data + len1, &oReqCtl, len2);
+    memcpy(data + len1 + len2, &utf8Bytes, len3);
+    QByteArray byteArray(data, len1 + len2);
+    qDebug() << "send extended order: " << byteArray.toHex();
     this->pTcpSocket->write(byteArray, len1 + len2);
     this->pTcpSocket->flush();
     free(data);
@@ -437,26 +530,77 @@ void CommonModule::sendNote2Operator(QString msg) {
 // 0x40,收到开始命令
 void CommonModule::recvStart(QByteArray buff) {
     qDebug() << "recvStart";
+    this->sendControlledOrder();
 }
 
 // 0x41,收到关闭命令
 void CommonModule::recvStop(QByteArray buff) {
     qDebug() << "recvStop";
+    this->sendControlledOrder();
 }
 
 // 0x42,收到重启命令
 void CommonModule::recvRestart(QByteArray buff) {
     qDebug() << "recvRestart";
+    this->sendControlledOrder();
 }
 
 // 0x43,收到重置命令
 void CommonModule::recvReset(QByteArray buff) {
     qDebug() << "recvReset";
+    this->sendControlledOrder();
 }
 
 // 0x44,收到更新命令
 void CommonModule::recvUpdate(QByteArray buff) {
     qDebug() << "recvUpdate";
+    this->sendControlledOrder();
+}
+
+// 0x45,收到操作员的短信
+void CommonModule::recvNote4Operator(QByteArray buff) {
+    QByteArray stringData = buff.right(buff.size() - sizeof(OTimeReq));
+    QString msg = QString::fromUtf8(stringData);
+    this->sendControlledOrder();
+    qDebug() << "recive the msg from operator: " << msg;
+}
+
+// 0x47,收到设置语言
+void CommonModule::recvSettingLang(QByteArray buff) {
+    this->sendControlledOrder();
+    qDebug() << "recive the setting language";
+}
+
+// 0x48,收到无线电与卫星导航
+void CommonModule::recvRadioAndSatellite(QByteArray buff){
+    this->sendControlledOrder();
+    qDebug() << "recive radio and statllite";
+}
+
+// 0x49,收到设置时间
+void CommonModule::recvSettingTime(QByteArray buff) {
+    this->sendControlledOrder();
+    qDebug() << "receive setting time";
+
+    OTimeReq oTimeReq;
+    memcpy(&oTimeReq, buff.data(), sizeof(OTimeReq));
+    qDebug() << "lower byte: " << oTimeReq.n_TimeReq1;
+    qDebug() << "higher byte: " << oTimeReq.n_TimeReq2;
+}
+
+// 0x4A,收到设置模块坐标
+void CommonModule::recvModuleLocation(QByteArray buff) {
+    this->sendControlledOrder();
+    qDebug() << "receive the location of module";
+    this->sendModuleLocation();
+}
+
+// 0x4B,设置自定义参数的值
+void CommonModule::recvCustomizedParam(QByteArray buff) {
+    this->sendControlledOrder();
+    qDebug() << "settings the customised parmeters";
+    // 发送0x24模块状态
+    this->sendModuleStatus();
 }
 
 }

@@ -8,7 +8,6 @@ QString readJson(QString Dev0x20Config) {
     if(file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream in(&file);
         jsonContent = in.readAll();
-        qDebug() << jsonContent;
         file.close();
     }
     return jsonContent;
@@ -24,8 +23,10 @@ void ModuleController::init() {
     auto *relayConfig = new QSettings(RELAY_PATH, QSettings::IniFormat);
     relayConfig->setIniCodec(QTextCodec::codecForName("utf-8"));
 
-    auto serverAddress = relayConfig->value("ControInfo/ControlIP").toString();
+    auto serverAddress = relayConfig->value("ControlInfo/ControlIP").toString();
     auto serverPort = relayConfig->value("ControlInfo/ControlPort").toInt();
+    qDebug() << "server address is " << serverAddress;
+    qDebug() << "server port is " << serverPort;
 
     // 侦测设备配置
     auto iDetectNum = relayConfig->value("DetectDevNum/DevNum").toInt();
@@ -54,6 +55,7 @@ void ModuleController::init() {
     // 启动所有设备
     for(auto& item : this->rtmVec) {
         item->startup();
+        item->initSocket();
     }
 }
 

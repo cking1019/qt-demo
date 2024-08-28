@@ -52,5 +52,5 @@ add_subdirectory(src/client)
 add_subdirectory(src/server)
 
 add_custom_target(${PROJECT_NAME} ALL 
-                    DEPENDS client server 
+                    DEPENDS Nebula.RelayModuleCK server 
                     COMMENT "cmake is building target")
