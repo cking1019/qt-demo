@@ -1,11 +1,13 @@
 #include <QCoreApplication>
-#include "CommonBase.hpp"
+#include "CommonModule.hpp"
+#include "ModuleController.hpp"
+// using namespace CUR_NAMESPACE;
 
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-    CommonBase commonBase;
-    commonBase.init();
+    NEBULA::ModuleController moduleController;
+    moduleController.init();
 
     return a.exec();
 }

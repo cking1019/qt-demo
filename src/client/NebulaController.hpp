@@ -3,17 +3,31 @@
 
 #include <QObject>
 #include <QDebug>
+#include <QUdpSocket>
+#include <QString>
+#include <QSettings>
+#include <QHostAddress>
 
+namespace NEBULA
+{
 class NebulaController : public QObject
 {
   Q_OBJECT
 private:
   /* data */
+  QUdpSocket* m_pUdpSock2Nebula;
 public:
   NebulaController(/* args */);
   ~NebulaController();
-public slots:
-    void slots_dosomething(int n);
+  
+  void InitUdpSock(QString strIP, int port);
+  
+  void dealUdpData(QByteArray data, int port);
+
+  void readNebulaUdpData();
+
+  void sendUdpData2Nebula(QByteArray data,int port);
 };
+}
 
 #endif // _NEBULACONTROLLER_H_
