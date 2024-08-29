@@ -189,6 +189,8 @@ struct ServerUpdate {
     uint32_t flag;
 };
 
+
+//==================RTM===========================================
 // 0x822，方位标记
 struct OBearingMark
 {
@@ -262,6 +264,81 @@ struct OSubRadioTime {
     float f_FrBegin;
     float f_FrStep;
     uint n_Cnt;
+};
+
+
+
+//==================PRUE===========================================
+// 0xD21,发送当前PRUE设置
+struct OSendTrapFixed
+{
+    uint32_t taskREB:8;
+    uint32_t taskGeo:8;
+    uint32_t reserve:16;
+    float curAzREB;
+    float curEpsREB;
+    float kGainREB;
+};
+
+// 0xD22,发送当前PRUE功能
+struct OTrapFunc {
+    uint32_t numDiap : 8;
+    uint32_t isGeo : 1;
+    uint32_t numDiap2 : 8;
+    uint32_t reserve : 7;
+    uint32_t dTgeo : 8;
+    float maxPowREB;
+    float dAzREB;
+    float dElevREB;
+    float azMinREB;
+    float azMaxREB;
+    float dAzGeo;
+    float dElevGeo;
+    float azMinGeo;
+    float azMaxGeo;
+    float minFreqREB;
+    float maxFreqREB;
+    float maxDFreq;
+};
+
+// 0xD01 & 0x201
+struct OTrapBanSector {
+    uint32_t time1;
+    uint32_t time2;
+    uint32_t num : 8;
+    uint32_t reserve : 24;
+
+    uint32_t type      : 1;
+    uint32_t isUse     : 1;
+    uint32_t isUseEps  : 1;
+    uint32_t isUseFrep : 1;
+    uint32_t reserve2   : 28;
+
+    float AzBegin;
+    float AzEnd;
+    float EpsBegin;
+    float EpsEnd;
+    float Freq;
+    float delFreq;
+};
+
+// 0x202,接收设置辐射禁止
+struct OTrapRadiationBan {
+    uint32_t time1;
+    uint32_t time2;
+    uint32_t isOn : 1;
+    uint32_t reserve : 31;
+};
+
+// 0x601,接收更改当前PRUE设置
+struct ORecvTrapFixed
+{
+    quint32 i_Num:8;
+    quint32 taskREB:8;
+    quint32 reserve:16;
+    float azREB;
+    float elevREB;
+    float kGainREB;
 };
 
 

@@ -169,6 +169,7 @@ struct OJammerSrcStatus
     char Channel[32];
     quint32 Reserve;
 };
+// 0x601
 struct OTrapFixed
 {
     quint32 i_Num:8;

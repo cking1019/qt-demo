@@ -416,18 +416,12 @@ void CommonModule::sendControlledOrder(uint8_t code) {
     // 消息体
     OReqCtl oReqCtl;
     oReqCtl.n_id_Com = 0x1;
-    oReqCtl.n_code = 0;
+    oReqCtl.n_code = code;
     oReqCtl.o_Header = this->genericHeader;
-    switch(oReqCtl.n_code) {
-        case 0: qDebug() << "no error";break;
-        case 1: qDebug() << "be execiting order";break;
-        case 2: qDebug() << "incorrect number of parmeters";break;
-        case 6: {
-            qDebug() << "unknow type of message";
-            // 无法处理，发送0x27作为响应
-            this->sendExtendedOrder("unknow type of message");
-            return;
-        }
+    if(code == 0x6 || code == 0x7f) {
+        QString msg = "unknow type of message";
+        this->sendExtendedOrder(msg);
+        return;
     }
 
     quint8 len1 = sizeof(oTimeReq);

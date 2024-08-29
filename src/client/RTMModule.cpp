@@ -98,16 +98,16 @@ void RTMModule::onReadRTMData(QByteArray& buff) {
         case 0x563: this->recvRequestForbiddenIRIList(buff); break;
         case 0x564: this->recvSettingForbiddenIRIList(buff); break;
         default: {
-            qDebug() << "this is unknown pkg 0x" << this->genericHeader.packType;
-            this->sendLogMsg("this is unknown pkg");
-            this->sendNote2Operator("this is unknown pkg");
+            QString msg = "this is unknown pkg 0x" + this->genericHeader.packType;
+            this->sendLogMsg(msg);
+            this->sendNote2Operator(msg);
             break;
         }
     }
 }
 
 // 0x561,收到更改RTM设置
-void RTMModule::recvChangingRTMSettings(QByteArray buff){
+void RTMModule::recvChangingRTMSettings(QByteArray& buff){
     this->sendLogMsg("recv changing RTM settings");
     OUpdateRTMSetting oUpdateRTMSetting;
     uint8_t len1 = sizeof(GenericHeader);
@@ -116,20 +116,22 @@ void RTMModule::recvChangingRTMSettings(QByteArray buff){
     QByteArray byteArray(reinterpret_cast<char*>(&oUpdateRTMSetting), len2);
     qDebug() << "0x561 msg body: " << byteArray.toHex();
     // 发送0x23作为响应
-    this->sendControlledOrder(0);
+    uint8_t code = 0;
+    this->sendControlledOrder(code);
 }
 
 // 0x563,请求禁止IRI列表
-void RTMModule::recvRequestForbiddenIRIList(QByteArray buff){
+void RTMModule::recvRequestForbiddenIRIList(QByteArray& buff){
     this->sendLogMsg("recv request forbidden IRI list");
     // 发送0x23作为响应
-    this->sendControlledOrder(0);
-    // 如果影响代码正常，则发送0x828作为响应
-    this->sendForbiddenIRIList();
+    uint8_t code = 0;
+    this->sendControlledOrder(code);
+    // 如果响应代码正常，则发送0x828作为响应
+    if(code == 0) this->sendForbiddenIRIList();
 }
 
 // 0x564,设置禁止IRI列表
-void RTMModule::recvSettingForbiddenIRIList(QByteArray buff){
+void RTMModule::recvSettingForbiddenIRIList(QByteArray& buff){
     this->sendLogMsg("recv setting forbidden IRI list");
     OSetBanIRIlist oSetBanIRIlist;
     uint8_t len1 = sizeof(GenericHeader);
@@ -137,8 +139,9 @@ void RTMModule::recvSettingForbiddenIRIList(QByteArray buff){
     memcpy(&oSetBanIRIlist, buff.data() + len1, len2);
     QByteArray byteArray(reinterpret_cast<char*>(&oSetBanIRIlist), len2);
     qDebug() << "0x564 msg body: " << byteArray.toHex();
-    // 发送0x23作为响应
-    this->sendControlledOrder(0);
+    // 发送0x23作为响应,默认返回0为执行成功
+    uint8_t code = 0;
+    this->sendControlledOrder(code);
 }
 
 // 0x822,发送方位标记

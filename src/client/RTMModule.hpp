@@ -37,11 +37,11 @@ public:
     void sendWirelessEnvInfo();
 
     // 0x561,收到更改RTM设置，必须用0x23去响应
-    void recvChangingRTMSettings(QByteArray buff);
+    void recvChangingRTMSettings(QByteArray& buff);
     // 0x563,请求禁止IRI列表，必须用0x23去响应，如果没有错，还得加上0x828响应
-    void recvRequestForbiddenIRIList(QByteArray buff);
+    void recvRequestForbiddenIRIList(QByteArray& buff);
     // 0x564,设置禁止IRI列表，必须用0x23去响应
-    void recvSettingForbiddenIRIList(QByteArray buff);
+    void recvSettingForbiddenIRIList(QByteArray& buff);
 
 public slots:
     // 接收RTM专有协议数据
