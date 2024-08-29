@@ -14,7 +14,7 @@
 #include <QTextCodec>
 #include <iostream>
 #include "NebulaController.hpp"
-#include "DataHeader.hpp"
+#include "CommonHeader.hpp"
 // #include "Logger.hpp"
 #define RELAY_PATH "./conf/module.ini"
 using namespace std;
@@ -39,7 +39,6 @@ public:
     ~CommonModule();
     // 设备启动
     void startup();
-    void initSocket();
     // 发送0x21和0x22
     void sendCPandNPStatus();
 
@@ -58,6 +57,7 @@ public:
     void sendModuleCPStatus();
     // 0x24,发送模块状态
     void sendModuleStatus();
+
     // 0x23,发送控制命令
     void sendControlledOrder();
     // 0x27,发生扩展命令
@@ -72,7 +72,6 @@ public:
     void recvRegister(QByteArray buff);
     // 0x4,确定对时
     void recvRequestTime(QByteArray buff);
-
     
     // 0x40,收到开始命令
     void recvStart(QByteArray buff);
@@ -98,13 +97,30 @@ public:
     void recvModuleLocation(QByteArray buff);
     // 0x4B,收到设置自定义参数
     void recvCustomizedParam(QByteArray buff);
+
     // 模块配置文件
     Cfg cfg;
+
+// 子类需要使用的变量
+protected:
     // Socket网络传输
     QTcpSocket* pTcpSocket;
     // 公共包头
     GenericHeader genericHeader;
-private:
+    // 公共包类型名称
+    QSet<qint16> pkgsComm;
+
+    // 是否注册成功
+    bool isRegister;
+    // 是否发送模块原理图0x20
+    bool isModuleConfigure;
+    // 是否发送NP与CP状态0x21&0x22
+    bool isNPandCPStatus;
+    // 是否发送模块位置0x5
+    bool isModuleLocation;
+    // 是否连接成功
+    bool isConnected;
+
     // 再次连接定时器器
     QTimer* pReconnectTimer;
     // 定时发送请求时间0x3
@@ -113,22 +129,18 @@ private:
     QTimer* pCPandNPTimer;
     // 定时发送0x24
     QTimer* pModuleStatueTimer;
-
-    // 连接主机标识
-    bool m_iConnectHostFlag;
+    
+private:
     // 时间差结果
     qint64 m_iStampResult;
     // 时间间隔
     quint64 m_iN;
-
-    
-
 signals:
     void signals_msg();
 
 public slots:
     // 接收服务器数据
-    void onReadData();
+    void onReadCommData(QByteArray& buff);
 };
 
 

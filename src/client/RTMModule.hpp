@@ -1,18 +1,28 @@
 #ifndef _RTMModule_H_
 #define _RTMModule_H_
 #include "CommonModule.hpp"
+#include <QSet>
 
 namespace NEBULA
 {
 class RTMModule : public CommonModule
 {
 private:
-    /* data */
     // 发送RTM配置定时器
     QTimer* pCurrentSettingTimer;
+    // 发送RTM功能定时器
+    QTimer* pCurrentFunctionTimer;
+    // 查看RTM状态定时器
+    QTimer* pCurrentStatusTimer;
+    // RTM包类型集合
+    QSet<qint16> pkgsRTM;
 public:
     RTMModule(/* args */);
     ~RTMModule();
+    // 接收数据统一接口
+    void onRecvData();
+    // 查看当前设备状态
+    void checkStatus();
 
     // 0x822,发送方位标记
     void sendBearingMarker();
@@ -35,8 +45,8 @@ public:
     void recvSettingForbiddenIRIList(QByteArray buff);
 
 public slots:
-    // 接收RTM专有协议
-    void onReadDataRTM();
+    // 接收RTM专有协议数据
+    void onReadRTMData(QByteArray& buff);
 };
 }
 #endif // _RTMModule_H_

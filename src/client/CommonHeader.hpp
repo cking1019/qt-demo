@@ -189,7 +189,7 @@ struct ServerUpdate {
     uint32_t flag;
 };
 
-// 0x822
+// 0x822，方位标记
 struct OBearingMark
 {
     GenericHeader o_Header;
@@ -211,7 +211,7 @@ struct OBearingMark
     float SNR_dB;
 };
 
-// 0x823
+// 0x823，RTM设置
 struct OSubRezhRTR20 {
     // 1
     quint32 n_Cnt:8;
@@ -220,7 +220,7 @@ struct OSubRezhRTR20 {
     float f_CurAz;
 };
 
-// 0x825
+// 0x825,RTM功能
 struct OSubPosobilRTR22 {
    quint32 n_IsRotate:1;
    quint32 n_MaxTask:7;
@@ -230,7 +230,7 @@ struct OSubPosobilRTR22 {
    float f_EpsSize;
 };
 
-// 0x828
+// 0x828，禁止IRI列表
 struct OBanIRI {
   float f_Freq;
   float f_DelFreq;
@@ -246,7 +246,7 @@ struct OBanIRI {
   }
 };
 
-// 0x829
+// 0x829，当前无线电环境信息
 struct OSubRadioTime {
     qint64 n_Time;
     quint32 n_Num:24;

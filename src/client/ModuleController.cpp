@@ -20,7 +20,7 @@ ModuleController::~ModuleController() {
 }
 
 void ModuleController::init() {
-    auto *relayConfig = new QSettings(RELAY_PATH, QSettings::IniFormat);
+    auto relayConfig = new QSettings(RELAY_PATH, QSettings::IniFormat);
     relayConfig->setIniCodec(QTextCodec::codecForName("utf-8"));
 
     auto serverAddress = relayConfig->value("ControlInfo/ControlIP").toString();
@@ -55,7 +55,6 @@ void ModuleController::init() {
     // 启动所有设备
     for(auto& item : this->rtmVec) {
         item->startup();
-        item->initSocket();
     }
 }
 
