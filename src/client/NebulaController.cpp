@@ -2,22 +2,20 @@
 
 namespace NEBULA
 {
-NebulaController::NebulaController(/* args */)
-{
+NebulaController::NebulaController(/* args */) {
     this->m_pUdpSock2Nebula = new QUdpSocket();
 }
 
-NebulaController::~NebulaController()
-{
-
+NebulaController::~NebulaController() {
 }
+
 void NebulaController::InitUdpSock(QString strIP, int port) {
-  this->m_pUdpSock2Nebula = new QUdpSocket();
-  if(!this->m_pUdpSock2Nebula->bind(port)) {
-    qDebug() << "bind port fail";
-  } else {
-    connect(m_pUdpSock2Nebula,&QUdpSocket::readyRead,this,&NebulaController::readNebulaUdpData);
-  }
+	this->m_pUdpSock2Nebula = new QUdpSocket();
+	if (!this->m_pUdpSock2Nebula->bind(port)) {
+		qDebug() << "bind port fail";
+  	} else {
+		connect(m_pUdpSock2Nebula, &QUdpSocket::readyRead, this, &NebulaController::readNebulaUdpData);
+  	}
 }
 
 void NebulaController::readNebulaUdpData() {

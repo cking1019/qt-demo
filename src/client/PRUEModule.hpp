@@ -2,11 +2,9 @@
 #define _PRUEModule_H_
 #include "CommonModule.hpp"
 
-namespace NEBULA
-{
-class PRUEModule : public CommonModule
-{
-private:
+namespace NEBULA {
+class PRUEModule : public CommonModule {
+ private:
     // 发送PRUE配置定时器
     QTimer* pCurrentSettingTimer;
     // 发送PRUE功能定时器
@@ -15,8 +13,8 @@ private:
     QTimer* pCurrentStatusTimer;
     // PRUE包类型集合
     QSet<qint16> pkgsPRUE;
-    
-public:
+
+ public:
     PRUEModule(/* args */);
     ~PRUEModule();
     // 接收数据统一接口
@@ -37,7 +35,7 @@ public:
     void recvSettingBanSector(QByteArray& buff);
     // 收到设置辐射禁止,0x202
     void recvBanRadiation(QByteArray& buff);
-public slots:
+ public slots:
     // 接收RTM专有协议数据
     void onReadPRUEData(QByteArray& buff);
 };

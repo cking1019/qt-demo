@@ -8,25 +8,23 @@
 #include <QSettings>
 #include <QHostAddress>
 
-namespace NEBULA
-{
-class NebulaController : public QObject
-{
+namespace NEBULA {
+class NebulaController : public QObject {
   Q_OBJECT
-private:
+ private:
   QUdpSocket* m_pUdpSock2Nebula;
-public:
-  NebulaController(/* args */);
-  ~NebulaController();
-  
-  void InitUdpSock(QString strIP, int port);
-  
-  void dealUdpData(QByteArray data, int port);
+ public:
+    NebulaController(/* args */);
+    ~NebulaController();
 
-  void readNebulaUdpData();
+    void InitUdpSock(QString strIP, int port);
 
-  void sendUdpData2Nebula(QByteArray data,int port);
+    void dealUdpData(QByteArray data, int port);
+
+    void readNebulaUdpData();
+
+    void sendUdpData2Nebula(QByteArray data, int port);
 };
-}
+} // namespace
 
 #endif // _NEBULACONTROLLER_H_

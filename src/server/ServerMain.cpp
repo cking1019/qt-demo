@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     QObject::connect(server, &QTcpServer::newConnection, [&](){
         qDebug() << "This is  a new connection from client:";
         QTcpSocket* clientSocket = server->nextPendingConnection();
-        if(clientSocket != nullptr) {
+        if (clientSocket != nullptr) {
             clientSockets.append(clientSocket);
             QObject::connect(clientSocket, &QTcpSocket::readyRead, [=](){
                 readDataFromClient(clientSocket);

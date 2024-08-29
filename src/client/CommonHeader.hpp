@@ -4,31 +4,31 @@
 #pragma pack(push, 4)
 
 enum ModuleDealInfo {
-    moduleRegister    = 0x1, // 请求在系统中注册模块
-    moduleTimeControl = 0x3, // 时间请求
-    moduleGeoLocation = 0x5, // 模块地址请求
+    moduleRegister    = 0x1,  // 请求在系统中注册模块
+    moduleTimeControl = 0x3,  // 时间请求
+    moduleGeoLocation = 0x5,  // 模块地址请求
 
-    moduleDiagram     = 0x20, // 模块图，只有发送该消息后才能被控制，发送模块组件及其参数
-    moduleParaStatus  = 0x21, // 电路元素变化
-    moduleControlledParaAndStatus = 0x22, // 受控参数和状态
-    moduleControlledOrder = 0x23,         // 模块受控状态，每秒发送一次
-    moduleStatus = 0x24,                  // 每秒发送模块状态
-    moduleSendLog = 0x25,                 // 发送消息日志
-    moduleSendMsg = 0x26,                 // 发送消息给操作员
-    moduleExtendedOrder = 0x27,           // 发送扩展控制命令
-    moduleCustomedPara = 0x28             // 发送电路元件自定义参数的值
+    moduleDiagram     = 0x20,  // 模块图，只有发送该消息后才能被控制，发送模块组件及其参数
+    moduleParaStatus  = 0x21,  // 电路元素变化
+    moduleControlledParaAndStatus = 0x22,  // 受控参数和状态
+    moduleControlledOrder = 0x23,          // 模块受控状态，每秒发送一次
+    moduleStatus = 0x24,                   // 每秒发送模块状态
+    moduleSendLog = 0x25,                  // 发送消息日志
+    moduleSendMsg = 0x26,                  // 发送消息给操作员
+    moduleExtendedOrder = 0x27,            // 发送扩展控制命令
+    moduleCustomedPara = 0x28              // 发送电路元件自定义参数的值
 };
 
 enum ServerDealInfo {
-    serverRegister    = 0x2, // 确定模块在系统中的注册
-    serverTimeControl = 0x4, // 服务器的时间戳
+    serverRegister    = 0x2,  // 确定模块在系统中的注册
+    serverTimeControl = 0x4,  // 服务器的时间戳
 
-    serverStart = 0x40,   // 启动
-    serverClose = 0x41,   // 关闭
-    serverRestart = 0x42, // 重启
-    serverReset = 0x43,   // 重设
-    serverAlter = 0x44,   // 修改
-    serverSendNote = 0x45,// 发送消息
+    serverStart = 0x40,     // 启动
+    serverClose = 0x41,     // 关闭
+    serverRestart = 0x42,   // 重启
+    serverReset = 0x43,     // 重设
+    serverAlter = 0x44,     // 修改
+    serverSendNote = 0x45,  // 发送消息
 };
 // 通用头
 struct GenericHeader
@@ -49,53 +49,52 @@ struct GenericHeader
 
 // 0x1
 struct ModuleRegister {
-    uint32_t idManuf     : 8; // 制造商标识符
-    uint32_t serialNum   : 24;// 产品序列号
+    uint32_t idManuf     : 8;   // 制造商标识符
+    uint32_t serialNum   : 24;  // 产品序列号
 
-    uint32_t versHardMaj : 8; // 产品修改版本(大)
-    uint32_t versHardMin : 8; // 产品修改版本(小)
-    uint32_t versProgMaj : 7; // 软件版本
-    uint32_t isInfo      : 1; // 信息处理标志
-    uint32_t versProgMin : 7; // 软件版本
-    uint32_t isAsku      : 1; // 控制和管理标志
+    uint32_t versHardMaj : 8;  // 产品修改版本(大)
+    uint32_t versHardMin : 8;  // 产品修改版本(小)
+    uint32_t versProgMaj : 7;  // 软件版本
+    uint32_t isInfo      : 1;  // 信息处理标志
+    uint32_t versProgMin : 7;  // 软件版本
+    uint32_t isAsku      : 1;  // 控制和管理标志
 };
 
 // 0x2
 struct ServerRegister
 {
-    uint32_t idxModule    : 8;  // 综合体中的模块号
-    uint32_t errorConnect : 8;  // 注册错误状态
-    uint32_t reserve      : 16; // 备用字段（未使用）
+    uint32_t idxModule    : 8;   // 综合体中的模块号
+    uint32_t errorConnect : 8;   // 注册错误状态
+    uint32_t reserve      : 16;  // 备用字段（未使用）
 };
 
 // 0x3
 struct ModuleTimeControl {
-    uint32_t timeRequest1     : 32; // 查询时间戳小字节
-    uint32_t timeRequest2     : 32; // 请求时间戳高级字节
+    uint32_t timeRequest1     : 32;  // 查询时间戳小字节
+    uint32_t timeRequest2     : 32;  // 请求时间戳高级字节
 };
 
 // 0x4
 struct ServerTimeControl {
-    uint64_t timeRequest1     : 64; // 查询时间戳小字节
+    uint64_t timeRequest1     : 64;  // 查询时间戳小字节
     // uint32_t timeRequest2     : 32; // 请求时间戳高级字节
-    uint64_t timeAnswer1      : 64; // 响应时间戳小字节
+    uint64_t timeAnswer1      : 64;  // 响应时间戳小字节
     // uint32_t timeAnswer2      : 32; // 响应时间戳高级字节
 };
 
 // 0x5
 struct ModuleGeoLocation {
-    uint32_t typeData     : 3;  // 定位数据类型
-    uint32_t isValid      : 1;  // 数据可靠性状况
-    uint32_t reserve      : 28; // 备用字段（未使用）
+    uint32_t typeData     : 3;   // 定位数据类型
+    uint32_t isValid      : 1;   // 数据可靠性状况
+    uint32_t reserve      : 28;  // 备用字段（未使用）
 
-    float    xLat;              // 模块站点坐标
+    float    xLat;               // 模块站点坐标
     float    yLong;
     float    zHeight;
 };
 
 // 0x21,设备np状态
-struct ONPStatus
-{
+struct ONPStatus {
     quint32 IDElem  : 16;
     quint32 status  : 4;
     quint32 workF1  : 4;
@@ -105,8 +104,7 @@ struct ONPStatus
 };
 
 // 0x22,设备cp状态
-struct OCPStatus
-{
+struct OCPStatus {
     quint32 IDParam : 32;
 
     quint32 status  : 8;
@@ -117,7 +115,7 @@ struct OCPStatus
 };
 
 // 0x23,控制指令
-struct OReqCtl{
+struct OReqCtl {
     GenericHeader o_Header;
     quint32 n_TimeReq1;
     quint32 n_TimeReq2;
@@ -126,8 +124,7 @@ struct OReqCtl{
 };
 
 // 0x24,设备状态
-struct OModuleStatus
-{
+struct OModuleStatus {
     quint32 time1;
     quint32 time2;
 
@@ -149,15 +146,14 @@ struct OModuleStatus
 };
 
 // 0x25,消息日志
-struct LogMsg
-{
+struct LogMsg {
     quint16 IDParam : 16;
     quint8 type : 8;
     quint8 reserve : 8;
 };
 
 // 消息体的头
-struct OTimeReq{
+struct OTimeReq {
     GenericHeader o_Header;
     quint32 n_TimeReq1;
     quint32 n_TimeReq2;
@@ -190,7 +186,7 @@ struct ServerUpdate {
 };
 
 
-//==================RTM===========================================
+// ==================RTM===========================================
 // 0x822，方位标记
 struct OBearingMark
 {
@@ -224,12 +220,12 @@ struct OSubRezhRTR20 {
 
 // 0x825,RTM功能
 struct OSubPosobilRTR22 {
-   quint32 n_IsRotate:1;
-   quint32 n_MaxTask:7;
-   quint32 n_MaxSubDiap:8;
-   quint32 n_Rezerv:16;
-   float f_AzSize;
-   float f_EpsSize;
+    quint32 n_IsRotate:1;
+    quint32 n_MaxTask:7;
+    quint32 n_MaxSubDiap:8;
+    quint32 n_Rezerv:16;
+    float f_AzSize;
+    float f_EpsSize;
 };
 
 // 0x561,更改RTM设置
@@ -268,10 +264,9 @@ struct OSubRadioTime {
 
 
 
-//==================PRUE===========================================
+// ==================PRUE===========================================
 // 0xD21,发送当前PRUE设置
-struct OSendTrapFixed
-{
+struct OSendTrapFixed {
     uint32_t taskREB:8;
     uint32_t taskGeo:8;
     uint32_t reserve:16;

@@ -16,8 +16,8 @@
 #define RELAY_PATH "./conf/module.ini"
 using namespace std;
 
-namespace NEBULA
-{
+
+namespace NEBULA {
 quint16 calcChcekSum(const char* sMess,int nCnt);
 
 struct Cfg{
@@ -28,10 +28,9 @@ struct Cfg{
     QString module0x20Cfg;
 };
 
-class CommonModule : public QObject
-{
+class CommonModule : public QObject {
     Q_OBJECT
-public:
+ public:
     explicit CommonModule(QObject *parent = nullptr);
     ~CommonModule();
     // 设备启动
@@ -59,7 +58,7 @@ public:
     void sendControlledOrder(uint8_t code);
     // 0x27,发生扩展命令
     void sendExtendedOrder(QString msg);
-    
+
     // 0x25,发送消息日志
     void sendLogMsg(QString msg);
     // 0x26,发送短信给操作员
@@ -69,7 +68,7 @@ public:
     void recvRegister(QByteArray buff);
     // 0x4,确定对时
     void recvRequestTime(QByteArray buff);
-    
+
     // 0x40,收到开始命令
     void recvStart(QByteArray buff);
     // 0x41,收到关闭命令
@@ -99,7 +98,7 @@ public:
     Cfg cfg;
 
 // 子类需要使用的变量
-protected:
+ protected:
     // Socket网络传输
     QTcpSocket* pTcpSocket;
     // 公共包头
@@ -126,8 +125,8 @@ protected:
     QTimer* pCPandNPTimer;
     // 定时发送0x24
     QTimer* pModuleStatueTimer;
-    
-private:
+
+ private:
     // 时间差结果
     qint64 m_iStampResult;
     // 时间间隔
@@ -135,7 +134,7 @@ private:
 signals:
     void signals_msg();
 
-public slots:
+ public slots:
     // 接收服务器数据
     void onReadCommData(QByteArray& buff);
 };

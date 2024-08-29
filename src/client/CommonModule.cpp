@@ -42,11 +42,11 @@ CommonModule::CommonModule(QObject *parent):QObject(parent){
 }
 
 CommonModule::~CommonModule(){
-    if(this->pTcpSocket != nullptr)         delete this->pTcpSocket;
-    if(this->pReconnectTimer != nullptr)    delete this->pReconnectTimer; 
-    if(this->pRequestTimer != nullptr)      delete this->pRequestTimer; 
-    if(this->pCPandNPTimer != nullptr)      delete this->pCPandNPTimer; 
-    if(this->pModuleStatueTimer != nullptr) delete this->pModuleStatueTimer;
+    if (this->pTcpSocket != nullptr)         delete this->pTcpSocket;
+    if (this->pReconnectTimer != nullptr)    delete this->pReconnectTimer; 
+    if (this->pRequestTimer != nullptr)      delete this->pRequestTimer; 
+    if (this->pCPandNPTimer != nullptr)      delete this->pCPandNPTimer; 
+    if (this->pModuleStatueTimer != nullptr) delete this->pModuleStatueTimer;
 }
 
 // 初始化成员变量
@@ -60,7 +60,7 @@ void CommonModule::startup() {
 
     // 尝试连接
     connect(this->pReconnectTimer, &QTimer::timeout, [=](){
-        if(this->pTcpSocket->state() == QAbstractSocket::UnconnectedState) {
+        if (this->pTcpSocket->state() == QAbstractSocket::UnconnectedState) {
             this->pTcpSocket->connectToHost(QHostAddress(this->cfg.serverAddress), this->cfg.serverPort);
         }
         // LOGI("Attempting to reconnect...");
@@ -112,7 +112,7 @@ void CommonModule::onReadCommData(QByteArray& buff) {
 void CommonModule::sendRegister() {
     this->genericHeader.packType = 0x1;
     this->genericHeader.dataSize = sizeof(ModuleRegister);
-    this->genericHeader.packIdx ++;
+    this->genericHeader.packIdx++;
     this->genericHeader.checkSum = calcChcekSum((char*)&this->genericHeader, sizeof(GenericHeader) - 2);
 
     ModuleRegister moduleRegister;
@@ -144,13 +144,13 @@ void CommonModule::recvRegister(QByteArray buff) {
     this->genericHeader.moduleId = serverRegister.idxModule;
     qDebug() << "the module id is " << QString::number(serverRegister.idxModule, 16);
     qDebug() << "the connection status is " << QString::number(serverRegister.errorConnect, 16);
-    switch(serverRegister.errorConnect) {
+    switch (serverRegister.errorConnect) {
         case 0x1:  qDebug() << "execeed the limited number of same type device"; break;
         case 0x2:  qDebug() << "try to reconnect same device"; break;
         case 0x4:  qDebug() << "don't support the device type"; break;
         case 0x8:  qDebug() << "don't support the prototal version"; break;
         case 0x10: qDebug() << "module id is not be supported"; break;
-        case 0x20: 
+        case 0x20:
         case 0x40: qDebug() << "unknown error"; break;
         case 0x0: {
             this->genericHeader.moduleId = serverRegister.idxModule;
@@ -208,10 +208,9 @@ void CommonModule::recvRequestTime(QByteArray buff) {
     qint64 timeOut = (0.5 * (delTime1 - delTime2) + this->m_iStampResult) / this->m_iN;
     this->m_iN++;
     this->m_iStampResult = timeOut + this->m_iStampResult;
-
-    if(timeOut > 200 || timeOut < -200)//授时
-    {
-        quint64 timeCurrentStamp = QDateTime::currentMSecsSinceEpoch() + timeOut; 
+    // 授时
+    if (timeOut > 200 || timeOut < -200) {
+        quint64 timeCurrentStamp = QDateTime::currentMSecsSinceEpoch() + timeOut;
 
         QDateTime dateTime = QDateTime::fromMSecsSinceEpoch(timeCurrentStamp);
         qDebug() << "UTC Time: " + dateTime.toUTC().toString("yyyy-MM-dd hh:mm:ss.zzz");
@@ -268,7 +267,7 @@ void CommonModule::sendModuleFigure() {
     this->genericHeader.packIdx++;
     this->genericHeader.checkSum = calcChcekSum((char*)&this->genericHeader, sizeof(this->genericHeader) - 2);
 
-    this->isModuleConfigure=true;
+    this->isModuleConfigure = true;
 
     quint8 len1 = sizeof(GenericHeader);
     quint8 len2 = this->cfg.module0x20Cfg.size();
@@ -418,7 +417,7 @@ void CommonModule::sendControlledOrder(uint8_t code) {
     oReqCtl.n_id_Com = 0x1;
     oReqCtl.n_code = code;
     oReqCtl.o_Header = this->genericHeader;
-    if(code == 0x6 || code == 0x7f) {
+    if (code == 0x6 || code == 0x7f) {
         QString msg = "unknow type of message";
         this->sendExtendedOrder(msg);
         return;
@@ -594,7 +593,7 @@ void CommonModule::recvSettingLang(QByteArray buff) {
 }
 
 // 0x48,收到无线电与卫星导航
-void CommonModule::recvRadioAndSatellite(QByteArray buff){
+void CommonModule::recvRadioAndSatellite(QByteArray buff) {
     // 发送受控状态0x23
     this->sendControlledOrder(0);
     qDebug() << "recive radio and statllite";

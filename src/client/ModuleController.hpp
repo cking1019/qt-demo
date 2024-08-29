@@ -6,17 +6,16 @@
 
 namespace NEBULA {
 
-class ModuleController
-{
-private:
+class ModuleController {
+ private:
     QVector<RTMModule*> rtmVec;
     QVector<PRUEModule*> prueVec;
-public:
+ public:
     ModuleController(/* args */);
     ~ModuleController();
     void init();
 };
 
-}
+}  // namespace NEBULA
 
 #endif // _MODULECONTROLLER_H_

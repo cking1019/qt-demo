@@ -5,7 +5,7 @@ namespace NEBULA {
 QString readJson(QString Dev0x20Config) {
     QFile file(Dev0x20Config);
     QString jsonContent;
-    if(file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream in(&file);
         jsonContent = in.readAll();
         file.close();
@@ -30,8 +30,7 @@ void ModuleController::init() {
 
     // 侦测设备配置
     auto iDetectNum = relayConfig->value("DetectDevNum/DevNum").toInt();
-    for(int i = 1; i <= iDetectNum; i++)
-    {
+    for (int i = 1; i <= iDetectNum; i++) {
         auto moduleAddress = relayConfig->value(QString("DetectDev%1/DevIP").arg(i)).toString();
         auto modulePort = relayConfig->value(QString("DetectDev%1/DevPort").arg(i)).toInt();
         auto Dev0x20Config = relayConfig->value("DetectDev1/Dev0x20Config").toString();
@@ -46,14 +45,13 @@ void ModuleController::init() {
 
     // 诱骗设备配置
     auto iTrapNum = relayConfig->value("TrapDevNum/DevNum").toInt();
-    for(int i = 1; i <= iTrapNum; i++)
-    {
+    for (int i = 1; i <= iTrapNum; i++) {
         auto p = new PRUEModule();
         this->prueVec.append(p);
     }
 
     // 启动所有设备
-    for(auto& item : this->rtmVec) {
+    for (auto& item : this->rtmVec) {
         item->startup();
     }
 }

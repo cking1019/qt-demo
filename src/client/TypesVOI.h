@@ -33,21 +33,21 @@ struct OVersion {
   OVersion(quint8 nMaj, quint8 nMin) {n_Maj = nMaj, n_Min = nMin;}
   OVersion() {n_Maj = 0, n_Min = 0;}
   bool operator< (OVersion& ver) {
-    if(n_Maj < ver.n_Maj) return true;
-    if(n_Maj > ver.n_Maj) return false;
-    if(n_Min < ver.n_Min) return true;
+    if (n_Maj < ver.n_Maj) return true;
+    if (n_Maj > ver.n_Maj) return false;
+    if (n_Min < ver.n_Min) return true;
     return false;
    }
   bool operator != (OVersion ver) {
-    if(n_Maj != ver.n_Maj) return true;
-    if(n_Min != ver.n_Min) return true;
+    if (n_Maj != ver.n_Maj) return true;
+    if (n_Min != ver.n_Min) return true;
     return false;
    }
   bool operator == (OVersion ver) {
     return !(*this != ver);
    }
   bool IsEmpty() const {
-    if(n_Maj == 0 && n_Min == 0) return true;
+    if (n_Maj == 0 && n_Min == 0) return true;
     else return false;
     }
   void Clear() { n_Min = n_Maj = 0;}
@@ -654,10 +654,10 @@ struct ORezhKoir10 { // режим КОИР версия 1.0, 1.1, 1.2
     float f_Focus;  // фокусное расстояние в мм
     ORezhKoir10() {}
     bool IsChanged(ORezhKoir10 oRezh) {
-      if(f_Az != oRezh.f_Az) return true;
-      if(f_Eps != oRezh.f_Eps) return true;
-      if(f_AzSize != oRezh.f_AzSize) return true;
-      if(f_EpsSize != oRezh.f_EpsSize) return true;
+      if (f_Az != oRezh.f_Az) return true;
+      if (f_Eps != oRezh.f_Eps) return true;
+      if (f_AzSize != oRezh.f_AzSize) return true;
+      if (f_EpsSize != oRezh.f_EpsSize) return true;
       return false;
     }
 };
@@ -1415,102 +1415,102 @@ struct RtrData
     void unpack(QJsonObject obj) {
 
         QString str;
-        if(obj.contains("ID")) m_id = obj["ID"].toString();
-        if(obj.contains("Frequencies")) {
+        if (obj.contains("ID")) m_id = obj["ID"].toString();
+        if (obj.contains("Frequencies")) {
             QJsonArray arr = obj["Frequencies"].toArray();
             for(int i = 0; i < arr.size(); i++) {
                 m_frequencies.append(str.setNum(arr[i].toDouble()));
             }
         }
-        if(obj.contains("Bands")) {
+        if (obj.contains("Bands")) {
             QJsonArray arr = obj["Bands"].toArray();
             for(int i = 0; i < arr.size(); i++) {
                 m_bands.append(str.setNum(arr[i].toDouble()));
             }
         }
-        if(obj.contains("PulsePeriods")) {
+        if (obj.contains("PulsePeriods")) {
             QJsonArray arr = obj["PulsePeriods"].toArray();
             for(int i = 0; i < arr.size(); i++) {
                 m_pulsePeriods.append(str.setNum(arr[i].toInt()));
             }
         }
-        if(obj.contains("PulseWidths")) {
+        if (obj.contains("PulseWidths")) {
             QJsonArray arr = obj["PulseWidths"].toArray();
             for(int i = 0; i < arr.size(); i++) {
                 m_pulseWidths.append(str.setNum(arr[i].toDouble()));
             }
         }
-        if(obj.contains("PulseModulations")) {
+        if (obj.contains("PulseModulations")) {
             QJsonArray arr = obj["PulseModulations"].toArray();
             for(int i = 0; i < arr.size(); i++) {
                 QJsonObject objectPulseMod = arr[i].toObject();
                 PulseModulation pulse_modulation;
-                if(objectPulseMod.contains("ModulationName")) pulse_modulation.m_modName = objectPulseMod["ModulationName"].toString();
-                if(objectPulseMod.contains("ModulationType")) pulse_modulation.m_modType.setNum(objectPulseMod["ModulationType"].toInt());
-                if(objectPulseMod.contains("LfmParams")) {
+                if (objectPulseMod.contains("ModulationName")) pulse_modulation.m_modName = objectPulseMod["ModulationName"].toString();
+                if (objectPulseMod.contains("ModulationType")) pulse_modulation.m_modType.setNum(objectPulseMod["ModulationType"].toInt());
+                if (objectPulseMod.contains("LfmParams")) {
                     QJsonObject objectLfm = objectPulseMod["LfmParams"].toObject();
-                    if(objectLfm.contains("Freq")) pulse_modulation.m_freq.setNum(objectLfm["Freq"].toDouble());
-                    if(objectLfm.contains("Deviation")) pulse_modulation.m_deviation.setNum(objectLfm["Deviation"].toDouble());
-                    if(objectLfm.contains("Direction")) pulse_modulation.m_directionLfm.setNum(objectLfm["Direction"].toInt());
+                    if (objectLfm.contains("Freq")) pulse_modulation.m_freq.setNum(objectLfm["Freq"].toDouble());
+                    if (objectLfm.contains("Deviation")) pulse_modulation.m_deviation.setNum(objectLfm["Deviation"].toDouble());
+                    if (objectLfm.contains("Direction")) pulse_modulation.m_directionLfm.setNum(objectLfm["Direction"].toInt());
                 }
-                if(objectPulseMod.contains("PskParams")) {
+                if (objectPulseMod.contains("PskParams")) {
                     QJsonObject objectPsk = objectPulseMod["PskParams"].toObject();
-                    if(objectPsk.contains("ChipWidth")) pulse_modulation.m_chipWidth.setNum(objectPsk["ChipWidth"].toDouble());
-                    if(objectPsk.contains("ChipCount")) pulse_modulation.m_chipCnt.setNum(objectPsk["ChipCount"].toInt());
-                    if(objectPsk.contains("Direction")) pulse_modulation.m_directionPsk.setNum(objectPsk["Direction"].toInt());
-                    if(objectPsk.contains("Type")) pulse_modulation.m_typePsk = objectPsk["Type"].toString();
+                    if (objectPsk.contains("ChipWidth")) pulse_modulation.m_chipWidth.setNum(objectPsk["ChipWidth"].toDouble());
+                    if (objectPsk.contains("ChipCount")) pulse_modulation.m_chipCnt.setNum(objectPsk["ChipCount"].toInt());
+                    if (objectPsk.contains("Direction")) pulse_modulation.m_directionPsk.setNum(objectPsk["Direction"].toInt());
+                    if (objectPsk.contains("Type")) pulse_modulation.m_typePsk = objectPsk["Type"].toString();
                 }
                 m_pulseMod.append(pulse_modulation);
             }
         }
-        if(obj.contains("RotationPeriod")) m_rotationPeriod.setNum(obj["RotationPeriod"].toDouble());
-        if(obj.contains("RlsMode")) m_rlsMode = obj["RlsMode"].toString();
-        if(obj.contains("Bearings")) {
+        if (obj.contains("RotationPeriod")) m_rotationPeriod.setNum(obj["RotationPeriod"].toDouble());
+        if (obj.contains("RlsMode")) m_rlsMode = obj["RlsMode"].toString();
+        if (obj.contains("Bearings")) {
             QJsonArray arr = obj["Bearings"].toArray();
             for(int i = 0; i < arr.size(); i++) {
                 QJsonObject objectBearings = arr[i].toObject();
                 Bearings bearings;
-                if(objectBearings.contains("Lat")) bearings.m_lat.setNum(objectBearings["Lat"].toDouble());
-                if(objectBearings.contains("Lon")) bearings.m_lon.setNum(objectBearings["Lon"].toDouble());
-                if(objectBearings.contains("Alt")) bearings.m_alt.setNum(objectBearings["Alt"].toDouble());
-                if(objectBearings.contains("Bearing")) bearings.m_bearing.setNum(objectBearings["Bearing"].toDouble());
-                if(objectBearings.contains("Timestamp")) bearings.m_timeStamp =
+                if (objectBearings.contains("Lat")) bearings.m_lat.setNum(objectBearings["Lat"].toDouble());
+                if (objectBearings.contains("Lon")) bearings.m_lon.setNum(objectBearings["Lon"].toDouble());
+                if (objectBearings.contains("Alt")) bearings.m_alt.setNum(objectBearings["Alt"].toDouble());
+                if (objectBearings.contains("Bearing")) bearings.m_bearing.setNum(objectBearings["Bearing"].toDouble());
+                if (objectBearings.contains("Timestamp")) bearings.m_timeStamp =
                         QDateTime::fromMSecsSinceEpoch(static_cast<int64_t>(objectBearings["Timestamp"].toDouble())).
                                                           toUTC().toString("yyyy-MM-dd hh:mm:ss.zzz");
-                if(objectBearings.contains("Quality")) bearings.m_quality.setNum(objectBearings["Quality"].toDouble());
-                if(objectBearings.contains("Std")) bearings.m_std.setNum(objectBearings["Std"].toDouble());
-                if(objectBearings.contains("DroneNumber")) bearings.m_droneNumber = objectBearings["DroneNumber"].toString();
+                if (objectBearings.contains("Quality")) bearings.m_quality.setNum(objectBearings["Quality"].toDouble());
+                if (objectBearings.contains("Std")) bearings.m_std.setNum(objectBearings["Std"].toDouble());
+                if (objectBearings.contains("DroneNumber")) bearings.m_droneNumber = objectBearings["DroneNumber"].toString();
                 m_bearings.append(bearings);
             }
         }
-        if(obj.contains("LocalityName")) m_localityName = obj["LocalityName"].toString();
-        if(obj.contains("AreaName")) m_areaName = obj["AreaName"].toString();
-        if(obj.contains("BeginTime")) m_beginTime =
+        if (obj.contains("LocalityName")) m_localityName = obj["LocalityName"].toString();
+        if (obj.contains("AreaName")) m_areaName = obj["AreaName"].toString();
+        if (obj.contains("BeginTime")) m_beginTime =
                 QDateTime::fromMSecsSinceEpoch(static_cast<int64_t>(obj["BeginTime"].toDouble())).
                                                   toUTC().toString("yyyy-MM-dd hh:mm:ss.zzz");
-        if(obj.contains("EndTime")) m_endTime =
+        if (obj.contains("EndTime")) m_endTime =
                 QDateTime::fromMSecsSinceEpoch(static_cast<int64_t>(obj["EndTime"].toDouble())).
                                                   toUTC().toString("yyyy-MM-dd hh:mm:ss.zzz");
-        if(obj.contains("SourceLocations")) {
+        if (obj.contains("SourceLocations")) {
             QJsonArray arr = obj["SourceLocations"].toArray();
             for(int i = 0; i < arr.size(); i++) {
                 QJsonObject objectSourceLoc = arr[i].toObject();
                 SourceLocations source_locations;
-                if(objectSourceLoc.contains("Lat"))
+                if (objectSourceLoc.contains("Lat"))
                     source_locations.m_lat = objectSourceLoc["Lat"].toDouble();
-                if(objectSourceLoc.contains("Lon"))
+                if (objectSourceLoc.contains("Lon"))
                     source_locations.m_lon = objectSourceLoc["Lon"].toDouble();
-                if(objectSourceLoc.contains("Alt")) source_locations.m_alt = objectSourceLoc["Alt"].toDouble();
-                if(objectSourceLoc.contains("Heading")) source_locations.m_heading.setNum(objectSourceLoc["Heading"].toInt());
-                if(objectSourceLoc.contains("Speed")) source_locations.m_speed.setNum(objectSourceLoc["Speed"].toInt());
-                if(objectSourceLoc.contains("Timestamp")) source_locations.m_timeStamp =
+                if (objectSourceLoc.contains("Alt")) source_locations.m_alt = objectSourceLoc["Alt"].toDouble();
+                if (objectSourceLoc.contains("Heading")) source_locations.m_heading.setNum(objectSourceLoc["Heading"].toInt());
+                if (objectSourceLoc.contains("Speed")) source_locations.m_speed.setNum(objectSourceLoc["Speed"].toInt());
+                if (objectSourceLoc.contains("Timestamp")) source_locations.m_timeStamp =
                         QDateTime::fromMSecsSinceEpoch(static_cast<int64_t>(objectSourceLoc["Timestamp"].toDouble())).
                                                           toUTC().toString("yyyy-MM-dd hh:mm:ss.zzz");
-                if(objectSourceLoc.contains("StdEllipse")) {
+                if (objectSourceLoc.contains("StdEllipse")) {
                     QJsonObject objectPsk = objectSourceLoc["StdEllipse"].toObject();
-                    if(objectPsk.contains("a")) source_locations.m_a.setNum(objectPsk["a"].toDouble());
-                    if(objectPsk.contains("b")) source_locations.m_b.setNum(objectPsk["b"].toDouble());
-                    if(objectPsk.contains("phi")) source_locations.m_phi.setNum(objectPsk["phi"].toDouble());
+                    if (objectPsk.contains("a")) source_locations.m_a.setNum(objectPsk["a"].toDouble());
+                    if (objectPsk.contains("b")) source_locations.m_b.setNum(objectPsk["b"].toDouble());
+                    if (objectPsk.contains("phi")) source_locations.m_phi.setNum(objectPsk["phi"].toDouble());
                 }
                 m_sourceLoc.append(source_locations);
             }

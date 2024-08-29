@@ -6,7 +6,7 @@ namespace NEBULA
 {
 class RTMModule : public CommonModule
 {
-private:
+ private:
     // 发送RTM配置定时器
     QTimer* pCurrentSettingTimer;
     // 发送RTM功能定时器
@@ -15,7 +15,7 @@ private:
     QTimer* pCurrentStatusTimer;
     // RTM包类型集合
     QSet<qint16> pkgsRTM;
-public:
+ public:
     RTMModule(/* args */);
     ~RTMModule();
     // 接收数据统一接口
@@ -43,7 +43,7 @@ public:
     // 0x564,设置禁止IRI列表，必须用0x23去响应
     void recvSettingForbiddenIRIList(QByteArray& buff);
 
-public slots:
+ public slots:
     // 接收RTM专有协议数据
     void onReadRTMData(QByteArray& buff);
 };
