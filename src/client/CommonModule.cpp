@@ -208,6 +208,23 @@ void CommonModule::recvRequestTime(QByteArray buff) {
     qint64 timeOut = (0.5 * (delTime1 - delTime2) + this->m_iStampResult) / this->m_iN;
     this->m_iN++;
     this->m_iStampResult = timeOut + this->m_iStampResult;
+
+    if(timeOut > 200 || timeOut < -200)//授时
+    {
+        quint64 timeCurrentStamp = QDateTime::currentMSecsSinceEpoch() + timeOut; 
+
+        QDateTime dateTime = QDateTime::fromMSecsSinceEpoch(timeCurrentStamp);
+        qDebug() << "UTC Time: " + dateTime.toUTC().toString("yyyy-MM-dd hh:mm:ss.zzz");
+
+        // 设置本地系统时间
+        QString strDate = "date " + dateTime.toString("yyyy-MM-dd");
+        QString strTime = "time " + dateTime.toString("hh:mm:ss");
+        system(strDate.toStdString().c_str());
+        system(strTime.toStdString().c_str());
+
+        m_iN = 1;
+        m_iStampResult = 0;
+    }
 }
 
 // 0x5,发送模块位置
@@ -383,7 +400,7 @@ void CommonModule::sendModuleStatus() {
 }
 
 // 0x23,发送控制命令
-void CommonModule::sendControlledOrder() {
+void CommonModule::sendControlledOrder(uint8_t code) {
     this->genericHeader.packType = 0x23;
     this->genericHeader.dataSize = sizeof(OReqCtl);
     this->genericHeader.packIdx++;
@@ -493,7 +510,8 @@ void CommonModule::sendLogMsg(QString msg) {
     memcpy(data + len1, &logMsg, len2);
     memcpy(data + len1 + len2, &utf8Bytes, len3);
     QByteArray byteArray(data, len1 + len2 + len3);
-    qDebug() << "send 0x25 log msg: " << byteArray.toHex();
+    // qDebug() << "send 0x25 log msg: " << byteArray.toHex();
+    qDebug() << "send 0x25 log msg: " << msg;
     this->pTcpSocket->write(byteArray, len1 + len2 + len3);
     this->pTcpSocket->flush();
     free(data);
@@ -533,35 +551,35 @@ void CommonModule::sendNote2Operator(QString msg) {
 // 0x40,收到开始命令
 void CommonModule::recvStart(QByteArray buff) {
     // 发送受控状态0x23
-    this->sendControlledOrder();
+    this->sendControlledOrder(0);
     qDebug() << "recvStart";
 }
 
 // 0x41,收到关闭命令
 void CommonModule::recvStop(QByteArray buff) {
     // 发送受控状态0x23
-    this->sendControlledOrder();
+    this->sendControlledOrder(0);
     qDebug() << "recvStop";
 }
 
 // 0x42,收到重启命令
 void CommonModule::recvRestart(QByteArray buff) {
     // 发送受控状态0x23
-    this->sendControlledOrder();
+    this->sendControlledOrder(0);
     qDebug() << "recvRestart";
 }
 
 // 0x43,收到重置命令
 void CommonModule::recvReset(QByteArray buff) {
     // 发送受控状态0x23
-    this->sendControlledOrder();
+    this->sendControlledOrder(0);
     qDebug() << "recvReset";
 }
 
 // 0x44,收到更新命令
 void CommonModule::recvUpdate(QByteArray buff) {
     // 发送受控状态0x23
-    this->sendControlledOrder();
+    this->sendControlledOrder(0);
     qDebug() << "recvUpdate";
 }
 
@@ -570,28 +588,28 @@ void CommonModule::recvNote4Operator(QByteArray buff) {
     QByteArray stringData = buff.right(buff.size() - sizeof(OTimeReq));
     QString msg = QString::fromUtf8(stringData);
     // 发送受控状态0x23
-    this->sendControlledOrder();
+    this->sendControlledOrder(0);
     qDebug() << "recive the msg from operator: " << msg;
 }
 
 // 0x47,收到设置语言
 void CommonModule::recvSettingLang(QByteArray buff) {
     // 发送受控状态0x23
-    this->sendControlledOrder();
+    this->sendControlledOrder(0);
     qDebug() << "recive the setting language";
 }
 
 // 0x48,收到无线电与卫星导航
 void CommonModule::recvRadioAndSatellite(QByteArray buff){
     // 发送受控状态0x23
-    this->sendControlledOrder();
+    this->sendControlledOrder(0);
     qDebug() << "recive radio and statllite";
 }
 
 // 0x49,收到设置时间
 void CommonModule::recvSettingTime(QByteArray buff) {
     // 发送受控状态0x23
-    this->sendControlledOrder();
+    this->sendControlledOrder(0);
 
     OTimeReq oTimeReq;
     memcpy(&oTimeReq, buff.data(), sizeof(OTimeReq));
@@ -602,7 +620,7 @@ void CommonModule::recvSettingTime(QByteArray buff) {
 // 0x4A,收到设置模块坐标
 void CommonModule::recvModuleLocation(QByteArray buff) {
     // 发送受控状态0x23
-    this->sendControlledOrder();
+    this->sendControlledOrder(0);
     // 发送模块位置0x5
     this->sendModuleLocation();
 }
@@ -610,7 +628,7 @@ void CommonModule::recvModuleLocation(QByteArray buff) {
 // 0x4B,设置自定义参数的值
 void CommonModule::recvCustomizedParam(QByteArray buff) {
     // 发送受控状态0x23
-    this->sendControlledOrder();
+    this->sendControlledOrder(0);
     // 发送0x24模块状态
     this->sendModuleStatus();
 }

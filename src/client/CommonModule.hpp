@@ -2,17 +2,14 @@
 #define _CommonModule_H_
 
 #include <QObject>
-#include <QCoreApplication>
 #include <QTcpSocket>
 #include <QDebug>
 #include <QTimer>
 #include <QHostAddress>
-#include <QThread>
 #include <QDateTime>
 #include <QFile>
 #include <QSettings>
 #include <QTextCodec>
-#include <iostream>
 #include "NebulaController.hpp"
 #include "CommonHeader.hpp"
 // #include "Logger.hpp"
@@ -59,7 +56,7 @@ public:
     void sendModuleStatus();
 
     // 0x23,发送控制命令
-    void sendControlledOrder();
+    void sendControlledOrder(uint8_t code);
     // 0x27,发生扩展命令
     void sendExtendedOrder(QString msg);
     

@@ -230,20 +230,28 @@ struct OSubPosobilRTR22 {
    float f_EpsSize;
 };
 
+// 0x561,更改RTM设置
+struct OUpdateRTMSetting {
+    uint32_t n_range : 8;
+    uint32_t rezerv  : 24;
+    float f_Freq;
+    float f_DelFreq;
+};
+
+// 0x564,设置禁用IRI列表
+struct OSetBanIRIlist {
+    uint32_t n_trans : 8;
+    uint32_t rezerv  : 24;
+    float f_Freq;
+    float f_DelFreq;
+};
+
 // 0x828，禁止IRI列表
 struct OBanIRI {
-  float f_Freq;
-  float f_DelFreq;
-  uint n_Numb;
-  OBanIRI() {
-    f_Freq = f_DelFreq = 0.f;
-    n_Numb = 0;
-  }
-  OBanIRI(uint nNumb, float fFreq, float fDelFreq) {
-      f_Freq = fFreq;
-      f_DelFreq = fDelFreq;
-      n_Numb = nNumb;
-  }
+    uint16_t n_Numb;
+    uint16_t rezerv;
+    float f_Freq;
+    float f_DelFreq;
 };
 
 // 0x829，当前无线电环境信息

@@ -44,7 +44,7 @@ void RTMModule::checkStatus() {
         if(this->pCurrentSettingTimer->isActive())  this->pCurrentSettingTimer->stop();
 
         if(this->isModuleConfigure) this->isModuleConfigure = false;
-        if(this->isModuleLocation) this->isModuleLocation   = false;
+        if(this->isModuleLocation)  this->isModuleLocation   = false;
         return;
     };
     
@@ -109,17 +109,21 @@ void RTMModule::onReadRTMData(QByteArray& buff) {
 // 0x561,收到更改RTM设置
 void RTMModule::recvChangingRTMSettings(QByteArray buff){
     this->sendLogMsg("recv changing RTM settings");
-    qDebug() << "recv changing RTM settings";
-    // 必须发送0x23作为响应
-    this->sendControlledOrder();
+    OUpdateRTMSetting oUpdateRTMSetting;
+    uint8_t len1 = sizeof(GenericHeader);
+    uint8_t len2 = sizeof(OUpdateRTMSetting);
+    memcpy(&oUpdateRTMSetting, buff.data() + len1, len2);
+    QByteArray byteArray(reinterpret_cast<char*>(&oUpdateRTMSetting), len2);
+    qDebug() << "0x561 msg body: " << byteArray.toHex();
+    // 发送0x23作为响应
+    this->sendControlledOrder(0);
 }
 
 // 0x563,请求禁止IRI列表
 void RTMModule::recvRequestForbiddenIRIList(QByteArray buff){
     this->sendLogMsg("recv request forbidden IRI list");
-    qDebug() << "recv request forbidden IRI list";
-    // 必须发送0x23作为响应
-    this->sendControlledOrder();
+    // 发送0x23作为响应
+    this->sendControlledOrder(0);
     // 如果影响代码正常，则发送0x828作为响应
     this->sendForbiddenIRIList();
 }
@@ -127,9 +131,14 @@ void RTMModule::recvRequestForbiddenIRIList(QByteArray buff){
 // 0x564,设置禁止IRI列表
 void RTMModule::recvSettingForbiddenIRIList(QByteArray buff){
     this->sendLogMsg("recv setting forbidden IRI list");
-    qDebug() << "recv setting forbidden IRI list";
-    // 必须发送0x23作为响应
-    this->sendControlledOrder();
+    OSetBanIRIlist oSetBanIRIlist;
+    uint8_t len1 = sizeof(GenericHeader);
+    uint8_t len2 = sizeof(OSetBanIRIlist);
+    memcpy(&oSetBanIRIlist, buff.data() + len1, len2);
+    QByteArray byteArray(reinterpret_cast<char*>(&oSetBanIRIlist), len2);
+    qDebug() << "0x564 msg body: " << byteArray.toHex();
+    // 发送0x23作为响应
+    this->sendControlledOrder(0);
 }
 
 // 0x822,发送方位标记

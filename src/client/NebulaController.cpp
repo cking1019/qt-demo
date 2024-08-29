@@ -4,7 +4,7 @@ namespace NEBULA
 {
 NebulaController::NebulaController(/* args */)
 {
-  
+    this->m_pUdpSock2Nebula = new QUdpSocket();
 }
 
 NebulaController::~NebulaController()

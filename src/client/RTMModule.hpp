@@ -1,7 +1,6 @@
 #ifndef _RTMModule_H_
 #define _RTMModule_H_
 #include "CommonModule.hpp"
-#include <QSet>
 
 namespace NEBULA
 {

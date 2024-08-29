@@ -14,7 +14,6 @@ class NebulaController : public QObject
 {
   Q_OBJECT
 private:
-  /* data */
   QUdpSocket* m_pUdpSock2Nebula;
 public:
   NebulaController(/* args */);

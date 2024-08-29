@@ -7,7 +7,6 @@ namespace NEBULA
 class PRUEModule : public CommonModule
 {
 private:
-    /* data */
 public:
     PRUEModule(/* args */);
     ~PRUEModule();
