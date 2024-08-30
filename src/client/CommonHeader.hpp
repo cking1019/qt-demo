@@ -30,7 +30,7 @@ enum ServerDealInfo {
     serverAlter = 0x44,     // 修改
     serverSendNote = 0x45,  // 发送消息
 };
-// 通用头
+// 通用头,424552ff 00000000 00000000 00000000
 struct GenericHeader
 {
     uint32_t sender   : 24;  // 发送者ID
@@ -95,59 +95,66 @@ struct ModuleGeoLocation {
 
 // 0x21,设备np状态
 struct ONPStatus {
-    quint32 IDElem  : 16;
-    quint32 status  : 4;
-    quint32 workF1  : 4;
-    quint32 local   : 1;
-    quint32 isImit  : 1;
-    quint32 reserve : 6;
+    uint32_t time1;
+    uint32_t time2;
+
+    uint32_t IDElem  : 16;
+    uint32_t status  : 4;
+    uint32_t workF1  : 4;
+    uint32_t local   : 1;
+    uint32_t isImit  : 1;
+    uint32_t reserve : 6;
 };
 
 // 0x22,设备cp状态
 struct OCPStatus {
-    quint32 IDParam : 32;
+    uint32_t time1;
+    uint32_t time2;
 
-    quint32 status  : 8;
-    quint32 size    : 8;
-    quint32 isNewStatus : 1;
-    quint32 isNewValue  : 1;
-    quint32 reserve     : 14;
+    uint32_t IDParam : 32;
+
+    uint32_t status  : 8;
+    uint32_t size    : 8;
+    uint32_t isNewStatus : 1;
+    uint32_t isNewValue  : 1;
+    uint32_t reserve     : 14;
 };
 
 // 0x23,控制指令;0x27,扩展指令
 struct OReqCtl {
-    quint32 n_TimeReq1;
-    quint32 n_TimeReq2;
-    quint32 n_id_Com:16;
-    quint32 n_code:16;
+    uint32_t n_TimeReq1;
+    uint32_t n_TimeReq2;
+
+    uint32_t n_id_Com:16;
+    uint32_t n_code:16;
 };
 
 // 0x24,设备状态
 struct OModuleStatus {
-    quint32 time1;
-    quint32 time2;
+    uint32_t time1;
+    uint32_t time2;
 
-    quint32 status : 3;
-    quint32 work   : 3;
-    quint32 isRGDV : 1;
-    quint32 isRAF  : 1;
-    quint32 isLocal : 1;
-    quint32 isImit  : 1;
-    quint32 hasTP : 1;
-    quint32 isTP  : 1;
-    quint32 isWP  : 1;
-    quint32 isTPValid : 1;
-    quint32 isWpValid : 1;
-    quint32 statusTwp : 1;
-    quint32 mode : 16;
+    uint32_t status : 3;
+    uint32_t work   : 3;
+    uint32_t isRGDV : 1;
+    uint32_t isRAF  : 1;
+    uint32_t isLocal : 1;
+    uint32_t isImit  : 1;
+    uint32_t hasTP : 1;
+    uint32_t isTP  : 1;
+    uint32_t isWP  : 1;
+    uint32_t isTPValid : 1;
+    uint32_t isWpValid : 1;
+    uint32_t statusTwp : 1;
+    uint32_t mode : 16;
 
-    quint32 reserve;
+    uint32_t reserve;
 };
 
 // 0x25,消息日志
 struct LogMsg {
-    quint32 time1;
-    quint32 time2;
+    uint32_t time1;
+    uint32_t time2;
 
     quint16 IDParam : 16;
     quint8 type : 8;
@@ -155,11 +162,10 @@ struct LogMsg {
 };
 
 
-// 消息体的头
+// 时间头
 struct OTimeReq {
-    GenericHeader o_Header;
-    quint32 n_TimeReq1;
-    quint32 n_TimeReq2;
+    uint32_t time1;
+    uint32_t time2;
 };
 
 
@@ -193,16 +199,16 @@ struct ServerUpdate {
 // 0x822，方位标记
 struct OBearingMark
 {
-    GenericHeader o_Header;
-    quint32 idxCeilVOI:16;
-    quint32 iReserve:16;
-    quint32 idxCeilSPP;
-    quint32 idxPoint:8;
-    quint32 typeCeilSPP:8;
-    quint32 typeChannel:8;
-    quint32 typeSignal:8;
-    quint32 timePel1;
-    quint32 timePel2;
+    GenericHeader header;
+    uint32_t idxCeilVOI:16;
+    uint32_t iReserve:16;
+    uint32_t idxCeilSPP;
+    uint32_t idxPoint:8;
+    uint32_t typeCeilSPP:8;
+    uint32_t typeChannel:8;
+    uint32_t typeSignal:8;
+    uint32_t timePel1;
+    uint32_t timePel2;
     float azim;
     float elev;
     float range;
@@ -215,18 +221,18 @@ struct OBearingMark
 // 0x823，RTM设置
 struct OSubRezhRTR20 {
     // 1
-    quint32 n_Cnt:8;
-    quint32 n_Reserv:24;
+    uint32_t n_Cnt:8;
+    uint32_t n_Reserv:24;
     // 2
     float f_CurAz;
 };
 
 // 0x825,RTM功能 52454201 02022f00 40000000 25087a01 00000000 00000000 00000000 f87f0000 00000000
 struct OSubPosobilRTR22 {
-    quint32 n_IsRotate:1;
-    quint32 n_MaxTask:7;
-    quint32 n_MaxSubDiap:8;
-    quint32 n_Rezerv:16;
+    uint32_t n_IsRotate:1;
+    uint32_t n_MaxTask:7;
+    uint32_t n_MaxSubDiap:8;
+    uint32_t n_Rezerv:16;
     float f_AzSize;
     float f_EpsSize;
     float f_maxBand;
@@ -251,20 +257,24 @@ struct OSetBanIRIlist {
 
 // 0x828，禁止IRI列表
 struct OBanIRI {
-    uint16_t n_Numb;
-    uint16_t rezerv;
+    uint32_t n_Numb : 16;
+    uint32_t rezerv : 16;
+
     float f_Freq;
     float f_DelFreq;
 };
 
 // 0x829，当前无线电环境信息
 struct OSubRadioTime {
-    qint64 n_Time;
-    quint32 n_Num:24;
-    quint32 n_Type:8;
+    uint64_t n_Time;
+
+    uint32_t n_Num:24;
+    uint32_t n_Type:8;
+
     float f_FrBegin;
     float f_FrStep;
-    uint n_Cnt;
+
+    uint8_t n_Cnt;
 };
 
 
@@ -275,6 +285,7 @@ struct OSendTrapFixed {
     uint32_t taskREB:8;
     uint32_t taskGeo:8;
     uint32_t reserve:16;
+
     float curAzREB;
     float curEpsREB;
     float kGainREB;
@@ -287,6 +298,7 @@ struct OTrapFunc {
     uint32_t numDiap2 : 8;
     uint32_t reserve : 7;
     uint32_t dTgeo : 8;
+
     float maxPowREB;
     float dAzREB;
     float dElevREB;
@@ -305,7 +317,8 @@ struct OTrapFunc {
 struct OTrapBanSector {
     uint32_t time1;
     uint32_t time2;
-    uint32_t num : 8;
+
+    uint32_t num     : 8;
     uint32_t reserve : 24;
 
     uint32_t type      : 1;
@@ -333,9 +346,9 @@ struct OTrapRadiationBan {
 // 0x601,接收更改当前PRUE设置
 struct ORecvTrapFixed
 {
-    quint32 i_Num:8;
-    quint32 taskREB:8;
-    quint32 reserve:16;
+    uint32_t i_Num:8;
+    uint32_t taskREB:8;
+    uint32_t reserve:16;
     float azREB;
     float elevREB;
     float kGainREB;

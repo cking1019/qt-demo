@@ -1,4 +1,10 @@
 project(Nebula.RelayModuleCK)
+message("==================================================")
+message("正在构建："${PROJECT_NAME})
+message("构建目录: "${CMAKE_CURRENT_BINARY_DIR})
+message("源码路径："${CMAKE_CURRENT_SOURCE_DIR})
+message("==================================================")
+
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
 )

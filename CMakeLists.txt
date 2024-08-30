@@ -13,10 +13,8 @@ message(STATUS "QT_VERSION_NUM is: $ENV{QT_VERSION_NUM}")
 # Linux下配置Qt非apt安装的Qt环境，不然找不到Qt模块
 if (DEFINED ENV{QT_VERSION_NUM})
     set(QT_VERSION $ENV{QT_VERSION_NUM} CACHE INTERNAL "Qt5 version")
-    message(STATUS "当前Qt版本号为: $ENV{QT_VERSION_NUM}")
 else ()
     set(QT_VERSION $ENV{QT_VERSION_NUM} CACHE INTERNAL "Qt5 version")
-    message(STATUS "当前Qt版本号为: $ENV{QT_VERSION_NUM}")
 endif ()
 
 
@@ -49,8 +47,8 @@ endif ()
 find_package(Qt5 COMPONENTS Core Network REQUIRED)
 
 add_subdirectory(src/client)
-add_subdirectory(src/server)
+add_subdirectory(src/test)
 
 add_custom_target(${PROJECT_NAME} ALL 
-                    DEPENDS Nebula.RelayModuleCK server 
+                    DEPENDS Nebula.RelayModuleCK test 
                     COMMENT "cmake is building target")

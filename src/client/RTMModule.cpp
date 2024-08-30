@@ -78,12 +78,12 @@ void RTMModule::checkStatus() {
 void RTMModule::onRecvData() {
     QByteArray buff = this->pTcpSocket->readAll();
     memcpy(&this->genericHeader, buff.data(), sizeof(GenericHeader));
-    qDebug() << "===============================================================";
+    qDebug("===================================================================");
     qDebug() << "received data from server: " << buff.toHex();
     qDebug("the size of pkg: %d", buff.size());
     qDebug("the type of pkg: %x", this->genericHeader.packType);
     qDebug("the type of pkg: %x", this->genericHeader.sender);
-    qDebug("===============================================================");
+    qDebug("===================================================================");
     // 策略模式，根据包类型决定转发至哪个函数
     if (this->pkgsComm.contains(this->genericHeader.packType)) {
         this->onReadCommData(buff);
@@ -174,14 +174,14 @@ void RTMModule::sendBearingMarker() {
     oBearingMark.Pow_dBm = 0;
     oBearingMark.SNR_dB = 0;
     // 消息头
-    oBearingMark.o_Header = this->genericHeader;
+    oBearingMark.header = this->genericHeader;
 
     quint8 len1 = sizeof(OBearingMark);
     char* data = (char*)malloc(len1);
     memcpy(data, &oBearingMark, len1);
     QByteArray byteArray(data, len1);
-    qDebug() << "send 0x822 bearing marker to server: " << byteArray.toHex();
-    this->pTcpSocket->write(byteArray, len1);
+    qDebug() << "send 0x822: " << byteArray.toHex();
+    this->pTcpSocket->write(byteArray);
     this->pTcpSocket->flush();
     free(data);
 }
@@ -219,9 +219,9 @@ void RTMModule::sendRTMSettings() {
     memcpy(data, &this->genericHeader, len1);
     memcpy(data + len1, &oSubRezhRTR20, len2);
     QByteArray byteArray(data, len1 + len2);
-    qDebug() << "send 0x823 RTM settings to server: " << byteArray.toHex();
+    qDebug() << "send 0x823: " << byteArray.toHex();
     printStruct(oSubRezhRTR20);
-    this->pTcpSocket->write(byteArray, len1 + len2);
+    this->pTcpSocket->write(byteArray);
     this->pTcpSocket->flush();
     free(data);
 }
@@ -248,8 +248,8 @@ void RTMModule::sendRTMFunction() {
     memcpy(data, &this->genericHeader, len1);
     memcpy(data + len1, &oSubPosobilRTR22, len2);
     QByteArray byteArray(data, len1 + len2);
-    qDebug() << "send 0x825 RTM function to server: " << byteArray.toHex();
-    this->pTcpSocket->write(byteArray, len1 + len2);
+    qDebug() << "send 0x825: " << byteArray.toHex();
+    this->pTcpSocket->write(byteArray);
     this->pTcpSocket->flush();
     free(data);
 }
@@ -262,9 +262,9 @@ void RTMModule::sendBearingAndRoute() {
     this->genericHeader.checkSum = calcChcekSum((char*)&this->genericHeader, sizeof(GenericHeader) - 2);
 
     QString jsonStr = "{'Number':12685126,'DateTime':'2018-09-28 13:11:37','StartPoint':{'Latitude':55.12345,'Longitude':38.12345,'Altitude':155.12},'TypeBLA':{'InfoName':'无人机类型','InfoValue':'phantom-3'}";
-    QByteArray byteArray(jsonStr.toUtf8());
-    qDebug() << "send 0x827 bearing and route to server: " << byteArray.toHex();
-    this->pTcpSocket->write(byteArray, byteArray.size());
+    QByteArray byteArray = jsonStr.toUtf8();
+    qDebug() << "send 0x827: " << byteArray.toHex();
+    this->pTcpSocket->write(byteArray);
     this->pTcpSocket->flush();
 }
 
@@ -287,8 +287,8 @@ void RTMModule::sendForbiddenIRIList() {
     memcpy(data, &this->genericHeader, len1);
     memcpy(data + len1, &oBanIRI, len2);
     QByteArray byteArray(data, len1 + len2);
-    qDebug() << "send 0x828 forbidden IRI list to server: " << byteArray.toHex();
-    this->pTcpSocket->write(byteArray, len1 + len2);
+    qDebug() << "send 0x828: " << byteArray.toHex();
+    this->pTcpSocket->write(byteArray);
     this->pTcpSocket->flush();
     free(data);
 }
@@ -315,8 +315,8 @@ void RTMModule::sendWirelessEnvInfo() {
     memcpy(data, &this->genericHeader, len1);
     memcpy(data + len1, &oSubRadioTime, len2);
     QByteArray byteArray(data, len1 + len2);
-    qDebug() << "send 0x829 wireless env info to server: " << byteArray.toHex();
-    this->pTcpSocket->write(byteArray, len1 + len2);
+    qDebug() << "send 0x829: " << byteArray.toHex();
+    this->pTcpSocket->write(byteArray);
     this->pTcpSocket->flush();
     free(data);
 }

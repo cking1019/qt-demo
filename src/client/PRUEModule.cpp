@@ -178,8 +178,8 @@ void PRUEModule::sendPRUESettings() {
     memcpy(data, &this->genericHeader, len1);
     memcpy(data + len1, &oSendTrapFixed, len2);
     QByteArray byteArray(data, len1 + len2);
-    qDebug() << "send 0xD21 PRUE settings to server: " << byteArray.toHex();
-    this->pTcpSocket->write(byteArray, len1 + len2);
+    qDebug() << "send 0xD21: " << byteArray.toHex();
+    this->pTcpSocket->write(byteArray);
     this->pTcpSocket->flush();
     free(data);
 }
@@ -217,8 +217,8 @@ void PRUEModule::sendPRUEFunction() {
     memcpy(data, &this->genericHeader, len1);
     memcpy(data + len1, &oTrapFunc, len2);
     QByteArray byteArray(data, len1 + len2);
-    qDebug() << "send 0xD22 PRUE function to server: " << byteArray.toHex();
-    this->pTcpSocket->write(byteArray, len1 + len2);
+    qDebug() << "send 0xD22: " << byteArray.toHex();
+    this->pTcpSocket->write(byteArray);
     this->pTcpSocket->flush();
     free(data);
 }
@@ -256,8 +256,8 @@ void PRUEModule::sendInstalledBanSector() {
     memcpy(data, &this->genericHeader, len1);
     memcpy(data + len1, &oTrapBanSector, len2);
     QByteArray byteArray(data, len1 + len2);
-    qDebug() << "send 0xD01 PRUE settings to server: " << byteArray.toHex();
-    this->pTcpSocket->write(byteArray, len1 + len2);
+    qDebug() << "send 0xD01: " << byteArray.toHex();
+    this->pTcpSocket->write(byteArray);
     this->pTcpSocket->flush();
     free(data);
 }
