@@ -1,11 +1,10 @@
-#ifndef _RTMModule_H_
-#define _RTMModule_H_
+#ifndef _RTMMODULE_H_
+#define _RTMMODULE_H_
+
 #include "CommonModule.hpp"
 
-namespace NEBULA
-{
-class RTMModule : public CommonModule
-{
+namespace NEBULA {
+class RTMModule : public CommonModule {
  private:
     // 发送RTM配置定时器
     QTimer* pCurrentSettingTimer;
@@ -37,15 +36,15 @@ class RTMModule : public CommonModule
     void sendWirelessEnvInfo();
 
     // 0x561,收到更改RTM设置，必须用0x23去响应
-    void recvChangingRTMSettings(QByteArray& buff);
+    void recvChangingRTMSettings(const QByteArray& buff);
     // 0x563,请求禁止IRI列表，必须用0x23去响应，如果没有错，还得加上0x828响应
-    void recvRequestForbiddenIRIList(QByteArray& buff);
+    void recvRequestForbiddenIRIList(const QByteArray& buff);
     // 0x564,设置禁止IRI列表，必须用0x23去响应
-    void recvSettingForbiddenIRIList(QByteArray& buff);
+    void recvSettingForbiddenIRIList(const QByteArray& buff);
 
  public slots:
     // 接收RTM专有协议数据
     void onReadRTMData(QByteArray& buff);
 };
-}
-#endif // _RTMModule_H_
+}  // namespace NEBULA
+#endif // _RTMMODULE_H_

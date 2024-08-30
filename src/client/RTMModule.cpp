@@ -3,6 +3,8 @@
 namespace NEBULA
 {
 RTMModule::RTMModule() {
+    // RTM的发送者标识
+    this->genericHeader.sender = 0x50454C;
     this->pCurrentSettingTimer = new QTimer();
     this->pCurrentFunctionTimer = new QTimer();
     this->pCurrentStatusTimer = new QTimer();
@@ -44,7 +46,7 @@ void RTMModule::checkStatus() {
         if (this->pCurrentSettingTimer->isActive())  this->pCurrentSettingTimer->stop();
 
         if (this->isModuleConfigure) this->isModuleConfigure = false;
-        if (this->isModuleLocation)  this->isModuleLocation   = false;
+        if (this->isModuleLocation)  this->isModuleLocation  = false;
         return;
     };
 
@@ -78,10 +80,10 @@ void RTMModule::onRecvData() {
     memcpy(&this->genericHeader, buff.data(), sizeof(GenericHeader));
     qDebug() << "===============================================================";
     qDebug() << "received data from server: " << buff.toHex();
-    qDebug() << "the size of pkg: " << buff.size();
-    qDebug() << "the type of pkg: " << QString::number(this->genericHeader.packType, 16);
-    qDebug() << "the sender is: " << QString::number(this->genericHeader.sender, 16);
-    qDebug() << "===============================================================";
+    qDebug("the size of pkg: %d", buff.size());
+    qDebug("the type of pkg: %x", this->genericHeader.packType);
+    qDebug("the type of pkg: %x", this->genericHeader.sender);
+    qDebug("===============================================================");
     // 策略模式，根据包类型决定转发至哪个函数
     if (this->pkgsComm.contains(this->genericHeader.packType)) {
         this->onReadCommData(buff);
@@ -98,7 +100,7 @@ void RTMModule::onReadRTMData(QByteArray& buff) {
         case 0x563: this->recvRequestForbiddenIRIList(buff); break;
         case 0x564: this->recvSettingForbiddenIRIList(buff); break;
         default: {
-            QString msg = "this is unknown pkg 0x" + this->genericHeader.packType;
+            QString msg = "this is unknown pkg 0x" + QString::number(this->genericHeader.packType, 16);
             this->sendLogMsg(msg);
             this->sendNote2Operator(msg);
             break;
@@ -107,7 +109,7 @@ void RTMModule::onReadRTMData(QByteArray& buff) {
 }
 
 // 0x561,收到更改RTM设置
-void RTMModule::recvChangingRTMSettings(QByteArray& buff){
+void RTMModule::recvChangingRTMSettings(const QByteArray& buff) {
     this->sendLogMsg("recv changing RTM settings");
     OUpdateRTMSetting oUpdateRTMSetting;
     uint8_t len1 = sizeof(GenericHeader);
@@ -115,15 +117,15 @@ void RTMModule::recvChangingRTMSettings(QByteArray& buff){
     memcpy(&oUpdateRTMSetting, buff.data() + len1, len2);
     QByteArray byteArray(reinterpret_cast<char*>(&oUpdateRTMSetting), len2);
     qDebug() << "0x561 msg body: " << byteArray.toHex();
-    // 发送0x23作为响应
+    // 执行操作代码响应0x23
     uint8_t code = 0;
     this->sendControlledOrder(code);
 }
 
 // 0x563,请求禁止IRI列表
-void RTMModule::recvRequestForbiddenIRIList(QByteArray& buff){
+void RTMModule::recvRequestForbiddenIRIList(const QByteArray& buff) {
     this->sendLogMsg("recv request forbidden IRI list");
-    // 发送0x23作为响应
+    // 执行操作代码响应0x23
     uint8_t code = 0;
     this->sendControlledOrder(code);
     // 如果响应代码正常，则发送0x828作为响应
@@ -131,7 +133,7 @@ void RTMModule::recvRequestForbiddenIRIList(QByteArray& buff){
 }
 
 // 0x564,设置禁止IRI列表
-void RTMModule::recvSettingForbiddenIRIList(QByteArray& buff){
+void RTMModule::recvSettingForbiddenIRIList(const QByteArray& buff) {
     this->sendLogMsg("recv setting forbidden IRI list");
     OSetBanIRIlist oSetBanIRIlist;
     uint8_t len1 = sizeof(GenericHeader);
@@ -139,18 +141,19 @@ void RTMModule::recvSettingForbiddenIRIList(QByteArray& buff){
     memcpy(&oSetBanIRIlist, buff.data() + len1, len2);
     QByteArray byteArray(reinterpret_cast<char*>(&oSetBanIRIlist), len2);
     qDebug() << "0x564 msg body: " << byteArray.toHex();
-    // 发送0x23作为响应,默认返回0为执行成功
+    // 执行操作代码响应0x23,默认返回0为执行成功
     uint8_t code = 0;
     this->sendControlledOrder(code);
 }
 
-// 0x822,发送方位标记
+// 0x822,发送方位标记,需要接收地图传来的数据，作为Nebula的槽函数，并由Nebula信号emit出去
 void RTMModule::sendBearingMarker() {
     this->genericHeader.packType = 0x822;
     this->genericHeader.dataSize = sizeof(OBearingMark);
     this->genericHeader.packIdx++;
-    this->genericHeader.checkSum = calcChcekSum((char*)&this->genericHeader, sizeof(GenericHeader) - 2);
-    
+    // this->genericHeader.checkSum = calcChcekSum((char*)&this->genericHeader, sizeof(GenericHeader) - 2);
+    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
+
     // 消息体
     OBearingMark oBearingMark;
     oBearingMark.idxCeilSPP = 0xffff;
@@ -183,6 +186,20 @@ void RTMModule::sendBearingMarker() {
     free(data);
 }
 
+template <class T>
+void printStruct(const T& s)
+{
+    const char* structName = typeid(T).name(); // 获取结构体名称
+    qDebug() << "Printing information for struct: " << structName;
+
+    // 使用位操作获取位字段的值
+    for (int i = 0; i < sizeof(T); i += sizeof(int)) {
+        int memberValue = 0;
+        memcpy(&memberValue, reinterpret_cast<const char*>(&s) + i, sizeof(int));
+        qDebug() << "Member" << i << ":" << memberValue;
+    }
+}
+
 // 0x823,发送当前RTM设置
 void RTMModule::sendRTMSettings() {
     this->genericHeader.packType = 0x823;
@@ -203,6 +220,7 @@ void RTMModule::sendRTMSettings() {
     memcpy(data + len1, &oSubRezhRTR20, len2);
     QByteArray byteArray(data, len1 + len2);
     qDebug() << "send 0x823 RTM settings to server: " << byteArray.toHex();
+    printStruct(oSubRezhRTR20);
     this->pTcpSocket->write(byteArray, len1 + len2);
     this->pTcpSocket->flush();
     free(data);

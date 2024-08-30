@@ -114,9 +114,8 @@ struct OCPStatus {
     quint32 reserve     : 14;
 };
 
-// 0x23,控制指令
+// 0x23,控制指令;0x27,扩展指令
 struct OReqCtl {
-    GenericHeader o_Header;
     quint32 n_TimeReq1;
     quint32 n_TimeReq2;
     quint32 n_id_Com:16;
@@ -147,10 +146,14 @@ struct OModuleStatus {
 
 // 0x25,消息日志
 struct LogMsg {
+    quint32 time1;
+    quint32 time2;
+
     quint16 IDParam : 16;
     quint8 type : 8;
     quint8 reserve : 8;
 };
+
 
 // 消息体的头
 struct OTimeReq {
@@ -218,7 +221,7 @@ struct OSubRezhRTR20 {
     float f_CurAz;
 };
 
-// 0x825,RTM功能
+// 0x825,RTM功能 52454201 02022f00 40000000 25087a01 00000000 00000000 00000000 f87f0000 00000000
 struct OSubPosobilRTR22 {
     quint32 n_IsRotate:1;
     quint32 n_MaxTask:7;
@@ -226,6 +229,8 @@ struct OSubPosobilRTR22 {
     quint32 n_Rezerv:16;
     float f_AzSize;
     float f_EpsSize;
+    float f_maxBand;
+    float f_minBand;
 };
 
 // 0x561,更改RTM设置
@@ -296,7 +301,7 @@ struct OTrapFunc {
     float maxDFreq;
 };
 
-// 0xD01 & 0x201
+// 0xD01 & 0x201,发送已安装的辐射禁止扇区或接收设置辐射禁止扇区
 struct OTrapBanSector {
     uint32_t time1;
     uint32_t time2;
@@ -336,7 +341,5 @@ struct ORecvTrapFixed
     float kGainREB;
 };
 
-
-
 #pragma pack(pop)
-#endif // _COMMONHEADER_H_
+#endif  // _COMMONHEADER_H_

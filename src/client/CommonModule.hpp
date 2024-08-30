@@ -1,5 +1,6 @@
-#ifndef _CommonModule_H_
-#define _CommonModule_H_
+#ifndef _COMMONMODULE_H_
+#define _COMMONMODULE_H_
+
 
 #include <QObject>
 #include <QTcpSocket>
@@ -14,10 +15,10 @@
 #include "CommonHeader.hpp"
 // #include "Logger.hpp"
 #define RELAY_PATH "./conf/module.ini"
-using namespace std;
 
 
 namespace NEBULA {
+
 quint16 calcChcekSum(const char* sMess,int nCnt);
 
 struct Cfg{
@@ -56,8 +57,6 @@ class CommonModule : public QObject {
 
     // 0x23,发送控制命令
     void sendControlledOrder(uint8_t code);
-    // 0x27,发生扩展命令
-    void sendExtendedOrder(QString msg);
 
     // 0x25,发送消息日志
     void sendLogMsg(QString msg);
@@ -65,34 +64,34 @@ class CommonModule : public QObject {
     void sendNote2Operator(QString msg);
 
     // 0x2,确定注册
-    void recvRegister(QByteArray buff);
+    void recvRegister(const QByteArray& buff);
     // 0x4,确定对时
-    void recvRequestTime(QByteArray buff);
+    void recvRequestTime(const QByteArray& buff);
 
     // 0x40,收到开始命令
-    void recvStart(QByteArray buff);
+    void recvStart(const QByteArray& buff);
     // 0x41,收到关闭命令
-    void recvStop(QByteArray buff);
+    void recvStop(const QByteArray& buff);
     // 0x42,收到重启命令
-    void recvRestart(QByteArray buff);
+    void recvRestart(const QByteArray& buff);
     // 0x43,收到重置命令
-    void recvReset(QByteArray buff);
+    void recvReset(const QByteArray& buff);
     // 0x44,收到更新命令
-    void recvUpdate(QByteArray buff);
+    void recvUpdate(const QByteArray& buff);
     // 0x45,收到操作员的短信
-    void recvNote4Operator(QByteArray buff);
+    void recvNote4Operator(const QByteArray& buff);
     // 0x46,收到请求模块模块原理图
-    void recvRequestModuleFigure(QByteArray buff);
+    void recvRequestModuleFigure(const QByteArray& buff);
     // 0x47,收到设置语言
-    void recvSettingLang(QByteArray buff);
+    void recvSettingLang(const QByteArray& buff);
     // 0x48,收到无线电与卫星导航
-    void recvRadioAndSatellite(QByteArray buff);
+    void recvRadioAndSatellite(const QByteArray& buff);
     // 0x49,收到设置时间
-    void recvSettingTime(QByteArray buff);
+    void recvSettingTime(const QByteArray& buff);
     // 0x4A,收到设置模块坐标
-    void recvModuleLocation(QByteArray buff);
+    void recvModuleLocation(const QByteArray& buff);
     // 0x4B,收到设置自定义参数
-    void recvCustomizedParam(QByteArray buff);
+    void recvCustomizedParam(const QByteArray& buff);
 
     // 模块配置文件
     Cfg cfg;
@@ -131,14 +130,15 @@ class CommonModule : public QObject {
     qint64 m_iStampResult;
     // 时间间隔
     quint64 m_iN;
-signals:
+ signals:
     void signals_msg();
 
+ // cppcheck-suppress unknownMacro
  public slots:
     // 接收服务器数据
-    void onReadCommData(QByteArray& buff);
+    void onReadCommData(const QByteArray& buff);
 };
 
 
-};
-#endif // _CommonModule_H_
+};  // namespace NEBULA
+#endif // _COMMONMODULE_H_

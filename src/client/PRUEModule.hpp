@@ -1,5 +1,6 @@
-#ifndef _PRUEModule_H_
-#define _PRUEModule_H_
+#ifndef _PRUEMODULE_H_
+#define _PRUEMODULE_H_
+
 #include "CommonModule.hpp"
 
 namespace NEBULA {
@@ -30,14 +31,15 @@ class PRUEModule : public CommonModule {
     void sendInstalledBanSector();
 
     // 收到更改PRUE设置,0x601
-    void recvUpdatePRUESetting(QByteArray& buff);
+    void recvUpdatePRUESetting(const QByteArray& buff);
     // 收到设置辐射禁止扇区,0x201
-    void recvSettingBanSector(QByteArray& buff);
+    void recvSettingBanSector(const QByteArray& buff);
     // 收到设置辐射禁止,0x202
-    void recvBanRadiation(QByteArray& buff);
+    void recvBanRadiation(const QByteArray& buff);
  public slots:
     // 接收RTM专有协议数据
-    void onReadPRUEData(QByteArray& buff);
+    void onReadPRUEData(const QByteArray& buff);
 };
-}
-#endif // _PRUEModule_H_
+}  // namespace NEBULA
+
+#endif // _PRUEMODULE_H_

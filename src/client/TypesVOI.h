@@ -881,7 +881,7 @@ struct OMkcTypeCell { // распознавание от МКЦ
     float f_Probab[e_MaxType]; // вероятости для каждого типа
     void Init() {
       n_TypeCell = 0;
-      for(int i = 0; i < e_MaxType; i++) f_Probab[i] = -1.f;
+      for (int i = 0; i < e_MaxType; i++) f_Probab[i] = -1.f;
     }
 };
 //---------------------------------------------------------
@@ -919,9 +919,9 @@ struct OMkcStat {
   OMkcStat();
   void Clear() {
     v_SendedKt.clear();
-    for(int i = 0; i < eProtMaxType; i++) {
+    for (int i = 0; i < eProtMaxType; i++) {
       n_RecvErr[i] = 0;
-      for(int j = 0; j < eProtMaxType; j++) n_Answer[i][j] = 0;
+      for (int j = 0; j < eProtMaxType; j++) n_Answer[i][j] = 0;
       }
     }
   };
@@ -1418,31 +1418,31 @@ struct RtrData
         if (obj.contains("ID")) m_id = obj["ID"].toString();
         if (obj.contains("Frequencies")) {
             QJsonArray arr = obj["Frequencies"].toArray();
-            for(int i = 0; i < arr.size(); i++) {
+            for (int i = 0; i < arr.size(); i++) {
                 m_frequencies.append(str.setNum(arr[i].toDouble()));
             }
         }
         if (obj.contains("Bands")) {
             QJsonArray arr = obj["Bands"].toArray();
-            for(int i = 0; i < arr.size(); i++) {
+            for (int i = 0; i < arr.size(); i++) {
                 m_bands.append(str.setNum(arr[i].toDouble()));
             }
         }
         if (obj.contains("PulsePeriods")) {
             QJsonArray arr = obj["PulsePeriods"].toArray();
-            for(int i = 0; i < arr.size(); i++) {
+            for (int i = 0; i < arr.size(); i++) {
                 m_pulsePeriods.append(str.setNum(arr[i].toInt()));
             }
         }
         if (obj.contains("PulseWidths")) {
             QJsonArray arr = obj["PulseWidths"].toArray();
-            for(int i = 0; i < arr.size(); i++) {
+            for (int i = 0; i < arr.size(); i++) {
                 m_pulseWidths.append(str.setNum(arr[i].toDouble()));
             }
         }
         if (obj.contains("PulseModulations")) {
             QJsonArray arr = obj["PulseModulations"].toArray();
-            for(int i = 0; i < arr.size(); i++) {
+            for (int i = 0; i < arr.size(); i++) {
                 QJsonObject objectPulseMod = arr[i].toObject();
                 PulseModulation pulse_modulation;
                 if (objectPulseMod.contains("ModulationName")) pulse_modulation.m_modName = objectPulseMod["ModulationName"].toString();
@@ -1467,7 +1467,7 @@ struct RtrData
         if (obj.contains("RlsMode")) m_rlsMode = obj["RlsMode"].toString();
         if (obj.contains("Bearings")) {
             QJsonArray arr = obj["Bearings"].toArray();
-            for(int i = 0; i < arr.size(); i++) {
+            for (int i = 0; i < arr.size(); i++) {
                 QJsonObject objectBearings = arr[i].toObject();
                 Bearings bearings;
                 if (objectBearings.contains("Lat")) bearings.m_lat.setNum(objectBearings["Lat"].toDouble());
@@ -1493,7 +1493,7 @@ struct RtrData
                                                   toUTC().toString("yyyy-MM-dd hh:mm:ss.zzz");
         if (obj.contains("SourceLocations")) {
             QJsonArray arr = obj["SourceLocations"].toArray();
-            for(int i = 0; i < arr.size(); i++) {
+            for (int i = 0; i < arr.size(); i++) {
                 QJsonObject objectSourceLoc = arr[i].toObject();
                 SourceLocations source_locations;
                 if (objectSourceLoc.contains("Lat"))
