@@ -3,71 +3,67 @@
 namespace NEBULA
 {
 PRUEModule::PRUEModule() {
-    // RTM的发送者标识
-    this->genericHeader.sender = 0x524542;
-    this->pCurrentSettingTimer = new QTimer();
-    this->pCurrentFunctionTimer = new QTimer();
-    this->pCurrentStatusTimer = new QTimer();
-
-    // 实时接收来自服务器的数据,使用基类的socket指针来接收数据，保证基类与派生类都可发送数据，但只允许派生类接收数据，然后发送给基类。
-    connect(this->pTcpSocket, &QTcpSocket::readyRead, this, &PRUEModule::onRecvData);
-
-    // 发送RTM设置定时器,0xD21
-    connect(this->pCurrentSettingTimer, &QTimer::timeout, this, &PRUEModule::sendPRUESettings);
-    // 发送RTM功能定时器,0xD22
-    connect(this->pCurrentFunctionTimer, &QTimer::timeout, this, &PRUEModule::sendPRUEFunction);
-
-    // 查看RTM状态检查定时器
-    connect(this->pCurrentStatusTimer, &QTimer::timeout, this, &PRUEModule::checkStatus);
-    this->pCurrentStatusTimer->start();
     this->pkgsPRUE = {0x601, 0x201, 0x202};
+    this->genericHeader = {0x524542, 0xff, 0x2, 0x2, 0x0, 0x0, 0x1, 0x0, 0x0};
+    this->pCurrentSettingTimerD21 = new QTimer();
+    this->pCurrentFunctionTimerD22 = new QTimer();
+    this->pStateMachineTimer = new QTimer();
+
+    connect(this->pTcpSocket, &QTcpSocket::readyRead, this, &PRUEModule::onRecvData);
+    connect(this->pStateMachineTimer, &QTimer::timeout, this, &PRUEModule::stateMachine);
+    connect(this->pCurrentSettingTimerD21, &QTimer::timeout, this, &PRUEModule::sendPRUESettingsD21);
+    connect(this->pCurrentFunctionTimerD22, &QTimer::timeout, this, &PRUEModule::sendPRUEFunctionD22);
+    
+    this->pStateMachineTimer->start();
 }
 
 PRUEModule::~PRUEModule() {
-    if (this->pCurrentSettingTimer == nullptr)  delete this->pCurrentSettingTimer;
-    if (this->pCurrentFunctionTimer == nullptr) delete this->pCurrentFunctionTimer;
-    if (this->pCurrentStatusTimer == nullptr)   delete this->pCurrentStatusTimer;
+    if (this->pStateMachineTimer == nullptr)       delete this->pStateMachineTimer;
+    if (this->pCurrentSettingTimerD21 == nullptr)  delete this->pCurrentSettingTimerD21;
+    if (this->pCurrentFunctionTimerD22 == nullptr) delete this->pCurrentFunctionTimerD22;
 }
 
-void PRUEModule::checkStatus() {
-    if (!this->isConnected) {
-        // 重新尝试连接
+void PRUEModule::stateMachine() {
+    switch (this->connStatus)
+    {
+    case unConnected:
         if (!this->pReconnectTimer->isActive())  this->pReconnectTimer->start(1000);
-        // 断开连接后，停止发送时间请求0x01
-        if (this->pRequestTimer->isActive()) this->pRequestTimer->stop();
-        // 断开连接后，停止发送CP与NP021&0x22
-        if (this->pCPandNPTimer->isActive()) this->pCPandNPTimer->stop();
-        // 断开连接后，停止发送模块状态0x24
-        if (this->pModuleStatueTimer->isActive()) this->pModuleStatueTimer->stop();
+        if (this->pRequestTimer03->isActive())   this->pRequestTimer03->stop();
 
-        if (this->pCurrentFunctionTimer->isActive()) this->pCurrentFunctionTimer->stop();
-        if (this->pCurrentSettingTimer->isActive())  this->pCurrentSettingTimer->stop();
-
-        if (this->isModuleConfigure) this->isModuleConfigure = false;
-        if (this->isModuleLocation)  this->isModuleLocation   = false;
-        return;
+        if (this->isModuleLocation05)  this->isModuleLocation05  = false;
+        if (this->isModuleConfigure20) this->isModuleConfigure20 = false;
+        break;
+    case connecting:
+        break;
+    case connected:
+        if (this->pReconnectTimer->isActive())  this->pReconnectTimer->stop();
+        if (!this->pRequestTimer03->isActive()) this->pRequestTimer03->start(1000);
+        break;
+    default:
+        break;
     }
 
-    if (this->isRegister) {
-        // 定时发送当前设置,0x823
-        if (!this->pCurrentSettingTimer->isActive())  this->pCurrentSettingTimer->start(1000);
-        // 定时发送当前功能,0x825
-        if (!this->pCurrentFunctionTimer->isActive()) this->pCurrentFunctionTimer->start(1000);
-        // 注册成功后发起心跳机制,每秒发送一次,0x3
-        if (!this->pRequestTimer->isActive()) this->pRequestTimer->start(1000);
-        // 注册成功后发送NP与CP,0x21&0x22
-        if (!this->pCPandNPTimer->isActive()) this->pCPandNPTimer->start(5000);
-        // 注册成功后定时发送模块状态,0x24
-        if (!this->pModuleStatueTimer->isActive()) this->pModuleStatueTimer->start(1000);
-        // 注册成功后立刻发送模块原理图,0x20
-        if (!this->isModuleConfigure) this->sendModuleFigure();
-        // 注册成功后立刻发送模块位置,0x5
-        if (!this->isModuleLocation)  this->sendModuleLocation();
-    }
-
-    if (!this->isRegister) {
-        if (this->pCurrentFunctionTimer->isActive()) this->pCurrentFunctionTimer->stop();
-        if (this->pCurrentSettingTimer->isActive())  this->pCurrentSettingTimer->stop();
+    switch (this->registerStatus)
+    {
+    case unRegister:
+        if (this->pNPTimer21->isActive())               this->pNPTimer21->stop();
+        if (this->pCPTimer22->isActive())               this->pCPTimer22->stop();
+        if (this->pModuleStatueTimer24->isActive())     this->pModuleStatueTimer24->stop();
+        if (this->pCurrentSettingTimerD21->isActive())  this->pCurrentSettingTimerD21->stop();
+        if (this->pCurrentFunctionTimerD22->isActive()) this->pCurrentFunctionTimerD22->stop();
+        break;
+    case registering:
+        break;
+    case registered:
+        if (!this->isModuleLocation05)  this->sendModuleLocation05();
+        if (!this->isModuleConfigure20) this->sendModuleFigure20();
+        if (!this->pNPTimer21->isActive())  this->pNPTimer21->start(5000);
+        if (!this->pCPTimer22->isActive())  this->pCPTimer22->start(5000);
+        if (!this->pModuleStatueTimer24->isActive()) this->pModuleStatueTimer24->start(1000);
+        if (!this->pCurrentSettingTimerD21->isActive())  this->pCurrentSettingTimerD21->start(1000);
+        if (!this->pCurrentFunctionTimerD22->isActive()) this->pCurrentFunctionTimerD22->start(1000);
+    default:
+        break;
     }
 }
 
@@ -93,75 +89,75 @@ void PRUEModule::onRecvData() {
 // 从服务器中读取RTM数据
 void PRUEModule::onReadPRUEData(const QByteArray& buff) {
     switch (genericHeader.packType) {
-        case 0x601: this->recvUpdatePRUESetting(buff); break;
-        case 0x201: this->recvSettingBanSector(buff); break;
-        case 0x202: this->recvBanRadiation(buff); break;
+        case 0x601: this->recvUpdatePRUESetting601(buff); break;
+        case 0x201: this->recvSettingBanSector201(buff); break;
+        case 0x202: this->recvBanRadiation202(buff); break;
         default: {
-            QString msg = "this is unknown pkg 0x" + QString::number(this->genericHeader.packType, 16);
-            this->sendLogMsg(msg);
-            this->sendNote2Operator(msg);
+            // QString msg = "this is unknown pkg 0x" + QString::number(this->genericHeader.packType, 16);
+            // this->sendLogMsg25(msg);
+            // this->sendNote2Operator26(msg);
             break;
         }
     }
 }
 
 // 0x601,收到更改PRUE设置
-void PRUEModule::recvUpdatePRUESetting(const QByteArray& buff) {
-    this->sendLogMsg("recv changing PRUE settings");
+void PRUEModule::recvUpdatePRUESetting601(const QByteArray& buff) {
+    // this->sendLogMsg25("recv changing PRUE settings");
     ORecvTrapFixed oRecvTrapFixed;
     uint8_t len1 = sizeof(GenericHeader);
     uint8_t len2 = sizeof(ORecvTrapFixed);
     memcpy(&oRecvTrapFixed, buff.data() + len1, len2);
     QByteArray byteArray(reinterpret_cast<char*>(&oRecvTrapFixed), len2);
-    qDebug() << "0x601 msg body: " << byteArray.toHex();
+    qDebug() << "recv 0x601:" << byteArray.toHex();
     /*
         deal with data
     */
     // 执行操作代码响应0x23
     uint8_t code = 0;
-    this->sendControlledOrder(code);
+    this->sendControlledOrder23(code);
 }
 
 // 0x201,收到设置辐射禁止扇区
-void PRUEModule::recvSettingBanSector(const QByteArray& buff) {
-    this->sendLogMsg("recv setting PRUE ban sector");
+void PRUEModule::recvSettingBanSector201(const QByteArray& buff) {
+    // this->sendLogMsg25("recv setting PRUE ban sector");
     OTrapBanSector oTrapBanSector;
     uint8_t len1 = sizeof(GenericHeader);
     uint8_t len2 = sizeof(ORecvTrapFixed);
     memcpy(&oTrapBanSector, buff.data() + len1, len2);
     QByteArray byteArray(reinterpret_cast<char*>(&oTrapBanSector), len2);
-    qDebug() << "0x601 msg body: " << byteArray.toHex();
+    qDebug() << "recv 0x601:" << byteArray.toHex();
     /*
         deal with data
     */
     // 执行操作代码响应0x23
     uint8_t code = 0;
-    this->sendControlledOrder(code);
+    this->sendControlledOrder23(code);
 }
 
 // 0x202,收到设置辐射禁止
-void PRUEModule::recvBanRadiation(const QByteArray& buff) {
-    this->sendLogMsg("recv setting PRUE ban sector");
+void PRUEModule::recvBanRadiation202(const QByteArray& buff) {
+    // this->sendLogMsg25("recv setting PRUE ban sector");
     OTrapRadiationBan oTrapRadiationBan;
     uint8_t len1 = sizeof(GenericHeader);
     uint8_t len2 = sizeof(OTrapRadiationBan);
     memcpy(&oTrapRadiationBan, buff.data() + len1, len2);
     QByteArray byteArray(reinterpret_cast<char*>(&oTrapRadiationBan), len2);
-    qDebug() << "0x601 msg body: " << byteArray.toHex();
+    qDebug() << "recv 0x601:" << byteArray.toHex();
     /*
         deal with data
     */
     // 执行操作代码响应0x23
     uint8_t code = 0;
-    this->sendControlledOrder(code);
+    this->sendControlledOrder23(code);
 }
 
 // 发送当前PRUE设置,0xD21
-void PRUEModule::sendPRUESettings() {
+void PRUEModule::sendPRUESettingsD21() {
     this->genericHeader.packType = 0xD21;
     this->genericHeader.dataSize = sizeof(OSendTrapFixed);
     this->genericHeader.packIdx++;
-    this->genericHeader.checkSum = calcChcekSum((char*)&this->genericHeader, sizeof(GenericHeader) - 2);
+    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
 
     // 消息体
     OSendTrapFixed oSendTrapFixed;
@@ -178,18 +174,18 @@ void PRUEModule::sendPRUESettings() {
     memcpy(data, &this->genericHeader, len1);
     memcpy(data + len1, &oSendTrapFixed, len2);
     QByteArray byteArray(data, len1 + len2);
-    qDebug() << "send 0xD21: " << byteArray.toHex();
+    qDebug() << "send 0xD21:" << byteArray.toHex();
     this->pTcpSocket->write(byteArray);
     this->pTcpSocket->flush();
     free(data);
 }
 
 // 发送当前PRUE功能,0xD22
-void PRUEModule::sendPRUEFunction() {
+void PRUEModule::sendPRUEFunctionD22() {
     this->genericHeader.packType = 0xD22;
     this->genericHeader.dataSize = sizeof(OSendTrapFixed);
     this->genericHeader.packIdx++;
-    this->genericHeader.checkSum = calcChcekSum((char*)&this->genericHeader, sizeof(GenericHeader) - 2);
+    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
 
     // 消息体
     OTrapFunc oTrapFunc;
@@ -217,18 +213,18 @@ void PRUEModule::sendPRUEFunction() {
     memcpy(data, &this->genericHeader, len1);
     memcpy(data + len1, &oTrapFunc, len2);
     QByteArray byteArray(data, len1 + len2);
-    qDebug() << "send 0xD22: " << byteArray.toHex();
+    qDebug() << "send 0xD22:" << byteArray.toHex();
     this->pTcpSocket->write(byteArray);
     this->pTcpSocket->flush();
     free(data);
 }
 
 // 发送已安装的辐射禁止扇区,0xD01
-void PRUEModule::sendInstalledBanSector() {
+void PRUEModule::sendInstalledBanSectorD01() {
     this->genericHeader.packType = 0xD01;
     this->genericHeader.dataSize = sizeof(OSendTrapFixed);
     this->genericHeader.packIdx++;
-    this->genericHeader.checkSum = calcChcekSum((char*)&this->genericHeader, sizeof(GenericHeader) - 2);
+    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
 
     // 消息体
     OTrapBanSector oTrapBanSector;
@@ -256,7 +252,7 @@ void PRUEModule::sendInstalledBanSector() {
     memcpy(data, &this->genericHeader, len1);
     memcpy(data + len1, &oTrapBanSector, len2);
     QByteArray byteArray(data, len1 + len2);
-    qDebug() << "send 0xD01: " << byteArray.toHex();
+    qDebug() << "send 0xD01:" << byteArray.toHex();
     this->pTcpSocket->write(byteArray);
     this->pTcpSocket->flush();
     free(data);

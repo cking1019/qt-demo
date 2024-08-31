@@ -30,7 +30,7 @@ enum ServerDealInfo {
     serverAlter = 0x44,     // 修改
     serverSendNote = 0x45,  // 发送消息
 };
-// 通用头,424552ff 00000000 00000000 00000000
+// 通用头
 struct GenericHeader
 {
     uint32_t sender   : 24;  // 发送者ID

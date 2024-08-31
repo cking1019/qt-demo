@@ -6,7 +6,6 @@
 
 int main(int argc, char *argv[])
 {
-
     QCoreApplication a(argc, argv);
     NEBULA::ModuleController moduleController;
     moduleController.init();

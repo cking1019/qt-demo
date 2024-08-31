@@ -21,13 +21,17 @@ namespace NEBULA {
 
 quint16 calcChcekSum(const char* sMess,int nCnt);
 
-struct Cfg{
+struct ModuleCfg{
     QString serverAddress;
     QString moduleAddress;
     qint16 serverPort;
     qint16 modulePort;
-    QString module0x20Cfg;
+    QString moduleCfg20;
 };
+
+enum ConnStatus{unConnected, connecting, connected};
+enum RegisterStatus{unRegister, registering, registered};
+enum TimeStatus{unTime, timing, timed};
 
 class CommonModule : public QObject {
     Q_OBJECT
@@ -36,94 +40,75 @@ class CommonModule : public QObject {
     ~CommonModule();
     // 设备启动
     void startup();
-    // 发送0x21和0x22
-    void sendCPandNPStatus();
 
-    // 0x1,请求注册
-    void sendRegister();
-    // 0x3,请求对时
-    void sendRequestTime();
-    // 0x5,发送模块位置
-    void sendModuleLocation();
+    void sendRegister01();
+    void sendRequestTime03();
+    void sendModuleLocation05();
 
-    // 0x20,发送模块图
-    void sendModuleFigure();
-    // 0x21,发送电路元素状态
-    void sendModuleNPStatus();
-    // 0x22,发送电路元素受控状态
-    void sendModuleCPStatus();
-    // 0x24,发送模块状态
-    void sendModuleStatus();
+    void sendModuleFigure20();
+    void sendModuleNPStatus21();
+    void sendModuleCPStatus22();
+    void sendModuleStatus24();
 
-    // 0x23,发送控制命令
-    void sendControlledOrder(uint8_t code);
+    void sendControlledOrder23(uint8_t code);
 
-    // 0x25,发送消息日志
-    void sendLogMsg(QString msg);
-    // 0x26,发送短信给操作员
-    void sendNote2Operator(QString msg);
+    void sendLogMsg25(QString msg);
+    void sendNote2Operator26(QString msg);
 
-    // 0x2,确定注册
-    void recvRegister(const QByteArray& buff);
-    // 0x4,确定对时
-    void recvRequestTime(const QByteArray& buff);
+    void recvRegister02(const QByteArray& buff);
+    void recvRequestTime04(const QByteArray& buff);
 
-    // 0x40,收到开始命令
-    void recvStart(const QByteArray& buff);
-    // 0x41,收到关闭命令
-    void recvStop(const QByteArray& buff);
-    // 0x42,收到重启命令
-    void recvRestart(const QByteArray& buff);
-    // 0x43,收到重置命令
-    void recvReset(const QByteArray& buff);
-    // 0x44,收到更新命令
-    void recvUpdate(const QByteArray& buff);
-    // 0x45,收到操作员的短信
-    void recvNote4Operator(const QByteArray& buff);
-    // 0x46,收到请求模块模块原理图
-    void recvRequestModuleFigure(const QByteArray& buff);
-    // 0x47,收到设置语言
-    void recvSettingLang(const QByteArray& buff);
-    // 0x48,收到无线电与卫星导航
-    void recvRadioAndSatellite(const QByteArray& buff);
-    // 0x49,收到设置时间
-    void recvSettingTime(const QByteArray& buff);
-    // 0x4A,收到设置模块坐标
-    void recvModuleLocation(const QByteArray& buff);
-    // 0x4B,收到设置自定义参数
-    void recvCustomizedParam(const QByteArray& buff);
+    void recvStart40(const QByteArray& buff);
+    void recvStop41(const QByteArray& buff);
+    void recvRestart42(const QByteArray& buff);
+    void recvReset43(const QByteArray& buff);
+    void recvUpdate44(const QByteArray& buff);
 
-    // 模块配置文件
-    Cfg cfg;
+    void recvNote4Operator45(const QByteArray& buff);
+    void recvRequestModuleFigure46(const QByteArray& buff);
 
-// 子类需要使用的变量
+    void recvSettingLang47(const QByteArray& buff);
+    void recvRadioAndSatellite48(const QByteArray& buff);
+    void recvSettingTime49(const QByteArray& buff);
+    void recvModuleLocation4A(const QByteArray& buff);
+    void recvCustomizedParam4B(const QByteArray& buff);
+
+    ModuleCfg cfg;
+
  protected:
     // Socket网络传输
     QTcpSocket* pTcpSocket;
     // 公共包头
     GenericHeader genericHeader;
-    // 公共包类型名称
+    // 公共包类型
     QSet<qint16> pkgsComm;
 
-    // 是否注册成功
-    bool isRegister;
-    // 是否发送模块原理图0x20
-    bool isModuleConfigure;
-    // 是否发送NP与CP状态0x21&0x22
-    bool isNPandCPStatus;
-    // 是否发送模块位置0x5
-    bool isModuleLocation;
-    // 是否连接成功
-    bool isConnected;
+    // 注册状态
+    RegisterStatus registerStatus;
+    // 对时状态
+    TimeStatus timeStatus;
+    // 连接状态
+    ConnStatus connStatus;
+
+    // 连接状态
+    // 是否发送0x20
+    bool isModuleConfigure20;
+    // 是否发送0x21&0x22
+    bool isNPStatus21;
+    bool isCPStatus22;
+    // 是否发送0x5
+    bool isModuleLocation05;
 
     // 再次连接定时器器
     QTimer* pReconnectTimer;
-    // 定时发送请求时间0x3
-    QTimer* pRequestTimer;
-    // 定时发送0x21、0x22
-    QTimer* pCPandNPTimer;
+    // 定时发送0x3
+    QTimer* pRequestTimer03;
+    // 定时发送0x21
+    QTimer* pCPTimer22;
+    // 定时发送0x22
+    QTimer* pNPTimer21;
     // 定时发送0x24
-    QTimer* pModuleStatueTimer;
+    QTimer* pModuleStatueTimer24;
 
  private:
     // 时间差结果
@@ -133,7 +118,6 @@ class CommonModule : public QObject {
  signals:
     void signals_msg();
 
- // cppcheck-suppress unknownMacro
  public slots:
     // 接收服务器数据
     void onReadCommData(const QByteArray& buff);
