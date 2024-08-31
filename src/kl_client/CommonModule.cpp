@@ -11,16 +11,15 @@ quint16 calcChcekSum(const char* sMess,int nCnt) {
     return nSum;
 }
 
-CommonModule::CommonModule(QObject *parent):QObject(parent){
+CommonModule::CommonModule(QObject *parent):QObject(parent) {
+    this->pkgsComm = {0x2, 0x4, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B};
     this->pTcpSocket = new QTcpSocket(this);
-    this->pRequestTimer03 = new QTimer();
     this->pReconnectTimer = new QTimer();
+    this->pRequestTimer03 = new QTimer();
     this->pNPTimer21 = new QTimer();
     this->pCPTimer22 = new QTimer();
     this->pModuleStatueTimer24 = new QTimer();
-    // 公共包类型
-    this->pkgsComm = {0x2, 0x4, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B};
-
+    
     this->m_iStampResult = 0;
     this->m_iN = 1;
 
@@ -28,8 +27,7 @@ CommonModule::CommonModule(QObject *parent):QObject(parent){
     this->registerStatus = unRegister;
     this->isModuleLocation05 = false;
     this->isModuleConfigure20 = false;
-    this->isNPStatus21 = false;
-    this->isCPStatus22 = false;
+    this->isSendRegister01 = false;
     
 }
 
@@ -50,20 +48,23 @@ void CommonModule::startup() {
     connect(this->pModuleStatueTimer24, &QTimer::timeout, this, &CommonModule::sendModuleStatus24);
 
     connect(this->pReconnectTimer, &QTimer::timeout, [=](){
-        if (this->pTcpSocket->state() == QAbstractSocket::UnconnectedState) {
+        while (!this->pTcpSocket->waitForConnected(1000))
+        {
             qDebug() << "Attempting to reconnect...";
-            this->pTcpSocket->connectToHost(QHostAddress(this->cfg.serverAddress), this->cfg.serverPort);
-            this->connStatus = connecting;
+            this->connStatus = ConnStatus::connecting;
+            this->pTcpSocket->connectToHost(this->cfg.serverAddress, this->cfg.serverPort);
         }
     });
     connect(this->pTcpSocket, &QTcpSocket::connected, [=](){
         qDebug() << "Connected to host!";
-        this->connStatus = connected;
-        this->sendRegister01();
+        this->connStatus = ConnStatus::connected;
+        this->registerStatus = RegisterStatus::unRegister;
+        // this->sendRegister01();
     });
+    // abort -> close -> disconnectFromHost
     connect(this->pTcpSocket, &QTcpSocket::disconnected, [=]() {
         qDebug() << "Disconnected from server!";
-        this->connStatus = unConnected;
+        this->connStatus = ConnStatus::unConnected;
     });
     this->pReconnectTimer->start(1000);
 }
@@ -87,8 +88,6 @@ void CommonModule::onReadCommData(const QByteArray& buff) {
         case 0x4B: this->recvCustomizedParam4B(buff); break;
         default: {
             qDebug() << "this is unknown pkg 0x" << this->genericHeader.packType;
-            // this->sendLogMsg25("this is unknown pkg");
-            // this->sendNote2Operator26("this is unknown pkg");
             break;
         }
     }
@@ -120,6 +119,8 @@ void CommonModule::sendRegister01() {
     this->pTcpSocket->write(byteArray);
     this->pTcpSocket->flush();
     free(data);
+
+    this->isSendRegister01 = true;
 }
 
 void CommonModule::recvRegister02(const QByteArray& buff) {
@@ -139,12 +140,6 @@ void CommonModule::recvRegister02(const QByteArray& buff) {
         case 0x0: {
             this->genericHeader.moduleId = serverRegister.idxModule;
             this->registerStatus = registered;
-            this->isNPStatus21 = true;
-            this->isCPStatus22 = true;
-            // // 注册成功发送日志
-            // this->sendLogMsg25("register successfully");
-            // // 注册成果发送给操作员
-            // this->sendNote2Operator26("register successfully");
             break;
         }
         default: {

@@ -93,9 +93,6 @@ void PRUEModule::onReadPRUEData(const QByteArray& buff) {
         case 0x201: this->recvSettingBanSector201(buff); break;
         case 0x202: this->recvBanRadiation202(buff); break;
         default: {
-            // QString msg = "this is unknown pkg 0x" + QString::number(this->genericHeader.packType, 16);
-            // this->sendLogMsg25(msg);
-            // this->sendNote2Operator26(msg);
             break;
         }
     }
@@ -103,7 +100,6 @@ void PRUEModule::onReadPRUEData(const QByteArray& buff) {
 
 // 0x601,收到更改PRUE设置
 void PRUEModule::recvUpdatePRUESetting601(const QByteArray& buff) {
-    // this->sendLogMsg25("recv changing PRUE settings");
     ORecvTrapFixed oRecvTrapFixed;
     uint8_t len1 = sizeof(GenericHeader);
     uint8_t len2 = sizeof(ORecvTrapFixed);
@@ -120,7 +116,6 @@ void PRUEModule::recvUpdatePRUESetting601(const QByteArray& buff) {
 
 // 0x201,收到设置辐射禁止扇区
 void PRUEModule::recvSettingBanSector201(const QByteArray& buff) {
-    // this->sendLogMsg25("recv setting PRUE ban sector");
     OTrapBanSector oTrapBanSector;
     uint8_t len1 = sizeof(GenericHeader);
     uint8_t len2 = sizeof(ORecvTrapFixed);
@@ -137,7 +132,6 @@ void PRUEModule::recvSettingBanSector201(const QByteArray& buff) {
 
 // 0x202,收到设置辐射禁止
 void PRUEModule::recvBanRadiation202(const QByteArray& buff) {
-    // this->sendLogMsg25("recv setting PRUE ban sector");
     OTrapRadiationBan oTrapRadiationBan;
     uint8_t len1 = sizeof(GenericHeader);
     uint8_t len2 = sizeof(OTrapRadiationBan);

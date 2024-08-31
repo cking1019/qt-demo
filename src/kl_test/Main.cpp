@@ -1,9 +1,10 @@
-#include <QCoreApplication>
-#include <QTcpServer>
+#include <QObject>
 #include <QTcpSocket>
 #include <QDebug>
-#include <QTimer>
-#include "../ck_client/CommonHeader.hpp"
+#include <QCoreApplication>
+#include <QDateTime>
+#include "Demo.hpp"
+#include "../kl_client/CommonHeader.hpp"
 
 
 template <class T>
@@ -33,11 +34,19 @@ void printStruct(const T& s)
     // }
 }
 
+
 int main(int argc, char *argv[])
 {
-    GenericHeader genericHeader;
-    genericHeader.sender = 0x524542;
-    genericHeader.moduleId = 0xFF;
-    printStruct(genericHeader);
-    return 0;
+    QCoreApplication a(argc, argv);
+    Demo demo;
+    demo.pTimer->start(1000);
+    demo.pReconnTimer->start();
+
+    // if (demo.pSocket->waitForConnected()) {
+    //     demo.pSocket->write("Hello, server!");
+    //     demo.pSocket->flush();
+    // }
+
+
+    return a.exec();
 }

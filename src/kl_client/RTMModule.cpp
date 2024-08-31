@@ -25,22 +25,22 @@ RTMModule::~RTMModule() {
 
 // 查看当前设备状态
 void RTMModule::stateMachine() {
+    // 连接状态
     switch (this->connStatus)
     {
-    case unConnected:
+    case ConnStatus::unConnected:
         if (!this->pReconnectTimer->isActive())  this->pReconnectTimer->start(1000);
 
+        if (this->isSendRegister01)              this->isSendRegister01 = false;
         if (this->pRequestTimer03->isActive())   this->pRequestTimer03->stop();
-        if (this->isModuleLocation05)  this->isModuleLocation05  = false;
-        if (this->isModuleConfigure20) this->isModuleConfigure20 = false;
-        
-        if (this->isNPStatus21)        this->isNPStatus21 = false;
-        if (this->isCPStatus22)        this->isCPStatus22 = false;
+        if (this->isModuleLocation05)            this->isModuleLocation05  = false;
+        if (this->isModuleConfigure20)           this->isModuleConfigure20 = false;
         break;
-    case connecting:
+    case ConnStatus::connecting:
         break;
-    case connected:
-        if (this->pReconnectTimer->isActive())  this->pReconnectTimer->stop();
+    case ConnStatus::connected:
+        if (this->pReconnectTimer->isActive())    this->pReconnectTimer->stop();
+        if (!this->isSendRegister01)              this->sendRegister01();
         break;
     default:
         break;
@@ -48,26 +48,35 @@ void RTMModule::stateMachine() {
     // 注册状态
     switch (this->registerStatus)
     {
-        case unRegister:
-            if (this->pNPTimer21->isActive())               this->pNPTimer21->stop();
-            if (this->pCPTimer22->isActive())               this->pCPTimer22->stop();
-            if (this->pModuleStatueTimer24->isActive())     this->pModuleStatueTimer24->stop();
-            if (this->pCurrentSettingTimer823->isActive())  this->pCurrentSettingTimer823->stop();
-            if (this->pCurrentFunctionTimer825->isActive()) this->pCurrentFunctionTimer825->stop();
-            break;
-        case registering:
-            break;
-        case registered:
-            if (!this->isModuleLocation05)           this->sendModuleLocation05();
-            if (!this->isModuleConfigure20)          this->sendModuleFigure20();
-            if (!this->pNPTimer21->isActive())               this->pNPTimer21->start(5000);
-            if (!this->pCPTimer22->isActive())               this->pCPTimer22->start(5000);
-            if (!this->pModuleStatueTimer24->isActive())     this->pModuleStatueTimer24->start(1000);
-            if (!this->pCurrentSettingTimer823->isActive())  this->pCurrentSettingTimer823->start(1000);
-            if (!this->pCurrentFunctionTimer825->isActive()) this->pCurrentFunctionTimer825->start(1000);
-            break;
-        default:
-            break;
+    case RegisterStatus::unRegister:
+        if (this->pNPTimer21->isActive())               this->pNPTimer21->stop();
+        if (this->pCPTimer22->isActive())               this->pCPTimer22->stop();
+        if (this->pModuleStatueTimer24->isActive())     this->pModuleStatueTimer24->stop();
+        if (this->pCurrentSettingTimer823->isActive())  this->pCurrentSettingTimer823->stop();
+        if (this->pCurrentFunctionTimer825->isActive()) this->pCurrentFunctionTimer825->stop();
+        break;
+    case RegisterStatus::registering:
+        break;
+    case RegisterStatus::registered:
+        if (!this->isModuleLocation05)                   this->sendModuleLocation05();
+        if (!this->isModuleConfigure20)                  this->sendModuleFigure20();
+        if (!this->pNPTimer21->isActive())               this->pNPTimer21->start(5000);
+        if (!this->pCPTimer22->isActive())               this->pCPTimer22->start(5000);
+        if (!this->pModuleStatueTimer24->isActive())     this->pModuleStatueTimer24->start(1000);
+        if (!this->pCurrentSettingTimer823->isActive())  this->pCurrentSettingTimer823->start(1000);
+        if (!this->pCurrentFunctionTimer825->isActive()) this->pCurrentFunctionTimer825->start(1000);
+        break;
+    default:
+        break;
+    }
+    // 对时状态
+    switch (this->timeStatus)
+    {
+    case TimeStatus::unTime: break;
+    case TimeStatus::timing: break;
+    case TimeStatus::timed:  break;
+    default:
+        break;
     }
 }
 
@@ -97,9 +106,6 @@ void RTMModule::onReadRTMData(QByteArray& buff) {
         case 0x563: this->recvRequestForbiddenIRIList563(buff); break;
         case 0x564: this->recvSettingForbiddenIRIList564(buff); break;
         default: {
-            // QString msg = "this is unknown pkg 0x" + QString::number(this->genericHeader.packType, 16);
-            // this->sendLogMsg25(msg);
-            // this->sendNote2Operator26(msg);
             break;
         }
     }
@@ -107,21 +113,19 @@ void RTMModule::onReadRTMData(QByteArray& buff) {
 
 // 0x561,收到更改RTM设置
 void RTMModule::recvChangingRTMSettings561(const QByteArray& buff) {
-    // this->sendLogMsg25("recv changing RTM settings");
     OUpdateRTMSetting oUpdateRTMSetting;
     uint8_t len1 = sizeof(GenericHeader);
     uint8_t len2 = sizeof(OUpdateRTMSetting);
     memcpy(&oUpdateRTMSetting, buff.data() + len1, len2);
     QByteArray byteArray(reinterpret_cast<char*>(&oUpdateRTMSetting), len2);
     qDebug() << "recv 0x561:" << byteArray.toHex();
-    // 执行操作代码响应0x23
+    // 响应0x23
     uint8_t code = 0;
     this->sendControlledOrder23(code);
 }
 
 // 0x563,请求禁止IRI列表
 void RTMModule::recvRequestForbiddenIRIList563(const QByteArray& buff) {
-    // this->sendLogMsg25("recv request forbidden IRI list");
     // 响应0x23
     uint8_t code = 0;
     this->sendControlledOrder23(code);
@@ -131,7 +135,6 @@ void RTMModule::recvRequestForbiddenIRIList563(const QByteArray& buff) {
 
 // 0x564,设置禁止IRI列表
 void RTMModule::recvSettingForbiddenIRIList564(const QByteArray& buff) {
-    // this->sendLogMsg25("recv setting forbidden IRI list");
     OSetBanIRIlist oSetBanIRIlist;
     uint8_t len1 = sizeof(GenericHeader);
     uint8_t len2 = sizeof(OSetBanIRIlist);

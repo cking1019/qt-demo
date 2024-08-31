@@ -11,5 +11,4 @@ int main(int argc, char *argv[])
     moduleController.init();
 
     return a.exec();
-    return 0;
 }

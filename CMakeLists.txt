@@ -46,8 +46,8 @@ endif ()
 
 find_package(Qt5 COMPONENTS Core Network REQUIRED)
 
-add_subdirectory(src/ck_client)
-add_subdirectory(src/ck_test)
+add_subdirectory(src/kl_client)
+add_subdirectory(src/kl_test)
 
 add_custom_target(${PROJECT_NAME} ALL 
                     DEPENDS Nebula.RelayModuleCK test 

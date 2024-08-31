@@ -83,31 +83,23 @@ class CommonModule : public QObject {
     // 公共包类型
     QSet<qint16> pkgsComm;
 
+    // 连接状态
+    ConnStatus connStatus;
     // 注册状态
     RegisterStatus registerStatus;
     // 对时状态
     TimeStatus timeStatus;
-    // 连接状态
-    ConnStatus connStatus;
 
     // 连接状态
-    // 是否发送0x20
-    bool isModuleConfigure20;
-    // 是否发送0x21&0x22
-    bool isNPStatus21;
-    bool isCPStatus22;
-    // 是否发送0x5
+    bool isSendRegister01;
     bool isModuleLocation05;
+    bool isModuleConfigure20;
 
     // 再次连接定时器器
     QTimer* pReconnectTimer;
-    // 定时发送0x3
     QTimer* pRequestTimer03;
-    // 定时发送0x21
     QTimer* pCPTimer22;
-    // 定时发送0x22
     QTimer* pNPTimer21;
-    // 定时发送0x24
     QTimer* pModuleStatueTimer24;
 
  private:
