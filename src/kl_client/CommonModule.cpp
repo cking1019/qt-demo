@@ -13,44 +13,45 @@ quint16 calcChcekSum(const char* sMess,int nCnt) {
 
 CommonModule::CommonModule(QObject *parent):QObject(parent) {
     this->pkgsComm = {0x2, 0x4, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B};
-    this->pTcpSocket = new QTcpSocket(this);
-    this->pReconnectTimer = new QTimer();
-    this->pRequestTimer03 = new QTimer();
-    this->pNPTimer21 = new QTimer();
-    this->pCPTimer22 = new QTimer();
+
+    this->pTcpSocket =           new QTcpSocket(this);
+    this->pReconnectTimer =      new QTimer();
+    this->pRequestTimer03 =      new QTimer();
+    this->pNPTimer21 =           new QTimer();
+    this->pCPTimer22 =           new QTimer();
     this->pModuleStatueTimer24 = new QTimer();
+
+    this->connStatus =     ConnStatus::unConnected;
+    this->registerStatus = RegisterStatus::unRegister;
+    this->timeStatus =     TimeStatus::unTime;
+    this->isSendRegister01    = false;
+    this->isModuleLocation05  = false;
+    this->isModuleConfigure20 = false;
     
     this->m_iStampResult = 0;
     this->m_iN = 1;
-
-    this->connStatus = unConnected;
-    this->registerStatus = unRegister;
-    this->isModuleLocation05 = false;
-    this->isModuleConfigure20 = false;
-    this->isSendRegister01 = false;
-    
 }
 
 CommonModule::~CommonModule() {
     if (this->pTcpSocket != nullptr)           delete this->pTcpSocket;
     if (this->pReconnectTimer != nullptr)      delete this->pReconnectTimer;
     if (this->pRequestTimer03 != nullptr)      delete this->pRequestTimer03;
-    if (this->pCPTimer22 != nullptr)           delete this->pCPTimer22;
     if (this->pNPTimer21 != nullptr)           delete this->pNPTimer21;
+    if (this->pCPTimer22 != nullptr)           delete this->pCPTimer22;
     if (this->pModuleStatueTimer24 != nullptr) delete this->pModuleStatueTimer24;
 }
 
 // 初始化成员变量
 void CommonModule::startup() {
-    connect(this->pRequestTimer03, &QTimer::timeout, this, &CommonModule::sendRequestTime03);
-    connect(this->pNPTimer21, &QTimer::timeout, this, &CommonModule::sendModuleNPStatus21);
-    connect(this->pCPTimer22, &QTimer::timeout, this, &CommonModule::sendModuleCPStatus22);
+    connect(this->pRequestTimer03,      &QTimer::timeout, this, &CommonModule::sendRequestTime03);
+    connect(this->pNPTimer21,           &QTimer::timeout, this, &CommonModule::sendModuleNPStatus21);
+    connect(this->pCPTimer22,           &QTimer::timeout, this, &CommonModule::sendModuleCPStatus22);
     connect(this->pModuleStatueTimer24, &QTimer::timeout, this, &CommonModule::sendModuleStatus24);
 
     connect(this->pReconnectTimer, &QTimer::timeout, [=](){
         while (!this->pTcpSocket->waitForConnected(1000))
         {
-            qDebug() << "Attempting to reconnect...";
+            qDebug() << "Attempting to connect...";
             this->connStatus = ConnStatus::connecting;
             this->pTcpSocket->connectToHost(this->cfg.serverAddress, this->cfg.serverPort);
         }
@@ -58,20 +59,17 @@ void CommonModule::startup() {
     connect(this->pTcpSocket, &QTcpSocket::connected, [=](){
         qDebug() << "Connected to host!";
         this->connStatus = ConnStatus::connected;
-        this->registerStatus = RegisterStatus::unRegister;
-        // this->sendRegister01();
     });
     // abort -> close -> disconnectFromHost
     connect(this->pTcpSocket, &QTcpSocket::disconnected, [=]() {
         qDebug() << "Disconnected from server!";
         this->connStatus = ConnStatus::unConnected;
     });
-    this->pReconnectTimer->start(1000);
 }
 
 // 接收数据
-void CommonModule::onReadCommData(const QByteArray& buff) {
-    switch (genericHeader.packType) {
+void CommonModule::onReadCommData(qint16 pkgID, const QByteArray& buff) {
+    switch (pkgID) {
         case 0x2:  this->recvRegister02(buff); break;
         case 0x4:  this->recvRequestTime04(buff); break;
         case 0x40: this->recvStart40(buff); break;
@@ -139,7 +137,7 @@ void CommonModule::recvRegister02(const QByteArray& buff) {
         case 0x40: qDebug() << "unknown error"; break;
         case 0x0: {
             this->genericHeader.moduleId = serverRegister.idxModule;
-            this->registerStatus = registered;
+            this->registerStatus = RegisterStatus::registered;
             break;
         }
         default: {
@@ -178,7 +176,7 @@ void CommonModule::recvRequestTime04(const QByteArray& buff) {
     quint8 len2 = sizeof(ServerTimeControl);
     memcpy(&serverTimeControl, buff.data() + len1, len2);
     quint64 timeStampRcv = QDateTime::currentMSecsSinceEpoch();
-    quint64 timeStampReq = (serverTimeControl.timeRequest1 << 32) | serverTimeControl.timeRequest1; // 或表示相加
+    quint64 timeStampReq = (serverTimeControl.timeRequest1 << 32) | serverTimeControl.timeRequest1;
     quint64 timeStampAns = (serverTimeControl.timeAnswer1 << 32) | serverTimeControl.timeAnswer1;
 
     qint64 delTime1 = timeStampAns - timeStampReq;
@@ -203,6 +201,8 @@ void CommonModule::recvRequestTime04(const QByteArray& buff) {
         m_iN = 1;
         m_iStampResult = 0;
     }
+
+    this->timeStatus = TimeStatus::timed;
 }
 
 void CommonModule::sendModuleLocation05() {

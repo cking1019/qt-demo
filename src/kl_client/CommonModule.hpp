@@ -90,7 +90,7 @@ class CommonModule : public QObject {
     // 对时状态
     TimeStatus timeStatus;
 
-    // 连接状态
+    // 连接状态,此类协议不是定期发送，因此用bool类型判断是否已发送
     bool isSendRegister01;
     bool isModuleLocation05;
     bool isModuleConfigure20;
@@ -112,7 +112,7 @@ class CommonModule : public QObject {
 
  public slots:
     // 接收服务器数据
-    void onReadCommData(const QByteArray& buff);
+    void onReadCommData(qint16 pkgID, const QByteArray& buff);
 };
 
 

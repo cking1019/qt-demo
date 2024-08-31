@@ -28,7 +28,7 @@ class RTMModule : public CommonModule {
     void recvSettingForbiddenIRIList564(const QByteArray& buff);
 
  public slots:
-    void onReadRTMData(QByteArray& buff);
+    void onReadRTMData(qint16 pkgID, QByteArray& buff);
 };
 }  // namespace NEBULA
 #endif // _RTMMODULE_H_

@@ -199,16 +199,19 @@ struct ServerUpdate {
 // 0x822，方位标记
 struct OBearingMark
 {
-    GenericHeader header;
     uint32_t idxCeilVOI:16;
     uint32_t iReserve:16;
+
     uint32_t idxCeilSPP;
+
     uint32_t idxPoint:8;
     uint32_t typeCeilSPP:8;
     uint32_t typeChannel:8;
     uint32_t typeSignal:8;
+
     uint32_t timePel1;
     uint32_t timePel2;
+
     float azim;
     float elev;
     float range;
@@ -266,7 +269,8 @@ struct OBanIRI {
 
 // 0x829，当前无线电环境信息
 struct OSubRadioTime {
-    uint64_t n_Time;
+    uint32_t time1;
+    uint32_t time2;
 
     uint32_t n_Num:24;
     uint32_t n_Type:8;

@@ -25,7 +25,7 @@ class PRUEModule : public CommonModule {
     void recvSettingBanSector201(const QByteArray& buff);
     void recvBanRadiation202(const QByteArray& buff);
  public slots:
-    void onReadPRUEData(const QByteArray& buff);
+    void onReadPRUEData(qint16 pkgID, const QByteArray& buff);
 };
 }  // namespace NEBULA
 

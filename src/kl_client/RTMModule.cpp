@@ -5,13 +5,14 @@ namespace NEBULA
 RTMModule::RTMModule() {
     this->pkgsRTM = {0x561, 0x563, 0x564};
     this->genericHeader = {0x50454C, 0xff, 0x2, 0x2, 0x0, 0x0, 0x1, 0x0, 0x0};
-    this->pStateMachineTimer = new QTimer();
-    this->pCurrentSettingTimer823 = new QTimer();
+
+    this->pStateMachineTimer =       new QTimer();
+    this->pCurrentSettingTimer823 =  new QTimer();
     this->pCurrentFunctionTimer825 = new QTimer();
 
-    connect(this->pTcpSocket, &QTcpSocket::readyRead, this, &RTMModule::onRecvData);
-    connect(this->pStateMachineTimer, &QTimer::timeout, this, &RTMModule::stateMachine);
-    connect(this->pCurrentSettingTimer823, &QTimer::timeout, this, &RTMModule::sendRTMSettings823);
+    connect(this->pTcpSocket,         &QTcpSocket::readyRead, this, &RTMModule::onRecvData);
+    connect(this->pStateMachineTimer,       &QTimer::timeout, this, &RTMModule::stateMachine);
+    connect(this->pCurrentSettingTimer823,  &QTimer::timeout, this, &RTMModule::sendRTMSettings823);
     connect(this->pCurrentFunctionTimer825, &QTimer::timeout, this, &RTMModule::sendRTMFunction825);
     
     this->pStateMachineTimer->start();
@@ -23,18 +24,16 @@ RTMModule::~RTMModule() {
     if (this->pCurrentFunctionTimer825 == nullptr) delete this->pCurrentFunctionTimer825;
 }
 
-// 查看当前设备状态
+// 状态机
 void RTMModule::stateMachine() {
     // 连接状态
     switch (this->connStatus)
     {
     case ConnStatus::unConnected:
-        if (!this->pReconnectTimer->isActive())  this->pReconnectTimer->start(1000);
+        if (!this->pReconnectTimer->isActive())                 this->pReconnectTimer->start(1000);
+        if (this->isSendRegister01)                             this->isSendRegister01 = false;
 
-        if (this->isSendRegister01)              this->isSendRegister01 = false;
-        if (this->pRequestTimer03->isActive())   this->pRequestTimer03->stop();
-        if (this->isModuleLocation05)            this->isModuleLocation05  = false;
-        if (this->isModuleConfigure20)           this->isModuleConfigure20 = false;
+        if (this->registerStatus == RegisterStatus::registered) this->registerStatus = RegisterStatus::unRegister;
         break;
     case ConnStatus::connecting:
         break;
@@ -49,15 +48,21 @@ void RTMModule::stateMachine() {
     switch (this->registerStatus)
     {
     case RegisterStatus::unRegister:
+        if (this->pRequestTimer03->isActive())          this->pRequestTimer03->stop();
+        if (this->isModuleLocation05)                   this->isModuleLocation05  = false;
+        if (this->isModuleConfigure20)                  this->isModuleConfigure20 = false;
         if (this->pNPTimer21->isActive())               this->pNPTimer21->stop();
         if (this->pCPTimer22->isActive())               this->pCPTimer22->stop();
         if (this->pModuleStatueTimer24->isActive())     this->pModuleStatueTimer24->stop();
         if (this->pCurrentSettingTimer823->isActive())  this->pCurrentSettingTimer823->stop();
         if (this->pCurrentFunctionTimer825->isActive()) this->pCurrentFunctionTimer825->stop();
+
+        if (this->timeStatus == TimeStatus::timed)      this->timeStatus = TimeStatus::unTime;
         break;
     case RegisterStatus::registering:
         break;
     case RegisterStatus::registered:
+        if (!this->pRequestTimer03->isActive())          this->pRequestTimer03->start(1000);
         if (!this->isModuleLocation05)                   this->sendModuleLocation05();
         if (!this->isModuleConfigure20)                  this->sendModuleFigure20();
         if (!this->pNPTimer21->isActive())               this->pNPTimer21->start(5000);
@@ -83,25 +88,26 @@ void RTMModule::stateMachine() {
 // 接收数据统一接口
 void RTMModule::onRecvData() {
     QByteArray buff = this->pTcpSocket->readAll();
-    memcpy(&this->genericHeader, buff.data(), sizeof(GenericHeader));
+    GenericHeader genericHeader2;
+    memcpy(&genericHeader2, buff.data(), sizeof(GenericHeader));
+    qint16 pkgID = genericHeader2.packType;
     qDebug("===================================================================");
-    qDebug() << "received data from server: " << buff.toHex();
-    qDebug("the size of pkg: %d", buff.size());
-    qDebug("the type of pkg: %x", this->genericHeader.packType);
-    qDebug("the type of pkg: %x", this->genericHeader.sender);
+    qDebug().nospace().noquote() << "recv 0x" << QString(pkgID).toUtf8().toHex() << ": " << buff.toHex();
+    // qDebug("the size of pkg: %d", buff.size());
+    // qDebug("the type of pkg: %x", this->genericHeader.packType);
     qDebug("===================================================================");
     // 策略模式，根据包类型决定转发至哪个函数
-    if (this->pkgsComm.contains(this->genericHeader.packType)) {
-        this->onReadCommData(buff);
+    if (this->pkgsComm.contains(genericHeader2.packType)) {
+        this->onReadCommData(pkgID, buff);
     }
-    if (this->pkgsRTM.contains(this->genericHeader.packType)) {
-        this->onReadRTMData(buff);
+    if (this->pkgsRTM.contains(genericHeader2.packType)) {
+        this->onReadRTMData(pkgID, buff);
     }
 }
 
 // 从服务器中读取RTM数据
-void RTMModule::onReadRTMData(QByteArray& buff) {
-    switch (genericHeader.packType) {
+void RTMModule::onReadRTMData(qint16 pkgID, QByteArray& buff) {
+    switch (pkgID) {
         case 0x561: this->recvChangingRTMSettings561(buff); break;
         case 0x563: this->recvRequestForbiddenIRIList563(buff); break;
         case 0x564: this->recvSettingForbiddenIRIList564(buff); break;
@@ -111,7 +117,6 @@ void RTMModule::onReadRTMData(QByteArray& buff) {
     }
 }
 
-// 0x561,收到更改RTM设置
 void RTMModule::recvChangingRTMSettings561(const QByteArray& buff) {
     OUpdateRTMSetting oUpdateRTMSetting;
     uint8_t len1 = sizeof(GenericHeader);
@@ -124,7 +129,6 @@ void RTMModule::recvChangingRTMSettings561(const QByteArray& buff) {
     this->sendControlledOrder23(code);
 }
 
-// 0x563,请求禁止IRI列表
 void RTMModule::recvRequestForbiddenIRIList563(const QByteArray& buff) {
     // 响应0x23
     uint8_t code = 0;
@@ -133,7 +137,6 @@ void RTMModule::recvRequestForbiddenIRIList563(const QByteArray& buff) {
     if (code == 0) this->sendForbiddenIRIList828();
 }
 
-// 0x564,设置禁止IRI列表
 void RTMModule::recvSettingForbiddenIRIList564(const QByteArray& buff) {
     OSetBanIRIlist oSetBanIRIlist;
     uint8_t len1 = sizeof(GenericHeader);
@@ -146,14 +149,12 @@ void RTMModule::recvSettingForbiddenIRIList564(const QByteArray& buff) {
     this->sendControlledOrder23(code);
 }
 
-// 0x822,发送方位标记,需要接收地图传来的数据，作为Nebula的槽函数，并由Nebula信号emit出去
 void RTMModule::sendBearingMarker822() {
     this->genericHeader.packType = 0x822;
     this->genericHeader.dataSize = sizeof(OBearingMark);
     this->genericHeader.packIdx++;
     this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
 
-    // 消息体
     OBearingMark oBearingMark;
     oBearingMark.idxCeilSPP = 0xffff;
     oBearingMark.iReserve = 0;
@@ -172,20 +173,19 @@ void RTMModule::sendBearingMarker822() {
     oBearingMark.dFreqMhz = 0;
     oBearingMark.Pow_dBm = 0;
     oBearingMark.SNR_dB = 0;
-    // 消息头
-    oBearingMark.header = this->genericHeader;
 
-    quint8 len1 = sizeof(OBearingMark);
-    char* data = (char*)malloc(len1);
-    memcpy(data, &oBearingMark, len1);
-    QByteArray byteArray(data, len1);
+    quint8 len1 = sizeof(GenericHeader);
+    quint8 len2 = sizeof(OBearingMark);
+    char* data = (char*)malloc(len1 + len2);
+    memcpy(data, &this->genericHeader, len1);
+    memcpy(data + len1, &oBearingMark, len2);
+    QByteArray byteArray(data, len1 + len2);
     qDebug() << "send 0x822:" << byteArray.toHex();
     this->pTcpSocket->write(byteArray);
     this->pTcpSocket->flush();
     free(data);
 }
 
-// 0x823,发送当前RTM设置
 void RTMModule::sendRTMSettings823() {
     this->genericHeader.packType = 0x823;
     this->genericHeader.dataSize = sizeof(OBearingMark);
@@ -210,7 +210,6 @@ void RTMModule::sendRTMSettings823() {
     free(data);
 }
 
-// 0x825,发送当前RTM功能
 void RTMModule::sendRTMFunction825() {
     this->genericHeader.packType = 0x825;
     this->genericHeader.dataSize = sizeof(OBearingMark);
@@ -238,7 +237,6 @@ void RTMModule::sendRTMFunction825() {
     free(data);
 }
 
-// 0x827,发送方位路线信息
 void RTMModule::sendBearingAndRoute827() {
     this->genericHeader.packType = 0x827;
     this->genericHeader.dataSize = sizeof(OBearingMark);
@@ -252,7 +250,6 @@ void RTMModule::sendBearingAndRoute827() {
     this->pTcpSocket->flush();
 }
 
-// 0x828,发送禁止IRI列表
 void RTMModule::sendForbiddenIRIList828() {
     this->genericHeader.packType = 0x828;
     this->genericHeader.dataSize = sizeof(OBearingMark);
@@ -277,7 +274,6 @@ void RTMModule::sendForbiddenIRIList828() {
     free(data);
 }
 
-// 0x829,发送无线电环境信息
 void RTMModule::sendWirelessEnvInfo829() {
     this->genericHeader.packType = 0x829;
     this->genericHeader.dataSize = sizeof(OBearingMark);
@@ -286,7 +282,9 @@ void RTMModule::sendWirelessEnvInfo829() {
 
     // 消息体
     OSubRadioTime oSubRadioTime;
-    oSubRadioTime.n_Time = 0;
+    qint64 reqTimestamp = QDateTime::currentMSecsSinceEpoch();
+    oSubRadioTime.time1 = reqTimestamp & 0xFFFFFFFF;
+    oSubRadioTime.time2 = (reqTimestamp >> 32) & 0xFFFFFFFF;
     oSubRadioTime.n_Num = 0;
     oSubRadioTime.n_Type = 0;
     oSubRadioTime.f_FrBegin = 0;
@@ -304,5 +302,4 @@ void RTMModule::sendWirelessEnvInfo829() {
     this->pTcpSocket->flush();
     free(data);
 }
-
 }

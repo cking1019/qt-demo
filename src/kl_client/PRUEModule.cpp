@@ -5,6 +5,7 @@ namespace NEBULA
 PRUEModule::PRUEModule() {
     this->pkgsPRUE = {0x601, 0x201, 0x202};
     this->genericHeader = {0x524542, 0xff, 0x2, 0x2, 0x0, 0x0, 0x1, 0x0, 0x0};
+    
     this->pCurrentSettingTimerD21 = new QTimer();
     this->pCurrentFunctionTimerD22 = new QTimer();
     this->pStateMachineTimer = new QTimer();
@@ -70,7 +71,9 @@ void PRUEModule::stateMachine() {
 // 接收数据统一接口
 void PRUEModule::onRecvData() {
     QByteArray buff = this->pTcpSocket->readAll();
-    memcpy(&this->genericHeader, buff.data(), sizeof(GenericHeader));
+    GenericHeader genericHeader2;
+    memcpy(&genericHeader2, buff.data(), sizeof(GenericHeader));
+    qint16 pkgID = genericHeader2.packType;
     qDebug("===============================================================");
     qDebug() << "received data from server: " << buff.toHex();
     qDebug("the size of pkg: %d", buff.size());
@@ -79,16 +82,16 @@ void PRUEModule::onRecvData() {
     qDebug("===============================================================");
     // 策略模式，根据包类型决定转发至哪个函数
     if (this->pkgsComm.contains(this->genericHeader.packType)) {
-        this->onReadCommData(buff);
+        this->onReadCommData(pkgID, buff);
     }
     if (this->pkgsPRUE.contains(this->genericHeader.packType)) {
-        this->onReadPRUEData(buff);
+        this->onReadPRUEData(pkgID, buff);
     }
 }
 
 // 从服务器中读取RTM数据
-void PRUEModule::onReadPRUEData(const QByteArray& buff) {
-    switch (genericHeader.packType) {
+void PRUEModule::onReadPRUEData(qint16 pkgID, const QByteArray& buff) {
+    switch (pkgID) {
         case 0x601: this->recvUpdatePRUESetting601(buff); break;
         case 0x201: this->recvSettingBanSector201(buff); break;
         case 0x202: this->recvBanRadiation202(buff); break;
