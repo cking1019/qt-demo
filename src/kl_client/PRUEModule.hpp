@@ -17,13 +17,14 @@ class PRUEModule : public CommonModule {
     void onRecvData();
     void stateMachine();
 
+    void sendInstalledBanSectorD01();
     void sendPRUESettingsD21();
     void sendPRUEFunctionD22();
-    void sendInstalledBanSectorD01();
-
-    void recvUpdatePRUESetting601(const QByteArray& buff);
+    
     void recvSettingBanSector201(const QByteArray& buff);
     void recvBanRadiation202(const QByteArray& buff);
+    void recvUpdatePRUESetting601(const QByteArray& buff);
+    
  public slots:
     void onReadPRUEData(qint16 pkgID, const QByteArray& buff);
 };

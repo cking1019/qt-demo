@@ -223,19 +223,19 @@ struct OBearingMark
 
 // 0x823，RTM设置
 struct OSubRezhRTR20 {
-    // 1
     uint32_t n_Cnt:8;
     uint32_t n_Reserv:24;
-    // 2
+
     float f_CurAz;
 };
 
-// 0x825,RTM功能 52454201 02022f00 40000000 25087a01 00000000 00000000 00000000 f87f0000 00000000
+// 0x825,RTM功能 
 struct OSubPosobilRTR22 {
     uint32_t n_IsRotate:1;
     uint32_t n_MaxTask:7;
     uint32_t n_MaxSubDiap:8;
     uint32_t n_Rezerv:16;
+
     float f_AzSize;
     float f_EpsSize;
     float f_maxBand;
@@ -278,7 +278,8 @@ struct OSubRadioTime {
     float f_FrBegin;
     float f_FrStep;
 
-    uint8_t n_Cnt;
+    uint32_t n_Cnt;
+    uint32_t n_power;
 };
 
 
@@ -343,16 +344,17 @@ struct OTrapBanSector {
 struct OTrapRadiationBan {
     uint32_t time1;
     uint32_t time2;
+
     uint32_t isOn : 1;
     uint32_t reserve : 31;
 };
 
 // 0x601,接收更改当前PRUE设置
-struct ORecvTrapFixed
-{
+struct ORecvTrapFixed {
     uint32_t i_Num:8;
     uint32_t taskREB:8;
     uint32_t reserve:16;
+
     float azREB;
     float elevREB;
     float kGainREB;

@@ -32,7 +32,6 @@ void RTMModule::stateMachine() {
     case ConnStatus::unConnected:
         if (!this->pReconnectTimer->isActive())                 this->pReconnectTimer->start(1000);
         if (this->isSendRegister01)                             this->isSendRegister01 = false;
-
         if (this->registerStatus == RegisterStatus::registered) this->registerStatus = RegisterStatus::unRegister;
         break;
     case ConnStatus::connecting:
@@ -56,7 +55,6 @@ void RTMModule::stateMachine() {
         if (this->pModuleStatueTimer24->isActive())     this->pModuleStatueTimer24->stop();
         if (this->pCurrentSettingTimer823->isActive())  this->pCurrentSettingTimer823->stop();
         if (this->pCurrentFunctionTimer825->isActive()) this->pCurrentFunctionTimer825->stop();
-
         if (this->timeStatus == TimeStatus::timed)      this->timeStatus = TimeStatus::unTime;
         break;
     case RegisterStatus::registering:
@@ -85,7 +83,6 @@ void RTMModule::stateMachine() {
     }
 }
 
-// 接收数据统一接口
 void RTMModule::onRecvData() {
     QByteArray buff = this->pTcpSocket->readAll();
     GenericHeader genericHeader2;
@@ -105,10 +102,9 @@ void RTMModule::onRecvData() {
     }
 }
 
-// 从服务器中读取RTM数据
 void RTMModule::onReadRTMData(qint16 pkgID, QByteArray& buff) {
     switch (pkgID) {
-        case 0x561: this->recvChangingRTMSettings561(buff); break;
+        case 0x561: this->recvChangingRTMSettings561(buff);     break;
         case 0x563: this->recvRequestForbiddenIRIList563(buff); break;
         case 0x564: this->recvSettingForbiddenIRIList564(buff); break;
         default: {
@@ -124,13 +120,11 @@ void RTMModule::recvChangingRTMSettings561(const QByteArray& buff) {
     memcpy(&oUpdateRTMSetting, buff.data() + len1, len2);
     QByteArray byteArray(reinterpret_cast<char*>(&oUpdateRTMSetting), len2);
     qDebug() << "recv 0x561:" << byteArray.toHex();
-    // 响应0x23
     uint8_t code = 0;
     this->sendControlledOrder23(code);
 }
 
 void RTMModule::recvRequestForbiddenIRIList563(const QByteArray& buff) {
-    // 响应0x23
     uint8_t code = 0;
     this->sendControlledOrder23(code);
     // 如果响应代码正常，则发送0x828作为响应
@@ -144,7 +138,6 @@ void RTMModule::recvSettingForbiddenIRIList564(const QByteArray& buff) {
     memcpy(&oSetBanIRIlist, buff.data() + len1, len2);
     QByteArray byteArray(reinterpret_cast<char*>(&oSetBanIRIlist), len2);
     qDebug() << "recv 0x564:" << byteArray.toHex();
-    // 响应0x23
     uint8_t code = 0;
     this->sendControlledOrder23(code);
 }
@@ -156,16 +149,20 @@ void RTMModule::sendBearingMarker822() {
     this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
 
     OBearingMark oBearingMark;
-    oBearingMark.idxCeilSPP = 0xffff;
+    oBearingMark.idxCeilVOI = 0xffff;
     oBearingMark.iReserve = 0;
+
     oBearingMark.idxCeilSPP = 0;
+
     oBearingMark.idxPoint = 0;
     oBearingMark.typeCeilSPP = 0xff;
     oBearingMark.typeChannel = 0xff;
     oBearingMark.typeSignal = 0xff;
+
     qint64 reqTimestamp = QDateTime::currentMSecsSinceEpoch();
     oBearingMark.timePel1 = reqTimestamp & 0xFFFFFFFF;
     oBearingMark.timePel2 = (reqTimestamp >> 32) & 0xFFFFFFFF;
+    
     oBearingMark.azim = 0;
     oBearingMark.elev = 0;
     oBearingMark.range = 0;
@@ -222,8 +219,11 @@ void RTMModule::sendRTMFunction825() {
     oSubPosobilRTR22.n_MaxTask = 0;
     oSubPosobilRTR22.n_MaxSubDiap = 0;
     oSubPosobilRTR22.n_Rezerv = 0;
+
     oSubPosobilRTR22.f_AzSize = 0;
     oSubPosobilRTR22.f_EpsSize = 0;
+    oSubPosobilRTR22.f_maxBand = 0;
+    oSubPosobilRTR22.f_minBand = 0;
 
     quint8 len1 = sizeof(GenericHeader);
     quint8 len2 = sizeof(OSubPosobilRTR22);
@@ -258,9 +258,11 @@ void RTMModule::sendForbiddenIRIList828() {
 
     // 消息体
     OBanIRI oBanIRI;
+    oBanIRI.n_Numb = 0;
+    oBanIRI.rezerv = 0;
     oBanIRI.f_Freq = 0;
     oBanIRI.f_DelFreq = 0;
-    oBanIRI.n_Numb = 0;
+    
 
     quint8 len1 = sizeof(GenericHeader);
     quint8 len2 = sizeof(OBanIRI);
@@ -285,8 +287,10 @@ void RTMModule::sendWirelessEnvInfo829() {
     qint64 reqTimestamp = QDateTime::currentMSecsSinceEpoch();
     oSubRadioTime.time1 = reqTimestamp & 0xFFFFFFFF;
     oSubRadioTime.time2 = (reqTimestamp >> 32) & 0xFFFFFFFF;
+    
     oSubRadioTime.n_Num = 0;
     oSubRadioTime.n_Type = 0;
+    
     oSubRadioTime.f_FrBegin = 0;
     oSubRadioTime.f_FrStep = 0;
     oSubRadioTime.n_Cnt = 0;

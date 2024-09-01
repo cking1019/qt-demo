@@ -10,6 +10,7 @@ class RTMModule : public CommonModule {
     QTimer* pCurrentFunctionTimer825;
     QTimer* pStateMachineTimer;
     QSet<qint16> pkgsRTM;
+    
  public:
     RTMModule();
     ~RTMModule();
