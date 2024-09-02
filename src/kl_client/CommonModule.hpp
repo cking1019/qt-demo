@@ -20,18 +20,7 @@
 namespace NEBULA {
 
 quint16 calcChcekSum(const char* sMess,int nCnt);
-
-struct ModuleCfg{
-    QString serverAddress;
-    QString moduleAddress;
-    qint16 serverPort;
-    qint16 modulePort;
-    QString moduleCfg20;
-};
-
-enum ConnStatus{unConnected, connecting, connected};
-enum RegisterStatus{unRegister, registering, registered};
-enum TimeStatus{unTime, timing, timed};
+QString readJson(QString DevConfig20);
 
 class CommonModule : public QObject {
     Q_OBJECT

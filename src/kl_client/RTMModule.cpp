@@ -26,7 +26,7 @@ RTMModule::~RTMModule() {
 
 // 状态机
 void RTMModule::stateMachine() {
-    // 连接状态
+    // 连接状态,连接->注册->对时
     switch (this->connStatus)
     {
     case ConnStatus::unConnected:
@@ -89,9 +89,7 @@ void RTMModule::onRecvData() {
     memcpy(&genericHeader2, buff.data(), sizeof(GenericHeader));
     qint16 pkgID = genericHeader2.packType;
     qDebug("===================================================================");
-    qDebug().nospace().noquote() << "recv 0x" << QString(pkgID).toUtf8().toHex() << ": " << buff.toHex();
-    // qDebug("the size of pkg: %d", buff.size());
-    // qDebug("the type of pkg: %x", this->genericHeader.packType);
+    qDebug().nospace().noquote() << "recv 0x" << QString::number(pkgID, 16) << ": " << buff.toHex();
     qDebug("===================================================================");
     // 策略模式，根据包类型决定转发至哪个函数
     if (this->pkgsComm.contains(genericHeader2.packType)) {

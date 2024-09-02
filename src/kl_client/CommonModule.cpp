@@ -11,6 +11,17 @@ quint16 calcChcekSum(const char* sMess,int nCnt) {
     return nSum;
 }
 
+QString readJson(QString DevConfig20) {
+    QFile file(DevConfig20);
+    QString jsonContent;
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&file);
+        jsonContent = in.readAll();
+        file.close();
+    }
+    return jsonContent;
+}
+
 CommonModule::CommonModule(QObject *parent):QObject(parent) {
     this->pkgsComm = {0x2, 0x4, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B};
 
@@ -52,7 +63,7 @@ void CommonModule::startup() {
         while (!this->pTcpSocket->waitForConnected(1000))
         {
             qDebug() << "Attempting to connect...";
-            this->connStatus = ConnStatus::connecting;
+            this->connStatus = ConnStatus::connecting; // 只需关注连接状态，因为连接状态会影响注册，注册状态会影响对时
             this->pTcpSocket->connectToHost(this->cfg.serverAddress, this->cfg.serverPort);
         }
     });
@@ -170,14 +181,13 @@ void CommonModule::sendRequestTime03() {
 }
 
 void CommonModule::recvRequestTime04(const QByteArray& buff) {
-    // qDebug("recv time request and begin to check the time.");
     ServerTimeControl serverTimeControl;
     quint8 len1 = sizeof(GenericHeader);
     quint8 len2 = sizeof(ServerTimeControl);
     memcpy(&serverTimeControl, buff.data() + len1, len2);
     quint64 timeStampRcv = QDateTime::currentMSecsSinceEpoch();
-    quint64 timeStampReq = (serverTimeControl.timeRequest1 << 32) | serverTimeControl.timeRequest1;
-    quint64 timeStampAns = (serverTimeControl.timeAnswer1 << 32) | serverTimeControl.timeAnswer1;
+    quint64 timeStampReq = serverTimeControl.timeRequest1;
+    quint64 timeStampAns = serverTimeControl.timeAnswer1;
 
     qint64 delTime1 = timeStampAns - timeStampReq;
     qint64 delTime2 = timeStampRcv - timeStampAns;
@@ -190,11 +200,13 @@ void CommonModule::recvRequestTime04(const QByteArray& buff) {
         quint64 timeCurrentStamp = QDateTime::currentMSecsSinceEpoch() + timeOut;
 
         QDateTime dateTime = QDateTime::fromMSecsSinceEpoch(timeCurrentStamp);
-        // qDebug() << "UTC Time: " + dateTime.toUTC().toString("yyyy-MM-dd hh:mm:ss.zzz");
+        qDebug() << "UTC Time: " + dateTime.toUTC().toString("yyyy-MM-dd hh:mm:ss.zzz");
 
         // 设置本地系统时间
         QString strDate = "date " + dateTime.toString("yyyy-MM-dd");
         QString strTime = "time " + dateTime.toString("hh:mm:ss");
+        qDebug() <<strDate;
+        qDebug() <<strTime;
         system(strDate.toStdString().c_str());
         system(strTime.toStdString().c_str());
 

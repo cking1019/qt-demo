@@ -2,17 +2,6 @@
 
 namespace NEBULA {
 
-QString readJson(QString DevConfig20) {
-    QFile file(DevConfig20);
-    QString jsonContent;
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        QTextStream in(&file);
-        jsonContent = in.readAll();
-        file.close();
-    }
-    return jsonContent;
-}
-
 ModuleController::ModuleController() {
 }
 
