@@ -1,28 +1,40 @@
 [
-{
-    "IDElem":0,
-    "Name":"Detect",
-    "ShortName":"Detect",
-    "Params":
-    [
-        {"IDParam":0,"Name":"status","type":2,"Template":
-            [
-                {"Value":0,"Text":"Open Device"},
-                {"Value":1,"Text":"Param Init"},
-                {"Value":2,"Text":"Prepare Work"}
-            ]
-        }
-    ],
-    "ConfigParam":
-    [
-        {
-            "NameConfig":"Open Unknow Target Detect",
-            "IDConfigParam":0,
-            "TypeConfig":1,
-            "IsSave":true,
-            "Values":["Open","Close"]
-        }
-
-    ]
-}
+    {
+        "IDElem": 0,
+        "Name": "Detect",
+        "ShortName": "Detect",
+        "Params": [
+            {
+                "IDParam": 0,
+                "Name": "status",
+                "type": 2,
+                "Template": [
+                    {
+                        "Value": 0,
+                        "Text": "OpenDevice"
+                    },
+                    {
+                        "Value": 1,
+                        "Text": "ParamInit"
+                    },
+                    {
+                        "Value": 2,
+                        "Text": "PrepareWork"
+                    }
+                ]
+            }
+        ],
+        "ConfigParam": [
+            {
+                "NameConfig": "OpenUnknowTargetDetect",
+                "IDConfigParam": 0,
+                "TypeConfig": 1,
+                "IsSave": true,
+                "Values": [
+                    "Open",
+                    "Close"
+                ]
+            }
+        ]
+    }
 ]

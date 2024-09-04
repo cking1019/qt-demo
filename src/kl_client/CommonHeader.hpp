@@ -31,17 +31,30 @@ enum ServerDealInfo {
     serverSendNote = 0x45,  // 发送消息
 };
 
-struct ModuleCfg{
+struct CommonCfg {
     QString serverAddress;
-    QString moduleAddress;
     qint16 serverPort;
-    qint16 modulePort;
     QString moduleCfg20;
 };
 
-enum ConnStatus{unConnected, connecting, connected};
-enum RegisterStatus{unRegister, registering, registered};
-enum TimeStatus{unTime, timing, timed};
+
+struct RTMCustomizedCfg {
+    QString moduleAddress;
+    qint16 serverPort;
+    qint16 modulePort;
+    
+
+    float elev;
+    float range;
+    float freqMhz;
+    float dFreqMhz;
+    float Pow_dBm;
+    float SNR_dB;
+};
+
+enum class ConnStatus{unConnected, connecting, connected};
+enum class RegisterStatus{unRegister, registering, registered};
+enum class TimeStatus{unTime, timing, timed};
 
 // 通用头
 struct GenericHeader
@@ -82,7 +95,7 @@ struct ServerRegister
 };
 
 // 0x3,请求时间
-struct ModuleTimeControl {
+struct ModuleTimeControl3 {
     uint32_t timeRequest1     :32;  // 查询时间戳低字节
     uint32_t timeRequest2     :32;  // 请求时间戳高字节
 };
@@ -94,7 +107,7 @@ struct ServerTimeControl {
 };
 
 // 0x5,模块位置
-struct ModuleGeoLocation {
+struct ModuleGeoLocation5 {
     uint32_t typeData     :3;   // 定位数据类型
     uint32_t isValid      :1;   // 数据可靠性状况
     uint32_t reserve      :28;  // 备用字段（未使用）
@@ -176,6 +189,8 @@ struct LogMsg {
 struct Msg2Oprator {
     uint32_t time1;
     uint32_t time2;
+
+    // msg
 };
 
 // 0x27,发送扩展命令收据
@@ -185,6 +200,8 @@ struct ExtendedOrder {
 
     uint32_t IDCom : 16;
     uint32_t code  : 16;
+
+    // msg
 };
 
 // 0x28,发送电路元件自定义参数值
@@ -197,7 +214,7 @@ struct CustomisedParm {
     uint32_t size    : 8;
     uint32_t reserve : 24;
 
-    uint32_t np_v;
+    //uint32_t np_v;
     
 };
 
@@ -233,6 +250,52 @@ struct ServerUpdate {
     uint32_t flag;
 };
 
+// 0x45
+struct Note2Oprator45 {
+    uint32_t time1;
+    uint32_t time2;
+    
+    // msg
+};
+
+// 0x48
+struct RadioAndSatellite48 {
+    uint32_t isREB   :1;
+    uint32_t isGeo   :1;
+    uint32_t reserve :30;
+};
+
+// 0x49，设置时间
+struct ReqSettingTime49 {
+    uint32_t time1;
+    uint32_t time2;
+};
+
+// 0x4A，设置模块坐标
+struct ReqSettingLocation4A {
+    float lat;
+    float lon;
+    float alt;
+
+    float x;
+    float y;
+    float z;
+};
+
+// 0x4B，设置自定义参数
+struct ReqSettingCustomizedParam4B {
+    uint32_t time1;
+    uint32_t time2;
+
+    uint32_t IDConfigParam;
+
+    uint32_t size    :8;  
+    uint32_t isSave  :1;  // 0保存新的NP值，无需持久化；1保存新的NP值，需要持久化
+    uint32_t reserve :23;
+
+    uint32_t npVal   :32; // 如果20中传输了np value的可能值数组，那么设置为4
+};
+
 
 // ==================RTM===========================================
 // 0x822，方位标记
@@ -261,15 +324,17 @@ struct OBearingMark
 };
 
 // 0x823，RTM设置
-struct OSubRezhRTR20 {
+struct OSubRezhRTR823 {
     uint32_t n_Cnt    :8;
     uint32_t n_Reserv :24;
 
     float f_CurAz;
+    float f_Curfm;
+    float f_Curband;
 };
 
-// 0x825,RTM功能 
-struct OSubPosobilRTR22 {
+// 0x825,RTM功能
+struct OSubPosobilRTR825 {
     uint32_t n_IsRotate   :1;
     uint32_t n_MaxTask    :7;
     uint32_t n_MaxSubDiap :8;
@@ -277,8 +342,8 @@ struct OSubPosobilRTR22 {
 
     float f_AzSize;
     float f_EpsSize;
-    float f_maxBand;
-    float f_minBand;
+    float f_fpMin;
+    float f_fpMax;
 };
 
 // 0x561,更改RTM设置
@@ -293,7 +358,7 @@ struct OUpdateRTMSetting {
 // 0x564,设置禁用IRI列表
 struct OSetBanIRIlist {
     uint32_t n_trans :8;
-    uint32_t rezerv  :24;
+    uint32_t reserve :24;
 
     float f_Freq;
     float f_DelFreq;

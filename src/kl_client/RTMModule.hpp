@@ -6,11 +6,12 @@
 namespace NEBULA {
 class RTMModule : public CommonModule {
  private:
+    QTimer* pCurrentTargetTimer822;
     QTimer* pCurrentSettingTimer823;
     QTimer* pCurrentFunctionTimer825;
     QTimer* pStateMachineTimer;
     QSet<qint16> pkgsRTM;
-    
+
  public:
     RTMModule();
     ~RTMModule();
@@ -27,6 +28,8 @@ class RTMModule : public CommonModule {
     void recvChangingRTMSettings561(const QByteArray& buff);
     void recvRequestForbiddenIRIList563(const QByteArray& buff);
     void recvSettingForbiddenIRIList564(const QByteArray& buff);
+
+    RTMCustomizedCfg rtmCustomizedCfg;
 
  public slots:
     void onReadRTMData(qint16 pkgID, QByteArray& buff);

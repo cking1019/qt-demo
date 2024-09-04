@@ -12,23 +12,30 @@ void ModuleController::init() {
     auto relayConfig = new QSettings(RELAY_PATH, QSettings::IniFormat);
     relayConfig->setIniCodec(QTextCodec::codecForName("utf-8"));
 
-    auto serverAddress = relayConfig->value("ControlInfo/ControlIP").toString();
-    auto serverPort = relayConfig->value("ControlInfo/ControlPort").toInt();
+    auto serverAddress = relayConfig->value("Common/serverIP").toString();
+    auto serverPort = relayConfig->value("Common/serverPort").toInt();
     qDebug() << "server address is " << serverAddress;
     qDebug() << "server port is " << serverPort;
 
     // 侦测设备配置
     auto iDetectNum = relayConfig->value("DetectDevNum/DevNum").toInt();
     for (int i = 1; i <= iDetectNum; i++) {
-        auto moduleAddress = relayConfig->value(QString("DetectDev%1/DevIP").arg(i)).toString();
-        auto modulePort = relayConfig->value(QString("DetectDev%1/DevPort").arg(i)).toInt();
-        auto DevConfig20 = relayConfig->value("DetectDev1/DevConfig20").toString();
         auto p = new RTMModule();
-        p->cfg.serverAddress = serverAddress;
-        p->cfg.serverPort = serverPort;
-        p->cfg.moduleAddress = moduleAddress;
-        p->cfg.modulePort = modulePort;
-        p->cfg.moduleCfg20 = readJson(DevConfig20);
+        p->commCfg.serverAddress = serverAddress;
+        p->commCfg.serverPort = serverPort;
+        p->commCfg.moduleCfg20 = readJson(relayConfig->value("DetectDev1/DevConfig20").toString());
+
+        p->rtmCustomizedCfg.serverPort = serverPort;
+        p->rtmCustomizedCfg.moduleAddress = relayConfig->value(QString("DetectDev%1/DevIP").arg(i)).toString();
+        p->rtmCustomizedCfg.modulePort = relayConfig->value(QString("DetectDev%1/DevPort").arg(i)).toInt();
+        p->rtmCustomizedCfg.elev = relayConfig->value(QString("DetectDev%1/elev").arg(i)).toFloat();
+        p->rtmCustomizedCfg.range = relayConfig->value(QString("DetectDev%1/range").arg(i)).toFloat();
+        p->rtmCustomizedCfg.freqMhz = relayConfig->value(QString("DetectDev%1/freqMhz").arg(i)).toFloat();
+        p->rtmCustomizedCfg.dFreqMhz = relayConfig->value(QString("DetectDev%1/dFreqMhz").arg(i)).toFloat();
+        p->rtmCustomizedCfg.Pow_dBm = relayConfig->value(QString("DetectDev%1/Pow_dBm").arg(i)).toFloat();
+        p->rtmCustomizedCfg.SNR_dB = relayConfig->value(QString("DetectDev%1/SNR_dB").arg(i)).toFloat();
+        
+        p->isDebugOut = relayConfig->value("Common/debugOut").toBool();
         this->rtmVec.append(p);
     }
 
