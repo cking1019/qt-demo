@@ -26,8 +26,8 @@
         ],
         "ConfigParam": [
             {
-                "NameConfig": "OpenUnknowTargetDetect",
                 "IDConfigParam": 0,
+                "NameConfig": "OpenUnknowTargetDetect",
                 "TypeConfig": 1,
                 "IsSave": true,
                 "Values": [

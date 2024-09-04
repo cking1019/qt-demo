@@ -3,8 +3,8 @@
 
 #pragma pack(push, 4)
 
-enum ModuleDealInfo {
-    moduleRegister    = 0x1,  // 请求在系统中注册模块
+enum class ModuleDealInfo {
+    ModuleRegister0x1 = 0x1,  // 请求在系统中注册模块
     moduleTimeControl = 0x3,  // 时间请求
     moduleGeoLocation = 0x5,  // 模块地址请求
 
@@ -12,22 +12,22 @@ enum ModuleDealInfo {
     moduleParaStatus  = 0x21,  // 电路元素变化
     moduleControlledParaAndStatus = 0x22,  // 受控参数和状态
     moduleControlledOrder = 0x23,          // 模块受控状态，每秒发送一次
-    moduleStatus = 0x24,                   // 每秒发送模块状态
+    moduleStatus  = 0x24,                   // 每秒发送模块状态
     moduleSendLog = 0x25,                  // 发送消息日志
     moduleSendMsg = 0x26,                  // 发送消息给操作员
     moduleExtendedOrder = 0x27,            // 发送扩展控制命令
-    moduleCustomedPara = 0x28              // 发送电路元件自定义参数的值
+    moduleCustomedPara  = 0x28              // 发送电路元件自定义参数的值
 };
 
-enum ServerDealInfo {
-    serverRegister    = 0x2,  // 确定模块在系统中的注册
-    serverTimeControl = 0x4,  // 服务器的时间戳
+enum class ServerDealInfo {
+    ServerRegister0x2    = 0x2,  // 确定模块在系统中的注册
+    ServerTimeControl0x4 = 0x4,  // 服务器的时间戳
 
-    serverStart = 0x40,     // 启动
-    serverClose = 0x41,     // 关闭
-    serverRestart = 0x42,   // 重启
-    serverReset = 0x43,     // 重设
-    serverAlter = 0x44,     // 修改
+    serverStart    = 0x40,     // 启动
+    serverClose    = 0x41,     // 关闭
+    serverRestart  = 0x42,   // 重启
+    serverReset    = 0x43,     // 重设
+    serverAlter    = 0x44,     // 修改
     serverSendNote = 0x45,  // 发送消息
 };
 
@@ -74,7 +74,7 @@ struct GenericHeader
 };
 
 // 0x1,请求注册
-struct ModuleRegister {
+struct ModuleRegister0x1 {
     uint32_t idManuf     :8;   // 制造商标识符
     uint32_t serialNum   :24;  // 产品序列号
 
@@ -87,7 +87,7 @@ struct ModuleRegister {
 };
 
 // 0x2,响应注册
-struct ServerRegister
+struct ServerRegister0x2
 {
     uint32_t idxModule    :8;   // 综合体中的模块号
     uint32_t errorConnect :8;   // 注册错误状态
@@ -95,19 +95,19 @@ struct ServerRegister
 };
 
 // 0x3,请求时间
-struct ModuleTimeControl3 {
-    uint32_t timeRequest1     :32;  // 查询时间戳低字节
-    uint32_t timeRequest2     :32;  // 请求时间戳高字节
+struct ModuleTimeControl0x3 {
+    uint32_t time1     :32;  // 查询时间戳低字节
+    uint32_t time2     :32;  // 请求时间戳高字节
 };
 
 // 0x4,响应时间
-struct ServerTimeControl {
-    uint64_t timeRequest1     :64;  // 查询时间戳
-    uint64_t timeAnswer1      :64;  // 响应时间戳
+struct ServerTimeControl0x4 {
+    uint64_t time1     :64;  // 查询时间戳
+    uint64_t time2     :64;  // 响应时间戳
 };
 
 // 0x5,模块位置
-struct ModuleGeoLocation5 {
+struct ModuleGeoLocation0x5 {
     uint32_t typeData     :3;   // 定位数据类型
     uint32_t isValid      :1;   // 数据可靠性状况
     uint32_t reserve      :28;  // 备用字段（未使用）
@@ -118,7 +118,7 @@ struct ModuleGeoLocation5 {
 };
 
 // 0x21,设备np状态
-struct ONPStatus {
+struct ONPStatus0x21 {
     uint32_t time1;
     uint32_t time2;
 
@@ -131,7 +131,7 @@ struct ONPStatus {
 };
 
 // 0x22,设备cp状态
-struct OCPStatus {
+struct OCPStatus0x22 {
     uint32_t time1;
     uint32_t time2;
 
@@ -145,7 +145,7 @@ struct OCPStatus {
 };
 
 // 0x23,控制指令;0x27,扩展指令
-struct OReqCtl {
+struct OReqCtl0x23 {
     uint32_t n_TimeReq1;
     uint32_t n_TimeReq2;
 
@@ -154,7 +154,7 @@ struct OReqCtl {
 };
 
 // 0x24,设备状态
-struct OModuleStatus {
+struct OModuleStatus0x24 {
     uint32_t time1;
     uint32_t time2;
 
@@ -176,7 +176,7 @@ struct OModuleStatus {
 };
 
 // 0x25,消息日志
-struct LogMsg {
+struct LogMsg0x25 {
     uint32_t time1;
     uint32_t time2;
 
@@ -186,7 +186,7 @@ struct LogMsg {
 };
 
 // 0x26,发送消息给操作员
-struct Msg2Oprator {
+struct Msg2Oprator0x26 {
     uint32_t time1;
     uint32_t time2;
 
@@ -194,7 +194,7 @@ struct Msg2Oprator {
 };
 
 // 0x27,发送扩展命令收据
-struct ExtendedOrder {
+struct ExtendedOrder0x27 {
     uint32_t time1;
     uint32_t time2;
 
@@ -205,7 +205,7 @@ struct ExtendedOrder {
 };
 
 // 0x28,发送电路元件自定义参数值
-struct CustomisedParm {
+struct CustomisedParm0x28 {
     uint32_t time1;
     uint32_t time2;
 
@@ -215,7 +215,6 @@ struct CustomisedParm {
     uint32_t reserve : 24;
 
     //uint32_t np_v;
-    
 };
 
 // 时间头
@@ -226,32 +225,32 @@ struct OTimeReq {
 
 
 // 0x40
-struct ServerStart {
+struct ServerStart0x40 {
     uint32_t flag;
 };
 
 // 0x41
-struct ServerClose {
+struct ServerClose0x41 {
     uint32_t flag;
 };
 
 // 0x42
-struct ServerRestart {
+struct ServerRestart0x42 {
     uint32_t flag;
 };
 
 // 0x43
-struct ServerReset {
+struct ServerReset0x43 {
     uint32_t flag;
 };
 
 // 0x44
-struct ServerUpdate {
+struct ServerUpdate0x44 {
     uint32_t flag;
 };
 
 // 0x45
-struct Note2Oprator45 {
+struct Note2Oprator450x45 {
     uint32_t time1;
     uint32_t time2;
     
@@ -259,20 +258,20 @@ struct Note2Oprator45 {
 };
 
 // 0x48
-struct RadioAndSatellite48 {
+struct RadioAndSatellite0x48 {
     uint32_t isREB   :1;
     uint32_t isGeo   :1;
     uint32_t reserve :30;
 };
 
 // 0x49，设置时间
-struct ReqSettingTime49 {
+struct ReqSettingTime0x49 {
     uint32_t time1;
     uint32_t time2;
 };
 
 // 0x4A，设置模块坐标
-struct ReqSettingLocation4A {
+struct ReqSettingLocation0x4A {
     float lat;
     float lon;
     float alt;
@@ -283,7 +282,7 @@ struct ReqSettingLocation4A {
 };
 
 // 0x4B，设置自定义参数
-struct ReqSettingCustomizedParam4B {
+struct ReqSettingCustomizedParam0x4B {
     uint32_t time1;
     uint32_t time2;
 
@@ -299,7 +298,7 @@ struct ReqSettingCustomizedParam4B {
 
 // ==================RTM===========================================
 // 0x822，方位标记
-struct OBearingMark
+struct OBearingMark0x822
 {
     uint32_t idxCeilVOI :16;
     uint32_t iReserve   :16;
@@ -324,7 +323,7 @@ struct OBearingMark
 };
 
 // 0x823，RTM设置
-struct OSubRezhRTR823 {
+struct OSubRezhRTR0x823 {
     uint32_t n_Cnt    :8;
     uint32_t n_Reserv :24;
 
@@ -334,7 +333,7 @@ struct OSubRezhRTR823 {
 };
 
 // 0x825,RTM功能
-struct OSubPosobilRTR825 {
+struct OSubPosobilRTR0x825 {
     uint32_t n_IsRotate   :1;
     uint32_t n_MaxTask    :7;
     uint32_t n_MaxSubDiap :8;
@@ -347,7 +346,7 @@ struct OSubPosobilRTR825 {
 };
 
 // 0x561,更改RTM设置
-struct OUpdateRTMSetting {
+struct OUpdateRTMSetting0x561 {
     uint32_t n_range :8;
     uint32_t rezerv  :24;
 
@@ -356,7 +355,7 @@ struct OUpdateRTMSetting {
 };
 
 // 0x564,设置禁用IRI列表
-struct OSetBanIRIlist {
+struct OSetBanIRIlist0x564 {
     uint32_t n_trans :8;
     uint32_t reserve :24;
 
@@ -365,7 +364,7 @@ struct OSetBanIRIlist {
 };
 
 // 0x828，禁止IRI列表
-struct OBanIRI {
+struct OBanIRI0x828 {
     uint32_t n_Numb :16;
     uint32_t rezerv :16;
 
@@ -374,7 +373,7 @@ struct OBanIRI {
 };
 
 // 0x829，当前无线电环境信息
-struct OSubRadioTime {
+struct OSubRadioTime0x829 {
     uint32_t time1;
     uint32_t time2;
 
@@ -392,7 +391,7 @@ struct OSubRadioTime {
 
 // ==================PRUE===========================================
 // 0xD21,发送当前PRUE设置
-struct OSendTrapFixed {
+struct OSendTrapFixed0xD21 {
     uint32_t taskREB :8;
     uint32_t taskGeo :8;
     uint32_t reserve :16;
@@ -403,7 +402,7 @@ struct OSendTrapFixed {
 };
 
 // 0xD22,发送当前PRUE功能
-struct OTrapFunc {
+struct OTrapFunc0xD22 {
     uint32_t numDiap  :8;
     uint32_t isGeo    :1;
     uint32_t numDiap2 :8;
@@ -447,7 +446,7 @@ struct OTrapBanSector {
 };
 
 // 0x202,接收设置辐射禁止
-struct OTrapRadiationBan {
+struct OTrapRadiationBan0x202 {
     uint32_t time1;
     uint32_t time2;
 
@@ -456,7 +455,7 @@ struct OTrapRadiationBan {
 };
 
 // 0x601,接收更改当前PRUE设置
-struct ORecvTrapFixed {
+struct ORecvTrapFixed0x601 {
     uint32_t i_Num   :8;
     uint32_t taskREB :8;
     uint32_t reserve :16;

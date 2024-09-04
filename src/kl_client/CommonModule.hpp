@@ -11,6 +11,9 @@
 #include <QFile>
 #include <QSettings>
 #include <QTextCodec>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonValue>
 #include "NebulaController.hpp"
 #include "CommonHeader.hpp"
 // #include "Logger.hpp"
@@ -33,7 +36,7 @@ class CommonModule : public QObject {
 
 	void sendRegister01();
 	void sendRequestTime03();
-	void sendModuleLocation05(ReqSettingLocation4A reqSettingLocation4A = ReqSettingLocation4A());
+	void sendModuleLocation05();
 
 	void sendModuleFigure20();
 	void sendModuleNPStatus21();
@@ -98,8 +101,8 @@ class CommonModule : public QObject {
 	QTimer* pCustomizedParmaTimer28;
 
 	// 时间和位置需要设置，所以单独用变量保存
-	ModuleTimeControl3 myModuleTimeControl3;
-	ModuleGeoLocation5 myModuleGeoLocation5;
+	ModuleTimeControl0x3 myModuleTimeControl0x3;
+	ModuleGeoLocation0x5 myModuleGeoLocation0x5;
 
 
  private:

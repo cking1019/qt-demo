@@ -114,7 +114,7 @@ void PRUEModule::onReadPRUEData(qint16 pkgID, const QByteArray& buff) {
 void PRUEModule::recvSettingBanSector201(const QByteArray& buff) {
     OTrapBanSector oTrapBanSector;
     uint8_t len1 = sizeof(GenericHeader);
-    uint8_t len2 = sizeof(ORecvTrapFixed);
+    uint8_t len2 = sizeof(ORecvTrapFixed0x601);
     memcpy(&oTrapBanSector, buff.data() + len1, len2);
     QByteArray byteArray(reinterpret_cast<char*>(&oTrapBanSector), len2);
     qDebug() << "recv 0x601:" << byteArray.toHex();
@@ -126,9 +126,9 @@ void PRUEModule::recvSettingBanSector201(const QByteArray& buff) {
 }
 
 void PRUEModule::recvBanRadiation202(const QByteArray& buff) {
-    OTrapRadiationBan oTrapRadiationBan;
+    OTrapRadiationBan0x202 oTrapRadiationBan;
     uint8_t len1 = sizeof(GenericHeader);
-    uint8_t len2 = sizeof(OTrapRadiationBan);
+    uint8_t len2 = sizeof(OTrapRadiationBan0x202);
     memcpy(&oTrapRadiationBan, buff.data() + len1, len2);
     QByteArray byteArray(reinterpret_cast<char*>(&oTrapRadiationBan), len2);
     qDebug() << "recv 0x601:" << byteArray.toHex();
@@ -140,9 +140,9 @@ void PRUEModule::recvBanRadiation202(const QByteArray& buff) {
 }
 
 void PRUEModule::recvUpdatePRUESetting601(const QByteArray& buff) {
-    ORecvTrapFixed oRecvTrapFixed;
+    ORecvTrapFixed0x601 oRecvTrapFixed;
     uint8_t len1 = sizeof(GenericHeader);
-    uint8_t len2 = sizeof(ORecvTrapFixed);
+    uint8_t len2 = sizeof(ORecvTrapFixed0x601);
     memcpy(&oRecvTrapFixed, buff.data() + len1, len2);
     QByteArray byteArray(reinterpret_cast<char*>(&oRecvTrapFixed), len2);
     qDebug() << "recv 0x601:" << byteArray.toHex();
@@ -155,7 +155,7 @@ void PRUEModule::recvUpdatePRUESetting601(const QByteArray& buff) {
 
 void PRUEModule::sendInstalledBanSectorD01() {
     this->genericHeader.packType = 0xD01;
-    this->genericHeader.dataSize = sizeof(OSendTrapFixed);
+    this->genericHeader.dataSize = sizeof(OSendTrapFixed0xD21);
     this->genericHeader.packIdx++;
     this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
 
@@ -194,12 +194,12 @@ void PRUEModule::sendInstalledBanSectorD01() {
 
 void PRUEModule::sendPRUESettingsD21() {
     this->genericHeader.packType = 0xD21;
-    this->genericHeader.dataSize = sizeof(OSendTrapFixed);
+    this->genericHeader.dataSize = sizeof(OSendTrapFixed0xD21);
     this->genericHeader.packIdx++;
     this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
 
     // 消息体
-    OSendTrapFixed oSendTrapFixed;
+    OSendTrapFixed0xD21 oSendTrapFixed;
     oSendTrapFixed.taskREB = 0;
     oSendTrapFixed.taskGeo = 0;
     oSendTrapFixed.reserve = 0;
@@ -209,7 +209,7 @@ void PRUEModule::sendPRUESettingsD21() {
     oSendTrapFixed.kGainREB = 0;
 
     quint8 len1 = sizeof(GenericHeader);
-    quint8 len2 = sizeof(OSendTrapFixed);
+    quint8 len2 = sizeof(OSendTrapFixed0xD21);
     char* data = (char*)malloc(len1 + len2);
     memcpy(data, &this->genericHeader, len1);
     memcpy(data + len1, &oSendTrapFixed, len2);
@@ -222,12 +222,12 @@ void PRUEModule::sendPRUESettingsD21() {
 
 void PRUEModule::sendPRUEFunctionD22() {
     this->genericHeader.packType = 0xD22;
-    this->genericHeader.dataSize = sizeof(OSendTrapFixed);
+    this->genericHeader.dataSize = sizeof(OSendTrapFixed0xD21);
     this->genericHeader.packIdx++;
     this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
 
     // 消息体
-    OTrapFunc oTrapFunc;
+    OTrapFunc0xD22 oTrapFunc;
     oTrapFunc.numDiap = 0;
     oTrapFunc.isGeo = 0;
     oTrapFunc.numDiap2 = 0;
@@ -247,8 +247,8 @@ void PRUEModule::sendPRUEFunctionD22() {
     oTrapFunc.maxFreqREB = 0;
     oTrapFunc.maxDFreq = 0;
 
-    quint8 len1 = sizeof(OTrapFunc);
-    quint8 len2 = sizeof(OSendTrapFixed);
+    quint8 len1 = sizeof(OTrapFunc0xD22);
+    quint8 len2 = sizeof(OSendTrapFixed0xD21);
     char* data = (char*)malloc(len1 + len2);
     memcpy(data, &this->genericHeader, len1);
     memcpy(data + len1, &oTrapFunc, len2);

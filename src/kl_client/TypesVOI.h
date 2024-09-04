@@ -1003,7 +1003,7 @@ struct OBanIRI { // запрещенный ИРИ
   };
 // 0x829
 //---------------------------------------------------------
-struct OSubRadioTime {
+struct OSubRadioTime0x829 {
     // 1 - 2
     qint64 n_Time;
     // 3
