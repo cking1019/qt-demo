@@ -30,6 +30,9 @@ class RTMModule : public CommonModule {
     void recvSettingForbiddenIRIList564(const QByteArray& buff);
 
     RTMCustomizedCfg rtmCustomizedCfg;
+    OBearingMark0x822 oBearingMark0x822;
+    OSubRezhRTR0x823 oSubRezhRTR0x823;
+    OSetBanIRIlist0x564And0x828 oSetBanIRIlist0x564And0x828;
 
  public slots:
     void onReadRTMData(qint16 pkgID, QByteArray& buff);

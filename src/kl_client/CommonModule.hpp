@@ -14,13 +14,35 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
-#include "NebulaController.hpp"
 #include "CommonHeader.hpp"
 // #include "Logger.hpp"
 #define RELAY_PATH "./conf/module.ini"
 
 
 namespace NEBULA {
+
+struct CommonCfg {
+    QString serverAddress;
+    qint16 serverPort;
+    QString moduleCfg20;
+};
+
+struct RTMCustomizedCfg {
+    QString moduleAddress;
+    qint16 serverPort;
+    qint16 modulePort;
+    
+    float elev;
+    float range;
+    float freqMhz;
+    float dFreqMhz;
+    float Pow_dBm;
+    float SNR_dB;
+};
+
+enum class ConnStatus{unConnected, connecting, connected};
+enum class RegisterStatus{unRegister, registering, registered};
+enum class TimeStatus{unTime, timing, timed};
 
 quint16 calcChcekSum(const char* sMess,int nCnt);
 QString readJson(QString DevConfig20);
@@ -39,7 +61,7 @@ class CommonModule : public QObject {
 	void sendModuleLocation05();
 
 	void sendModuleFigure20();
-	void sendModuleNPStatus21();
+	void sendModuleStatus21();
 	void sendModuleCPStatus22();
 	void sendModuleStatus24();
 
@@ -47,7 +69,8 @@ class CommonModule : public QObject {
 
 	void sendLogMsg25(QString msg);
 	void sendNote2Operator26(QString msg);
-	void sendCustomized28();
+
+	void sendModuleCPStatus28();
 
 	void recvRegister02(const QByteArray& buff);
 	void recvRequestTime04(const QByteArray& buff);
@@ -96,14 +119,13 @@ class CommonModule : public QObject {
 	QTimer* pReconnectTimer;
 	QTimer* pRequestTimer03;
 	QTimer* pCPTimer22;
-	QTimer* pNPTimer21;
+	QTimer* pModuleStateTimer21;
 	QTimer* pModuleStatueTimer24;
-	QTimer* pCustomizedParmaTimer28;
+	QTimer* pNPTimer28;
 
 	// 时间和位置需要设置，所以单独用变量保存
 	ModuleTimeControl0x3 myModuleTimeControl0x3;
 	ModuleGeoLocation0x5 myModuleGeoLocation0x5;
-
 
  private:
 	// 时间差结果

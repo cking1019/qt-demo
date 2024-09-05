@@ -50,7 +50,7 @@ void PRUEModule::stateMachine() {
         if (this->pRequestTimer03->isActive())          this->pRequestTimer03->stop();
         if (this->isModuleLocation05)                   this->isModuleLocation05  = false;
         if (this->isModuleConfigure20)                  this->isModuleConfigure20 = false;
-        if (this->pNPTimer21->isActive())               this->pNPTimer21->stop();
+        if (this->pModuleStateTimer21->isActive())               this->pModuleStateTimer21->stop();
         if (this->pCPTimer22->isActive())               this->pCPTimer22->stop();
         if (this->pModuleStatueTimer24->isActive())     this->pModuleStatueTimer24->stop();
         if (this->pCurrentSettingTimerD21->isActive())  this->pCurrentSettingTimerD21->stop();
@@ -63,7 +63,7 @@ void PRUEModule::stateMachine() {
         if (!this->pRequestTimer03->isActive())          this->pRequestTimer03->start(1000);
         if (!this->isModuleLocation05)                   this->sendModuleLocation05();
         if (!this->isModuleConfigure20)                  this->sendModuleFigure20();
-        if (!this->pNPTimer21->isActive())               this->pNPTimer21->start(5000);
+        if (!this->pModuleStateTimer21->isActive())               this->pModuleStateTimer21->start(5000);
         if (!this->pCPTimer22->isActive())               this->pCPTimer22->start(5000);
         if (!this->pModuleStatueTimer24->isActive())     this->pModuleStatueTimer24->start(1000);
         if (!this->pCurrentSettingTimerD21->isActive())  this->pCurrentSettingTimerD21->start(1000);
@@ -88,9 +88,9 @@ void PRUEModule::onRecvData() {
     GenericHeader genericHeader2;
     memcpy(&genericHeader2, buff.data(), sizeof(GenericHeader));
     qint16 pkgID = genericHeader2.packType;
-    // qDebug("===================================================================");
-    qDebug().nospace().noquote() << "recv 0x" << QString::number(pkgID, 16) << ": " << buff.toHex();
-    // qDebug("===================================================================");
+    qDebug("===================================================================");
+    qDebug().nospace() << "recv 0x" << QString::number(pkgID, 16) << ": " << buff.toHex();
+    qDebug("===================================================================");
     // 策略模式，根据包类型决定转发至哪个函数
     if (this->pkgsComm.contains(this->genericHeader.packType)) {
         this->onReadCommData(pkgID, buff);
@@ -121,8 +121,6 @@ void PRUEModule::recvSettingBanSector201(const QByteArray& buff) {
     /*
         deal with data
     */
-    uint8_t code = 0;
-    this->sendControlledOrder23(code);
 }
 
 void PRUEModule::recvBanRadiation202(const QByteArray& buff) {
@@ -135,8 +133,6 @@ void PRUEModule::recvBanRadiation202(const QByteArray& buff) {
     /*
         deal with data
     */
-    uint8_t code = 0;
-    this->sendControlledOrder23(code);
 }
 
 void PRUEModule::recvUpdatePRUESetting601(const QByteArray& buff) {
@@ -149,8 +145,6 @@ void PRUEModule::recvUpdatePRUESetting601(const QByteArray& buff) {
     /*
         deal with data
     */
-    uint8_t code = 0;
-    this->sendControlledOrder23(code);
 }
 
 void PRUEModule::sendInstalledBanSectorD01() {

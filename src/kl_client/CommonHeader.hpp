@@ -31,30 +31,7 @@ enum class ServerDealInfo {
     serverSendNote = 0x45,  // 发送消息
 };
 
-struct CommonCfg {
-    QString serverAddress;
-    qint16 serverPort;
-    QString moduleCfg20;
-};
 
-
-struct RTMCustomizedCfg {
-    QString moduleAddress;
-    qint16 serverPort;
-    qint16 modulePort;
-    
-
-    float elev;
-    float range;
-    float freqMhz;
-    float dFreqMhz;
-    float Pow_dBm;
-    float SNR_dB;
-};
-
-enum class ConnStatus{unConnected, connecting, connected};
-enum class RegisterStatus{unRegister, registering, registered};
-enum class TimeStatus{unTime, timing, timed};
 
 // 通用头
 struct GenericHeader
@@ -142,12 +119,14 @@ struct OCPStatus0x22 {
     uint32_t isNewStatus :1;
     uint32_t isNewValue  :1;
     uint32_t reserve     :14;
+
+    uint32_t n_val;
 };
 
 // 0x23,控制指令;0x27,扩展指令
 struct OReqCtl0x23 {
-    uint32_t n_TimeReq1;
-    uint32_t n_TimeReq2;
+    uint32_t time1;
+    uint32_t time2;
 
     uint32_t n_id_Com  :16;
     uint32_t n_code    :16;
@@ -214,7 +193,7 @@ struct CustomisedParm0x28 {
     uint32_t size    : 8;
     uint32_t reserve : 24;
 
-    //uint32_t np_v;
+    uint32_t np_v;
 };
 
 // 时间头
@@ -354,23 +333,21 @@ struct OUpdateRTMSetting0x561 {
     float f_DelFreq;
 };
 
-// 0x564,设置禁用IRI列表
-struct OSetBanIRIlist0x564 {
-    uint32_t n_trans :8;
+// 0x564&&0x828,设置禁用IRI列表
+struct OSetBanIRIlist0x564And0x828 {
+    uint32_t n_Numb :8;
     uint32_t reserve :24;
 
-    float f_Freq;
-    float f_DelFreq;
+    float f_Freq1;
+    float f_DelFreq1;
+    
+    float f_Freq2;
+    float f_DelFreq2;
+    
+    float f_Freq3;
+    float f_DelFreq3;
 };
 
-// 0x828，禁止IRI列表
-struct OBanIRI0x828 {
-    uint32_t n_Numb :16;
-    uint32_t rezerv :16;
-
-    float f_Freq;
-    float f_DelFreq;
-};
 
 // 0x829，当前无线电环境信息
 struct OSubRadioTime0x829 {

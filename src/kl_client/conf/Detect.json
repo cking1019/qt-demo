@@ -3,6 +3,18 @@
         "IDElem": 0,
         "Name": "Detect",
         "ShortName": "Detect",
+        "ConfigParam": [
+            {
+                "IDConfigParam": 0,
+                "NameConfig": "OpenUnknowTargetDetect",
+                "TypeConfig": 1,
+                "IsSave": true,
+                "Values": [
+                    "Open",
+                    "Close"
+                ]
+            }
+        ],
         "Params": [
             {
                 "IDParam": 0,
@@ -21,18 +33,6 @@
                         "Value": 2,
                         "Text": "PrepareWork"
                     }
-                ]
-            }
-        ],
-        "ConfigParam": [
-            {
-                "IDConfigParam": 0,
-                "NameConfig": "OpenUnknowTargetDetect",
-                "TypeConfig": 1,
-                "IsSave": true,
-                "Values": [
-                    "Open",
-                    "Close"
                 ]
             }
         ]

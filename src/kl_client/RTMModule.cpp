@@ -29,6 +29,21 @@ RTMModule::RTMModule() {
     
     // 启动状态机定时器
     this->pStateMachineTimer->start();
+
+    this->oSubRezhRTR0x823.n_Cnt = 1;
+    this->oSubRezhRTR0x823.n_Reserv = 0;
+    this->oSubRezhRTR0x823.f_CurAz = -1;
+    this->oSubRezhRTR0x823.f_Curfm = 5850.5;
+    this->oSubRezhRTR0x823.f_Curband = 120.0;
+
+    this->oSetBanIRIlist0x564And0x828.n_Numb = 1;
+    this->oSetBanIRIlist0x564And0x828.reserve = 0;
+    this->oSetBanIRIlist0x564And0x828.f_Freq1 = 0;
+    this->oSetBanIRIlist0x564And0x828.f_DelFreq1 = 0;
+    this->oSetBanIRIlist0x564And0x828.f_Freq2 = 0;
+    this->oSetBanIRIlist0x564And0x828.f_DelFreq2 = 0;   
+    this->oSetBanIRIlist0x564And0x828.f_Freq3 = 0;
+    this->oSetBanIRIlist0x564And0x828.f_DelFreq3 = 0;  
 }
 
 RTMModule::~RTMModule() {
@@ -90,27 +105,27 @@ void RTMModule::stateMachine() {
     case TimeStatus::unTime: {
         if (this->isModuleLocation05)                   this->isModuleLocation05  = false;
         if (this->isModuleConfigure20)                  this->isModuleConfigure20 = false;
-        if (this->pNPTimer21->isActive())               this->pNPTimer21->stop();
+        if (this->pModuleStateTimer21->isActive())               this->pModuleStateTimer21->stop();
         if (this->pCPTimer22->isActive())               this->pCPTimer22->stop();
         if (this->pModuleStatueTimer24->isActive())     this->pModuleStatueTimer24->stop();
-        if (this->pCustomizedParmaTimer28->isActive())  this->pCustomizedParmaTimer28->stop();
+        if (this->pNPTimer28->isActive())  this->pNPTimer28->stop();
         if (this->pCurrentTargetTimer822->isActive())   this->pCurrentTargetTimer822->stop();
         if (this->pCurrentSettingTimer823->isActive())  this->pCurrentSettingTimer823->stop();
         if (this->pCurrentFunctionTimer825->isActive()) this->pCurrentFunctionTimer825->stop();
         break;
     }
     case TimeStatus::timing: break;
-    case TimeStatus::timed:  
+    case TimeStatus::timed:
     {
         if (!this->isModuleLocation05)                   this->sendModuleLocation05();
         if (!this->isModuleConfigure20)                  this->sendModuleFigure20();
-        if (!this->pNPTimer21->isActive())               this->pNPTimer21->start(5000);
-        if (!this->pCPTimer22->isActive())               this->pCPTimer22->start(6000);
-        if (!this->pModuleStatueTimer24->isActive())     this->pModuleStatueTimer24->start(1000);
-        if (!this->pCustomizedParmaTimer28->isActive())  this->pCustomizedParmaTimer28->start(1200);
-        if (!this->pCurrentTargetTimer822->isActive())   this->pCurrentTargetTimer822->start(1500);
-        if (!this->pCurrentSettingTimer823->isActive())  this->pCurrentSettingTimer823->start(1700);
-        if (!this->pCurrentFunctionTimer825->isActive()) this->pCurrentFunctionTimer825->start(1900);
+        if (!this->pModuleStateTimer21->isActive())      this->pModuleStateTimer21->start(30000);
+        // if (!this->pCPTimer22->isActive())            this->pCPTimer22->start(6000);
+        if (!this->pModuleStatueTimer24->isActive())     this->pModuleStatueTimer24->start(10000);
+        if (!this->pNPTimer28->isActive())               this->pNPTimer28->start(12000);
+        if (!this->pCurrentTargetTimer822->isActive())   this->pCurrentTargetTimer822->start(15000);
+        if (!this->pCurrentSettingTimer823->isActive())  this->pCurrentSettingTimer823->start(17000);
+        if (!this->pCurrentFunctionTimer825->isActive()) this->pCurrentFunctionTimer825->start(19000);
         break;
     }
     default:{
@@ -149,49 +164,56 @@ void RTMModule::onReadRTMData(qint16 pkgID, QByteArray& buff) {
     }
 }
 
+// 修改频率、频段
 void RTMModule::recvChangingRTMSettings561(const QByteArray& buff) {
-    OUpdateRTMSetting0x561 oUpdateRTMSetting;
+    OUpdateRTMSetting0x561 oUpdateRTMSetting561;
     qint8 len1 = sizeof(GenericHeader);
     qint8 len2 = sizeof(OUpdateRTMSetting0x561);
-    memcpy(&oUpdateRTMSetting, buff.data() + len1, len2);
-    QByteArray byteArray(reinterpret_cast<char*>(&oUpdateRTMSetting), len2);
-    qint8 code = 0;
-    this->sendControlledOrder23(code);
+    memcpy(&oUpdateRTMSetting561, buff.data() + len1, len2);
+    this->sendControlledOrder23(0);
+    this->oSubRezhRTR0x823.f_Curfm   = oUpdateRTMSetting561.f_Freq;
+    this->oSubRezhRTR0x823.f_Curband = oUpdateRTMSetting561.f_DelFreq;
+    this->sendRTMSettings823();
     /* ------------------------------------------------------------------------ */
+    QByteArray byteArray(reinterpret_cast<char*>(&oUpdateRTMSetting561), len2);
     if(this->isDebugOut) {
         this->sendLogMsg25(QString::fromUtf8(byteArray));
         this->sendNote2Operator26(QString::fromUtf8(byteArray));
     }
     qDebug() << "recv 0x561:" << byteArray.toHex()
-                              << oUpdateRTMSetting.n_range
-                              << oUpdateRTMSetting.rezerv
-                              << oUpdateRTMSetting.f_Freq
-                              << oUpdateRTMSetting.f_DelFreq;
+                              << oUpdateRTMSetting561.n_range
+                              << oUpdateRTMSetting561.rezerv
+                              << oUpdateRTMSetting561.f_Freq
+                              << oUpdateRTMSetting561.f_DelFreq;
 }
 
 // 563->828
 void RTMModule::recvRequestForbiddenIRIList563(const QByteArray& buff) {
-    qint8 code = 0;
-    this->sendControlledOrder23(code);
-    if (code == 0) this->sendForbiddenIRIList828();
+    this->sendControlledOrder23(0);
+    this->sendForbiddenIRIList828();
 }
 
-// 564->828
+//564修改IRI的中心评率
 void RTMModule::recvSettingForbiddenIRIList564(const QByteArray& buff) {
-    OSetBanIRIlist0x564 oSetBanIRIlist;
+    // 只能接收等于三个频率、频段
+    OSetBanIRIlist0x564And0x828 oSetBanIRIlist;
     qint8 len1 = sizeof(GenericHeader);
-    qint8 len2 = sizeof(OSetBanIRIlist0x564);
+    qint8 len2 = sizeof(OSetBanIRIlist0x564And0x828);
     memcpy(&oSetBanIRIlist, buff.data() + len1, len2);
-    QByteArray byteArray(reinterpret_cast<char*>(&oSetBanIRIlist), len2);
-    qint8 code = 0;
-    this->sendControlledOrder23(code);
-    if (code == 0) this->sendForbiddenIRIList828();
+    this->oSetBanIRIlist0x564And0x828.n_Numb = oSetBanIRIlist.n_Numb;
+    this->oSetBanIRIlist0x564And0x828.reserve = oSetBanIRIlist.reserve;
+    this->oSetBanIRIlist0x564And0x828.f_Freq1 = oSetBanIRIlist.f_Freq1;
+    this->oSetBanIRIlist0x564And0x828.f_DelFreq1 = oSetBanIRIlist.f_DelFreq1;
+    this->oSetBanIRIlist0x564And0x828.f_Freq2 = oSetBanIRIlist.f_Freq2;
+    this->oSetBanIRIlist0x564And0x828.f_DelFreq2 = oSetBanIRIlist.f_DelFreq2;
+    this->oSetBanIRIlist0x564And0x828.f_Freq3 = oSetBanIRIlist.f_Freq3;
+    this->oSetBanIRIlist0x564And0x828.f_DelFreq3 = oSetBanIRIlist.f_DelFreq3;
+
+    this->sendControlledOrder23(0);
     /* ------------------------------------------------------------------------ */
+    QByteArray byteArray(reinterpret_cast<char*>(&oSetBanIRIlist), len2);
     qDebug() << "recv 0x564:" << byteArray.toHex()
-                              << oSetBanIRIlist.n_trans
-                              << oSetBanIRIlist.reserve
-                              << oSetBanIRIlist.f_Freq
-                              << oSetBanIRIlist.f_DelFreq;
+             << "n_Numb:"     << oSetBanIRIlist.n_Numb;
 }
 
 void RTMModule::sendBearingMarker822() {
@@ -212,7 +234,7 @@ void RTMModule::sendBearingMarker822() {
     qint64 reqTimestamp = QDateTime::currentMSecsSinceEpoch();
     oBearingMark.timePel1 = reqTimestamp & 0xFFFFFFFF;
     oBearingMark.timePel2 = (reqTimestamp >> 32) & 0xFFFFFFFF;
-    oBearingMark.azim = (10 + (oBearingMark.idxPoint) * 2) % 360;
+    oBearingMark.azim = 180;
     oBearingMark.elev = 10.5;
     oBearingMark.range = 1060;
     oBearingMark.freqMhz = 5840;
@@ -234,7 +256,15 @@ void RTMModule::sendBearingMarker822() {
         this->sendLogMsg25("a target has being detected");
         this->sendNote2Operator26("a target has being detected");
     }
-    qDebug() << "send 0x822:" << byteArray.toHex() << this->genericHeader.checkSum;
+    qDebug() << "send 0x822:"   << byteArray.toHex() 
+             << "checksum:"<< this->genericHeader.checkSum
+             << "azim:"    << oBearingMark.azim
+             << "elev:"    << oBearingMark.elev
+             << "range:"   << oBearingMark.range
+             << "freqMhz:" << oBearingMark.freqMhz
+             << "dFreqMhz:"<< oBearingMark.dFreqMhz
+             << "Pow_dBm:" << oBearingMark.Pow_dBm
+             << "SNR_dB:"  << oBearingMark.SNR_dB;
 }
 
 void RTMModule::sendRTMSettings823() {
@@ -244,23 +274,21 @@ void RTMModule::sendRTMSettings823() {
     this->genericHeader.packIdx++;
     this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
     /* ------------------------------------------------------------------------ */
-    OSubRezhRTR0x823 oSubRezhRTR823;
-    oSubRezhRTR823.n_Cnt = 1;
-    oSubRezhRTR823.n_Reserv = 0;
-    oSubRezhRTR823.f_CurAz = -1;
-    oSubRezhRTR823.f_Curfm = 5850.5;
-    oSubRezhRTR823.f_Curband = 120.0;
-    /* ------------------------------------------------------------------------ */
     quint8 len1 = sizeof(GenericHeader);
     quint8 len2 = sizeof(OSubRezhRTR0x823);
     char* data = (char*)malloc(len1 + len2);
     memcpy(data, &this->genericHeader, len1);
-    memcpy(data + len1, &oSubRezhRTR823, len2);
+    memcpy(data + len1, &this->oSubRezhRTR0x823, len2);
     QByteArray byteArray(data, len1 + len2);
     this->pTcpSocket->write(byteArray);
     this->pTcpSocket->flush();
     free(data);
-    qDebug() << "send 0x823:" << byteArray.toHex();
+    qDebug() << "send 0x823:"     << byteArray.toHex()
+             << "n_Cnt:"          << this->oSubRezhRTR0x823.n_Cnt
+             << "n_Reserv:"       << this->oSubRezhRTR0x823.n_Reserv
+             << "f_CurAz:"        << this->oSubRezhRTR0x823.f_CurAz
+             << "f_Curfm:"        << this->oSubRezhRTR0x823.f_Curfm
+             << "f_Curband:"      << this->oSubRezhRTR0x823.f_Curband;
 }
 
 void RTMModule::sendRTMFunction825() {
@@ -289,7 +317,15 @@ void RTMModule::sendRTMFunction825() {
     this->pTcpSocket->write(byteArray);
     this->pTcpSocket->flush();
     free(data);
-    qDebug() << "send 0x825:" << byteArray.toHex();
+    qDebug() << "send 0x825:"        << byteArray.toHex()
+             << "n_IsRotate:"        << oSubPosobilRTR825.n_IsRotate
+             << "n_MaxTask:"         << oSubPosobilRTR825.n_MaxTask
+             << "n_MaxSubDiap:"      << oSubPosobilRTR825.n_MaxSubDiap
+             << "n_Rezerv:"          << oSubPosobilRTR825.n_Rezerv
+             << "f_AzSize:"          << oSubPosobilRTR825.f_AzSize
+             << "f_EpsSize:"         << oSubPosobilRTR825.f_EpsSize
+             << "f_fpMin:"           << oSubPosobilRTR825.f_fpMin
+             << "f_fpMax:"           << oSubPosobilRTR825.f_fpMax;
 }
 
 void RTMModule::sendBearingAndRoute827() {
@@ -304,32 +340,35 @@ void RTMModule::sendBearingAndRoute827() {
     QByteArray byteArray = jsonStr.toUtf8();
     this->pTcpSocket->write(byteArray);
     this->pTcpSocket->flush();
-    qDebug() << "send 0x827:" << byteArray.toHex();
+    qDebug() << "send 0x827:"   << byteArray.toHex()
+             << "jsonStr:" << jsonStr;
 }
 
+// 修改频率、频段
 void RTMModule::sendForbiddenIRIList828() {
     /* ------------------------------------------------------------------------ */
     this->genericHeader.packType = 0x828;
-    this->genericHeader.dataSize = sizeof(OBanIRI0x828);
+    this->genericHeader.dataSize = sizeof(OSetBanIRIlist0x564And0x828);
     this->genericHeader.packIdx++;
     this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
     /* ------------------------------------------------------------------------ */
-    OBanIRI0x828 oBanIRI;
-    oBanIRI.n_Numb = 3;
-    oBanIRI.rezerv = 0;
-    oBanIRI.f_Freq = 500;
-    oBanIRI.f_DelFreq = 1000;
-    /* ------------------------------------------------------------------------ */
     quint8 len1 = sizeof(GenericHeader);
-    quint8 len2 = sizeof(OBanIRI0x828);
+    quint8 len2 = sizeof(OSetBanIRIlist0x564And0x828);
     char* data = (char*)malloc(len1 + len2);
     memcpy(data, &this->genericHeader, len1);
-    memcpy(data + len1, &oBanIRI, len2);
+    memcpy(data + len1, &this->oSetBanIRIlist0x564And0x828, len2);
     QByteArray byteArray(data, len1 + len2);
     this->pTcpSocket->write(byteArray);
     this->pTcpSocket->flush();
     free(data);
-    qDebug() << "send 0x828:" << byteArray.toHex();
+    qDebug() << "send 0x828:"  << byteArray.toHex()
+             << "n_Numb:"      << this->oSetBanIRIlist0x564And0x828.n_Numb
+             << "f_Freq1:"    << this->oSetBanIRIlist0x564And0x828.f_Freq1
+             << "f_DelFreq1:" << this->oSetBanIRIlist0x564And0x828.f_DelFreq1
+             << "f_Freq2:"    << this->oSetBanIRIlist0x564And0x828.f_Freq2
+             << "f_DelFreq2:" << this->oSetBanIRIlist0x564And0x828.f_DelFreq2
+             << "f_Freq3:"    << this->oSetBanIRIlist0x564And0x828.f_Freq3
+             << "f_DelFreq3:" << this->oSetBanIRIlist0x564And0x828.f_DelFreq3;
 }
 
 void RTMModule::sendWirelessEnvInfo829() {
@@ -358,6 +397,11 @@ void RTMModule::sendWirelessEnvInfo829() {
     this->pTcpSocket->write(byteArray);
     this->pTcpSocket->flush();
     free(data);
-    qDebug() << "send 0x829:" << byteArray.toHex();
+    qDebug() << "send 0x829:"     << byteArray.toHex()
+             << "n_Num:"     << oSubRadioTime.n_Num
+             << "n_Type:"    << oSubRadioTime.n_Type
+             << "f_FrBegin:" << oSubRadioTime.f_FrBegin
+             << "f_FrStep:"  << oSubRadioTime.f_FrStep
+             << "n_Cnt:"     << oSubRadioTime.n_Cnt;
 }
 }
