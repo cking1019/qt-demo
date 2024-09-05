@@ -45,6 +45,12 @@ CommonModule::CommonModule(QObject *parent):QObject(parent) {
     this->m_iN = 1;
 
     this->isDebugOut = 0;
+
+    this->myModuleGeoLocation0x5.typeData = 1;
+    this->myModuleGeoLocation0x5.isValid = 1;
+    this->myModuleGeoLocation0x5.xLat = 10;
+    this->myModuleGeoLocation0x5.yLong = 20;
+    this->myModuleGeoLocation0x5.zHeight = 30;
 }
 
 CommonModule::~CommonModule() {
@@ -113,7 +119,7 @@ void CommonModule::sendRegister01() {
     this->genericHeader.packType = 0x1;
     this->genericHeader.dataSize = sizeof(ModuleRegister0x1);
     this->genericHeader.packIdx = 0;
-    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
+    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
     ModuleRegister0x1 ModuleRegister0x1;
     ModuleRegister0x1.idManuf = 0x1;
@@ -125,7 +131,7 @@ void CommonModule::sendRegister01() {
     ModuleRegister0x1.versProgMin = 0x0;
     ModuleRegister0x1.isAsku = this->genericHeader.isAsku;
     /* ------------------------------------------------------------------------ */
-    quint8 len1 = sizeof(GenericHeader);
+    quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(ModuleRegister0x1);
     char* data = (char*)malloc(len1 + len2);
     memcpy(data, &this->genericHeader, len1);
@@ -140,7 +146,7 @@ void CommonModule::sendRegister01() {
 
 void CommonModule::recvRegister02(const QByteArray& buff) {
     ServerRegister0x2 ServerRegister0x2;
-    memcpy(&ServerRegister0x2, buff.data() + sizeof(GenericHeader), sizeof(ServerRegister0x2));
+    memcpy(&ServerRegister0x2, buff.data() + HEADER_LEN, sizeof(ServerRegister0x2));
     this->genericHeader.moduleId = ServerRegister0x2.idxModule;
     qDebug() << "the module id is " << QString::number(ServerRegister0x2.idxModule, 16);
     qDebug() << "the connection status is " << QString::number(ServerRegister0x2.errorConnect, 16);
@@ -167,13 +173,13 @@ void CommonModule::sendRequestTime03() {
     this->genericHeader.packType = 0x3;
     this->genericHeader.dataSize = sizeof(ModuleTimeControl0x3);
     this->genericHeader.packIdx++;
-    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
+    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
     qint64 reqTimestamp = QDateTime::currentMSecsSinceEpoch();
     this->myModuleTimeControl0x3.time1 = reqTimestamp & 0xFFFFFFFF;
     this->myModuleTimeControl0x3.time2 = (reqTimestamp >> 32) & 0xFFFFFFFF;
     /* ------------------------------------------------------------------------ */
-    quint8 len1 = sizeof(GenericHeader);
+    quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(ModuleTimeControl0x3);
     char* data = (char*)malloc(len1 + len2);
     memcpy(data, &this->genericHeader, len1);
@@ -214,7 +220,7 @@ void CommonModule::reqAndResTime(quint64 timeStampReq, quint64 timeStampAns) {
 
 void CommonModule::recvRequestTime04(const QByteArray& buff) {
     ServerTimeControl0x4 serverTimeControl0x4;
-    quint8 len1 = sizeof(GenericHeader);
+    quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(ServerTimeControl0x4);
     memcpy(&serverTimeControl0x4, buff.data() + len1, len2);
     
@@ -229,9 +235,9 @@ void CommonModule::sendModuleLocation05() {
     this->genericHeader.packType = 0x5;
     this->genericHeader.dataSize = sizeof(ModuleGeoLocation0x5);
     this->genericHeader.packIdx++;
-    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
+    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
-    quint8 len1 = sizeof(GenericHeader);
+    quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(ModuleGeoLocation0x5);
     char* data = (char*)malloc(len1 + len2);
     memcpy(data, &this->genericHeader, len1);
@@ -252,9 +258,9 @@ void CommonModule::sendModuleFigure20() {
     this->genericHeader.packType = 0x20;
     this->genericHeader.dataSize = this->commCfg.moduleCfg20.length();
     this->genericHeader.packIdx++;
-    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
+    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
-    quint8 len1 = sizeof(GenericHeader);
+    quint8 len1 = HEADER_LEN;
     quint16 len2 = this->commCfg.moduleCfg20.length();
     char* data = (char*)malloc(len1 + len2);
     memcpy(data, &this->genericHeader, len1);
@@ -272,7 +278,7 @@ void CommonModule::sendModuleStatus21() {
     this->genericHeader.packType = 0x21;
     this->genericHeader.dataSize = sizeof(ONPStatus0x21);
     this->genericHeader.packIdx++;
-    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
+    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
     ONPStatus0x21 oNPStatus;
     quint64 timestamp = QDateTime::currentMSecsSinceEpoch();
@@ -285,7 +291,7 @@ void CommonModule::sendModuleStatus21() {
     oNPStatus.isImit = 0;
     oNPStatus.reserve = 0;
     /* ------------------------------------------------------------------------ */
-    quint8 len1 = sizeof(GenericHeader);
+    quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(ONPStatus0x21);
     char* data = (char*)malloc(len1 + len2);
     memcpy(data, &this->genericHeader, len1);
@@ -301,7 +307,7 @@ void CommonModule::sendModuleCPStatus22() {
     this->genericHeader.packType = 0x22;
     this->genericHeader.dataSize = sizeof(OCPStatus0x22);
     this->genericHeader.packIdx++;
-    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
+    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
     OCPStatus0x22 oCPStatus;
     quint64 timestamp = QDateTime::currentMSecsSinceEpoch();
@@ -315,7 +321,7 @@ void CommonModule::sendModuleCPStatus22() {
     oCPStatus.reserve = 0;
     oCPStatus.n_val = 2; // "Value": 2, "Text": "PrepareWork"
     /* ------------------------------------------------------------------------ */
-    quint8 len1 = sizeof(GenericHeader);
+    quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OCPStatus0x22);
     char* data = (char*)malloc(len1 + len2);
     memcpy(data, &this->genericHeader, len1);
@@ -331,7 +337,7 @@ void CommonModule::sendModuleStatus24() {
     this->genericHeader.packType = 0x24;
     this->genericHeader.dataSize = sizeof(OModuleStatus0x24);
     this->genericHeader.packIdx++;
-    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
+    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
     OModuleStatus0x24 oModuleStatus;
     quint64 timestamp = QDateTime::currentMSecsSinceEpoch();
@@ -350,9 +356,8 @@ void CommonModule::sendModuleStatus24() {
     oModuleStatus.isWpValid = 0;
     oModuleStatus.statusTwp = 0;
     oModuleStatus.mode = 0;
-    oModuleStatus.reserve = 0;
     /* ------------------------------------------------------------------------ */
-    quint8 len1 = sizeof(GenericHeader);
+    quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OModuleStatus0x24);
     char* data = (char*)malloc(len1 + len2);
     memcpy(data, &this->genericHeader, len1);
@@ -368,7 +373,7 @@ void CommonModule::sendControlledOrder23(uint8_t code) {
     this->genericHeader.packType = 0x23;
     this->genericHeader.dataSize = sizeof(OReqCtl0x23);
     this->genericHeader.packIdx++;
-    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
+    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
     OReqCtl0x23 oReqCtl;
     quint64 timestamp = QDateTime::currentMSecsSinceEpoch();
@@ -377,7 +382,7 @@ void CommonModule::sendControlledOrder23(uint8_t code) {
     oReqCtl.n_id_Com = 0x1;
     oReqCtl.n_code = code;
     
-    quint8 len1 = sizeof(GenericHeader);
+    quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OReqCtl0x23);
     char* data = (char*)malloc(len1 + len2);
     memcpy(data, &this->genericHeader, len1);
@@ -393,7 +398,7 @@ void CommonModule::sendLogMsg25(QString msg) {
     this->genericHeader.packType = 0x25;
     this->genericHeader.dataSize = msg.size();
     this->genericHeader.packIdx++;
-    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
+    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
     LogMsg0x25 logMsg;
     quint64 timestamp = QDateTime::currentMSecsSinceEpoch();
@@ -403,7 +408,7 @@ void CommonModule::sendLogMsg25(QString msg) {
     logMsg.type = 0;
     logMsg.reserve = 0;
     /* ------------------------------------------------------------------------ */
-    quint8 len1 = sizeof(GenericHeader);
+    quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(LogMsg0x25);
     quint8 len3 = msg.length();
     char* data = (char*)malloc(len1 + len2 + len3);
@@ -421,14 +426,14 @@ void CommonModule::sendNote2Operator26(QString msg) {
     this->genericHeader.packType = 0x26;
     this->genericHeader.dataSize = msg.size();
     this->genericHeader.packIdx++;
-    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
+    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
     OTimeReq oTimeReq;
     quint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     oTimeReq.time1 = timestamp & 0xFFFFFFFF;
     oTimeReq.time2 = (timestamp >> 32) & 0xFFFFFFFF;
     /* ------------------------------------------------------------------------ */
-    quint8 len1 = sizeof(GenericHeader);
+    quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OTimeReq);
     quint8 len3 = msg.length();
     char* data = (char*)malloc(len1 + len2 + len3);
@@ -455,9 +460,9 @@ void CommonModule::sendModuleCPStatus28() {
     this->genericHeader.packType = 0x28;
     this->genericHeader.packIdx++;
     this->genericHeader.dataSize = sizeof(CustomisedParm0x28);
-    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
+    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
-    quint8 len1 = sizeof(GenericHeader);
+    quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(CustomisedParm0x28);
     char* data = (char*)malloc(len1 + len2);
     memcpy(data, &this->genericHeader, len1);
@@ -510,7 +515,7 @@ void CommonModule::recvUpdate44(const QByteArray& buff) {
 }
 
 void CommonModule::recvNote4Operator45(const QByteArray& buff) {
-    qint8 len1 = sizeof(GenericHeader);
+    qint8 len1 = HEADER_LEN;
     qint8 len2 = sizeof(Note2Oprator450x45);
     QByteArray stringData = buff.right(buff.size() - len1 - len2);
     QString msg = QString::fromUtf8(stringData);
@@ -526,7 +531,7 @@ void CommonModule::recvSettingLang47(const QByteArray& buff) {
 }
 
 void CommonModule::recvRadioAndSatellite48(const QByteArray& buff) {
-    qint8 len1 = sizeof(GenericHeader);
+    qint8 len1 = HEADER_LEN;
     qint8 len2 = sizeof(RadioAndSatellite0x48);
     RadioAndSatellite0x48 radioAndSatellite48;
     memcpy(&radioAndSatellite48, buff.data() + len1, len2);
@@ -541,7 +546,7 @@ void CommonModule::recvRadioAndSatellite48(const QByteArray& buff) {
 
 // 49->23
 void CommonModule::recvSettingTime49(const QByteArray& buff) {
-    qint8 len1 = sizeof(GenericHeader);
+    qint8 len1 = HEADER_LEN;
     qint8 len2 = sizeof(ReqSettingTime0x49);
     ReqSettingTime0x49 reqSettingTime49;
     memcpy(&reqSettingTime49, buff.data() + len1, len2);
@@ -563,7 +568,7 @@ void CommonModule::recvSettingTime49(const QByteArray& buff) {
 
 // 4A -> 05
 void CommonModule::recvModuleLocation4A(const QByteArray& buff) {
-    qint8 len1 = sizeof(GenericHeader);
+    qint8 len1 = HEADER_LEN;
     qint8 len2 = sizeof(ReqSettingLocation0x4A);
     ReqSettingLocation0x4A reqSettingLocation0x4A;
     memcpy(&reqSettingLocation0x4A, buff.data() + len1, len2);
@@ -590,7 +595,7 @@ void CommonModule::recvModuleLocation4A(const QByteArray& buff) {
 
 // 4B -> 28
 void CommonModule::recvCustomizedParam4B(const QByteArray& buff) {
-    qint8 len1 = sizeof(GenericHeader);
+    qint8 len1 = HEADER_LEN;
     qint8 len2 = sizeof(ReqSettingCustomizedParam0x4B);
     ReqSettingCustomizedParam0x4B reqSettingCustomizedParam0x4B;
     memcpy(&reqSettingCustomizedParam0x4B, buff.data() + len1, len2);

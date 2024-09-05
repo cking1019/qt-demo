@@ -303,49 +303,32 @@ struct OBearingMark0x822
 
 // 0x823，RTM设置
 struct OSubRezhRTR0x823 {
-    uint32_t n_Cnt    :8;
-    uint32_t n_Reserv :24;
+    uint32_t N    :8;
+    uint32_t reserve :24;
 
-    float f_CurAz;
-    float f_Curfm;
-    float f_Curband;
+    float curAz;
+    QVector<QVector<float>> freqs;
 };
 
 // 0x825,RTM功能
 struct OSubPosobilRTR0x825 {
-    uint32_t n_IsRotate   :1;
-    uint32_t n_MaxTask    :7;
-    uint32_t n_MaxSubDiap :8;
+    uint32_t isRotate   :1;
+    uint32_t maxTasks    :7;
+    uint32_t numDiap :8;
     uint32_t n_Rezerv     :16;
 
-    float f_AzSize;
-    float f_EpsSize;
-    float f_fpMin;
-    float f_fpMax;
+    float dAz;
+    float dElev;
+    float minFreqRTR;
+    float maxFreqRTR;
 };
 
-// 0x561,更改RTM设置
-struct OUpdateRTMSetting0x561 {
-    uint32_t n_range :8;
-    uint32_t rezerv  :24;
-
-    float f_Freq;
-    float f_DelFreq;
-};
-
-// 0x564&&0x828,设置禁用IRI列表
-struct OSetBanIRIlist0x564And0x828 {
-    uint32_t n_Numb :8;
+// 0x828,禁用IRI列表
+struct OSetBanIRIlist0x828 {
+    uint32_t NIRI :8;
     uint32_t reserve :24;
 
-    float f_Freq1;
-    float f_DelFreq1;
-    
-    float f_Freq2;
-    float f_DelFreq2;
-    
-    float f_Freq3;
-    float f_DelFreq3;
+    QVector<QVector<float>> freqs;
 };
 
 
@@ -354,14 +337,14 @@ struct OSubRadioTime0x829 {
     uint32_t time1;
     uint32_t time2;
 
-    uint32_t n_Num  :24;
-    uint32_t n_Type :8;
+    uint32_t taskNum  :24;
+    uint32_t powType :8;
 
-    float f_FrBegin;
-    float f_FrStep;
+    float freqBegin;
+    float freqStep;
 
-    uint32_t n_Cnt;
-    uint32_t n_power;
+    uint32_t N;
+    uint32_t pow1;
 };
 
 

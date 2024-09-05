@@ -44,6 +44,9 @@ enum class ConnStatus{unConnected, connecting, connected};
 enum class RegisterStatus{unRegister, registering, registered};
 enum class TimeStatus{unTime, timing, timed};
 
+// 包头长度
+const qint8 HEADER_LEN = 16;
+
 quint16 calcChcekSum(const char* sMess,int nCnt);
 QString readJson(QString DevConfig20);
 

@@ -7,27 +7,20 @@
 #include "Demo.hpp"
 #include "../kl_client/CommonHeader.hpp"
 
- class Base {
-    public:
-   virtual void doSomething(int i) const {
-     std::cout << "This is from Base with " << i << std::endl;
-   }
- };
- 
- class Derivied : public Base {
-    public:
-   void doSomething(int i) {
-     std::cout << "This is from Derived with " << i << std::endl;
-   }
- };
+struct OSubRezhRTR0x8233 {
+    uint32_t N    :8;
+    uint32_t reserve :24;
+
+    float curAz;
+    QVector<float> freqs = {1, 2};
+};
 
 
 
 int main(int argc, char *argv[])
 {
-    Base* pB = new Base();
-    Base* dB = new Derivied();
-    pB->doSomething(1);
-    dB->doSomething(2);
+    OSubRezhRTR0x8233 obj;
+    qDebug() << sizeof(OSubRezhRTR0x8233);
+    qDebug() << sizeof(obj.freqs);
     return 0;
 }

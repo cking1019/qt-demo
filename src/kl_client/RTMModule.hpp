@@ -32,7 +32,9 @@ class RTMModule : public CommonModule {
     RTMCustomizedCfg rtmCustomizedCfg;
     OBearingMark0x822 oBearingMark0x822;
     OSubRezhRTR0x823 oSubRezhRTR0x823;
-    OSetBanIRIlist0x564And0x828 oSetBanIRIlist0x564And0x828;
+    OSubPosobilRTR0x825 oSubPosobilRTR0x825;
+    OSetBanIRIlist0x828 oSetBanIRIlist0x828;
+    OSubRadioTime0x829 oSubRadioTime0x829;
 
  public slots:
     void onReadRTMData(qint16 pkgID, QByteArray& buff);

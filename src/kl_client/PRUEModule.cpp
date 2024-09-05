@@ -86,7 +86,7 @@ void PRUEModule::stateMachine() {
 void PRUEModule::onRecvData() {
     QByteArray buff = this->pTcpSocket->readAll();
     GenericHeader genericHeader2;
-    memcpy(&genericHeader2, buff.data(), sizeof(GenericHeader));
+    memcpy(&genericHeader2, buff.data(), HEADER_LEN);
     qint16 pkgID = genericHeader2.packType;
     qDebug("===================================================================");
     qDebug().nospace() << "recv 0x" << QString::number(pkgID, 16) << ": " << buff.toHex();
@@ -113,7 +113,7 @@ void PRUEModule::onReadPRUEData(qint16 pkgID, const QByteArray& buff) {
 
 void PRUEModule::recvSettingBanSector201(const QByteArray& buff) {
     OTrapBanSector oTrapBanSector;
-    uint8_t len1 = sizeof(GenericHeader);
+    uint8_t len1 = HEADER_LEN;
     uint8_t len2 = sizeof(ORecvTrapFixed0x601);
     memcpy(&oTrapBanSector, buff.data() + len1, len2);
     QByteArray byteArray(reinterpret_cast<char*>(&oTrapBanSector), len2);
@@ -125,7 +125,7 @@ void PRUEModule::recvSettingBanSector201(const QByteArray& buff) {
 
 void PRUEModule::recvBanRadiation202(const QByteArray& buff) {
     OTrapRadiationBan0x202 oTrapRadiationBan;
-    uint8_t len1 = sizeof(GenericHeader);
+    uint8_t len1 = HEADER_LEN;
     uint8_t len2 = sizeof(OTrapRadiationBan0x202);
     memcpy(&oTrapRadiationBan, buff.data() + len1, len2);
     QByteArray byteArray(reinterpret_cast<char*>(&oTrapRadiationBan), len2);
@@ -137,7 +137,7 @@ void PRUEModule::recvBanRadiation202(const QByteArray& buff) {
 
 void PRUEModule::recvUpdatePRUESetting601(const QByteArray& buff) {
     ORecvTrapFixed0x601 oRecvTrapFixed;
-    uint8_t len1 = sizeof(GenericHeader);
+    uint8_t len1 = HEADER_LEN;
     uint8_t len2 = sizeof(ORecvTrapFixed0x601);
     memcpy(&oRecvTrapFixed, buff.data() + len1, len2);
     QByteArray byteArray(reinterpret_cast<char*>(&oRecvTrapFixed), len2);
@@ -151,7 +151,7 @@ void PRUEModule::sendInstalledBanSectorD01() {
     this->genericHeader.packType = 0xD01;
     this->genericHeader.dataSize = sizeof(OSendTrapFixed0xD21);
     this->genericHeader.packIdx++;
-    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
+    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), HEADER_LEN - 2);
 
     // 消息体
     OTrapBanSector oTrapBanSector;
@@ -174,7 +174,7 @@ void PRUEModule::sendInstalledBanSectorD01() {
     oTrapBanSector.Freq = 0;
     oTrapBanSector.delFreq = 0;
 
-    quint8 len1 = sizeof(GenericHeader);
+    quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OTrapBanSector);
     char* data = (char*)malloc(len1 + len2);
     memcpy(data, &this->genericHeader, len1);
@@ -190,7 +190,7 @@ void PRUEModule::sendPRUESettingsD21() {
     this->genericHeader.packType = 0xD21;
     this->genericHeader.dataSize = sizeof(OSendTrapFixed0xD21);
     this->genericHeader.packIdx++;
-    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
+    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), HEADER_LEN - 2);
 
     // 消息体
     OSendTrapFixed0xD21 oSendTrapFixed;
@@ -202,7 +202,7 @@ void PRUEModule::sendPRUESettingsD21() {
     oSendTrapFixed.curEpsREB = 0;
     oSendTrapFixed.kGainREB = 0;
 
-    quint8 len1 = sizeof(GenericHeader);
+    quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OSendTrapFixed0xD21);
     char* data = (char*)malloc(len1 + len2);
     memcpy(data, &this->genericHeader, len1);
@@ -218,7 +218,7 @@ void PRUEModule::sendPRUEFunctionD22() {
     this->genericHeader.packType = 0xD22;
     this->genericHeader.dataSize = sizeof(OSendTrapFixed0xD21);
     this->genericHeader.packIdx++;
-    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), sizeof(GenericHeader) - 2);
+    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), HEADER_LEN - 2);
 
     // 消息体
     OTrapFunc0xD22 oTrapFunc;
