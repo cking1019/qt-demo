@@ -71,28 +71,28 @@ class CommonModule : public QObject {
 
 	void sendModuleCPStatus28();
 
-	void recvRegister02(const QByteArray& buff);
-	void recvRequestTime04(const QByteArray& buff);
+	void recvRegister02(const QByteArray& buf);
+	void recvRequestTime04(const QByteArray& buf);
 
-	void recvStart40(const QByteArray& buff);
-	void recvStop41(const QByteArray& buff);
-	void recvRestart42(const QByteArray& buff);
-	void recvReset43(const QByteArray& buff);
-	void recvUpdate44(const QByteArray& buff);
+	void recvStart40(const QByteArray& buf);
+	void recvStop41(const QByteArray& buf);
+	void recvRestart42(const QByteArray& buf);
+	void recvReset43(const QByteArray& buf);
+	void recvUpdate44(const QByteArray& buf);
 
-	void recvNote4Operator45(const QByteArray& buff);
-	void recvRequestModuleFigure46(const QByteArray& buff);
+	void recvNote4Operator45(const QByteArray& buf);
+	void recvRequestModuleFigure46(const QByteArray& buf);
 
-	void recvSettingLang47(const QByteArray& buff);
-	void recvRadioAndSatellite48(const QByteArray& buff);
-	void recvSettingTime49(const QByteArray& buff);
-	void recvModuleLocation4A(const QByteArray& buff);
-	void recvCustomizedParam4B(const QByteArray& buff);
+	void recvSettingLang47(const QByteArray& buf);
+	void recvRadioAndSatellite48(const QByteArray& buf);
+	void recvSettingTime49(const QByteArray& buf);
+	void recvModuleLocation4A(const QByteArray& buf);
+	void recvCustomizedParam4B(const QByteArray& buf);
 
 	// 公共配置
-	CommonCfg commCfg;
+	CommonCfg m_commCfg;
 	// 是否发送日志	
-	bool isDebugOut;
+	bool m_isDebugOut;
 
  protected:
 	// Socket网络传输
@@ -123,9 +123,15 @@ class CommonModule : public QObject {
 	QTimer* pModuleStatueTimer24;
 	QTimer* pNPTimer28;
 
-	// 时间和位置需要设置，所以单独用变量保存
+    ModuleRegister0x1 m_moduleRegister0x1;
 	ModuleTimeControl0x3 m_moduleTimeControl0x3;
 	ModuleGeoLocation0x5 m_ModuleGeoLocation0x5;
+    ONPStatus0x21 m_oNPStatus0x21;
+    OCPStatus0x22 m_oCPStatus0x22;
+    OModuleStatus0x24 m_oModuleStatus0x24;
+    OReqCtl0x23 m_oReqCtl0x23;
+    LogMsg0x25 m_logMsg0x25;
+    CustomisedParm0x28 m_customisedParm0x28;
 
  private:
 	// 时间差结果
@@ -137,7 +143,7 @@ class CommonModule : public QObject {
 
  public slots:
 	// 接收服务器数据
-	void onReadCommData(qint16 pkgID, const QByteArray& buff);
+	void onReadCommData(qint16 pkgID, const QByteArray& buf);
 };
 
 

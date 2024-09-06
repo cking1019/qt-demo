@@ -25,9 +25,9 @@ class RTMModule : public CommonModule {
     void sendForbiddenIRIList828();
     void sendWirelessEnvInfo829();
 
-    void recvChangingRTMSettings561(const QByteArray& buff);
-    void recvRequestForbiddenIRIList563(const QByteArray& buff);
-    void recvSettingForbiddenIRIList564(const QByteArray& buff);
+    void recvChangingRTMSettings561(const QByteArray& buf);
+    void recvRequestForbiddenIRIList563(const QByteArray& buf);
+    void recvSettingForbiddenIRIList564(const QByteArray& buf);
 
     RTMCustomizedCfg m_rtmCustomizedCfg;
     OBearingMark0x822 m_oBearingMark0x822;
@@ -39,7 +39,7 @@ class RTMModule : public CommonModule {
     QVector<QVector<float>> m_freqs828;
 
  public slots:
-    void onReadRTMData(qint16 pkgID, QByteArray& buff);
+    void onReadRTMData(qint16 pkgID, QByteArray& buf);
 };
 }  // namespace NEBULA
 #endif // _RTMMODULE_H_

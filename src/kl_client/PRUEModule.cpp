@@ -84,54 +84,54 @@ void PRUEModule::stateMachine() {
 }
 
 void PRUEModule::onRecvData() {
-    QByteArray buff = this->pTcpSocket->readAll();
+    QByteArray buf = this->pTcpSocket->readAll();
     GenericHeader genericHeader2;
-    memcpy(&genericHeader2, buff.data(), HEADER_LEN);
+    memcpy(&genericHeader2, buf.data(), HEADER_LEN);
     qint16 pkgID = genericHeader2.packType;
     qDebug("===================================================================");
-    qDebug().nospace() << "recv 0x" << QString::number(pkgID, 16) << ": " << buff.toHex();
+    qDebug().nospace() << "recv 0x" << QString::number(pkgID, 16) << ": " << buf.toHex();
     qDebug("===================================================================");
     // 策略模式，根据包类型决定转发至哪个函数
     if (this->pkgsComm.contains(this->m_genericHeader.packType)) {
-        this->onReadCommData(pkgID, buff);
+        this->onReadCommData(pkgID, buf);
     }
     if (this->pkgsPRUE.contains(this->m_genericHeader.packType)) {
-        this->onReadPRUEData(pkgID, buff);
+        this->onReadPRUEData(pkgID, buf);
     }
 }
 
-void PRUEModule::onReadPRUEData(qint16 pkgID, const QByteArray& buff) {
+void PRUEModule::onReadPRUEData(qint16 pkgID, const QByteArray& buf) {
     switch (pkgID) {
-        case 0x201: this->recvSettingBanSector201(buff);  break;
-        case 0x202: this->recvBanRadiation202(buff);      break;
-        case 0x601: this->recvUpdatePRUESetting601(buff); break;
+        case 0x201: this->recvSettingBanSector201(buf);  break;
+        case 0x202: this->recvBanRadiation202(buf);      break;
+        case 0x601: this->recvUpdatePRUESetting601(buf); break;
         default: {
             break;
         }
     }
 }
 
-void PRUEModule::recvSettingBanSector201(const QByteArray& buff) {
+void PRUEModule::recvSettingBanSector201(const QByteArray& buf) {
     OTrapBanSector oTrapBanSector;
     uint8_t len1 = HEADER_LEN;
     uint8_t len2 = sizeof(ORecvTrapFixed0x601);
-    memcpy(&oTrapBanSector, buff.data() + len1, len2);
+    memcpy(&oTrapBanSector, buf.data() + len1, len2);
     QByteArray byteArray(reinterpret_cast<char*>(&oTrapBanSector), len2);
 }
 
-void PRUEModule::recvBanRadiation202(const QByteArray& buff) {
+void PRUEModule::recvBanRadiation202(const QByteArray& buf) {
     OTrapRadiationBan0x202 oTrapRadiationBan;
     uint8_t len1 = HEADER_LEN;
     uint8_t len2 = sizeof(OTrapRadiationBan0x202);
-    memcpy(&oTrapRadiationBan, buff.data() + len1, len2);
+    memcpy(&oTrapRadiationBan, buf.data() + len1, len2);
     QByteArray byteArray(reinterpret_cast<char*>(&oTrapRadiationBan), len2);
 }
 
-void PRUEModule::recvUpdatePRUESetting601(const QByteArray& buff) {
+void PRUEModule::recvUpdatePRUESetting601(const QByteArray& buf) {
     ORecvTrapFixed0x601 oRecvTrapFixed;
     uint8_t len1 = HEADER_LEN;
     uint8_t len2 = sizeof(ORecvTrapFixed0x601);
-    memcpy(&oRecvTrapFixed, buff.data() + len1, len2);
+    memcpy(&oRecvTrapFixed, buf.data() + len1, len2);
     QByteArray byteArray(reinterpret_cast<char*>(&oRecvTrapFixed), len2);
 }
 

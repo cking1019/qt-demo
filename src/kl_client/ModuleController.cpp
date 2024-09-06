@@ -21,15 +21,15 @@ void ModuleController::init() {
     auto iDetectNum = relayConfig->value("DetectDevNum/DevNum").toInt();
     for (int i = 1; i <= iDetectNum; i++) {
         auto p = new RTMModule();
-        p->commCfg.serverAddress = serverAddress;
-        p->commCfg.serverPort = serverPort;
-        p->commCfg.moduleCfg20 = readJson(relayConfig->value("DetectDev1/DevConfig20").toString());
+        p->m_commCfg.serverAddress = serverAddress;
+        p->m_commCfg.serverPort = serverPort;
+        p->m_commCfg.moduleCfg20 = readJson(relayConfig->value("DetectDev1/DevConfig20").toString());
 
         p->m_rtmCustomizedCfg.serverPort = serverPort;
         p->m_rtmCustomizedCfg.moduleAddress = relayConfig->value(QString("DetectDev%1/DevIP").arg(i)).toString();
         p->m_rtmCustomizedCfg.modulePort = relayConfig->value(QString("DetectDev%1/DevPort").arg(i)).toInt();
         
-        p->isDebugOut = relayConfig->value("Common/debugOut").toBool();
+        p->m_isDebugOut = relayConfig->value("Common/debugOut").toBool();
         rtmVec.append(p);
     }
 

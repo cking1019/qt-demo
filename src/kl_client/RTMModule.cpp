@@ -81,7 +81,7 @@ void RTMModule::stateMachine() {
         if (!m_isSendRegister01)            sendRegister01();
         break;
     default: {
-        if(isDebugOut) {
+        if(m_isDebugOut) {
             sendLogMsg25("the connection state is unknown");
             sendNote2Operator26("the connection state is unknown");
         }
@@ -103,7 +103,7 @@ void RTMModule::stateMachine() {
         if(m_isSendForbiddenIRIList828)           sendForbiddenIRIList828();
         break;
     default:{
-        if(isDebugOut) {
+        if(m_isDebugOut) {
             sendLogMsg25("the regsiter state is unknown");
             sendNote2Operator26("the regsiter state is unknown");
         }
@@ -118,13 +118,13 @@ void RTMModule::stateMachine() {
         if (m_isModuleLocation05)                   m_isModuleLocation05  = false;
         if (m_isModuleConfigure20)                  m_isModuleConfigure20 = false;
         if (m_isSendForbiddenIRIList828)            m_isSendForbiddenIRIList828 = false;
-        if (pModuleStateTimer21->isActive())               pModuleStateTimer21->stop();
-        if (pCPTimer22->isActive())               pCPTimer22->stop();
-        if (pModuleStatueTimer24->isActive())     pModuleStatueTimer24->stop();
-        if (pNPTimer28->isActive())  pNPTimer28->stop();
-        if (pCurrentTargetTimer822->isActive())   pCurrentTargetTimer822->stop();
-        if (pCurrentSettingTimer823->isActive())  pCurrentSettingTimer823->stop();
-        if (pCurrentFunctionTimer825->isActive()) pCurrentFunctionTimer825->stop();
+        if (pModuleStateTimer21->isActive())        pModuleStateTimer21->stop();
+        if (pCPTimer22->isActive())                 pCPTimer22->stop();
+        if (pModuleStatueTimer24->isActive())       pModuleStatueTimer24->stop();
+        if (pNPTimer28->isActive())                 pNPTimer28->stop();
+        if (pCurrentTargetTimer822->isActive())     pCurrentTargetTimer822->stop();
+        if (pCurrentSettingTimer823->isActive())    pCurrentSettingTimer823->stop();
+        if (pCurrentFunctionTimer825->isActive())   pCurrentFunctionTimer825->stop();
         break;
     }
     case TimeStatus::timing: break;
@@ -132,17 +132,17 @@ void RTMModule::stateMachine() {
     {
         if (!m_isModuleLocation05)                   sendModuleLocation05();
         if (!m_isModuleConfigure20)                  sendModuleFigure20();
-        if (!pModuleStateTimer21->isActive())      pModuleStateTimer21->start(30000);
-        // if (!pCPTimer22->isActive())            pCPTimer22->start(6000);
-        if (!pModuleStatueTimer24->isActive())     pModuleStatueTimer24->start(10000);
-        if (!pNPTimer28->isActive())               pNPTimer28->start(12000);
-        if (!pCurrentTargetTimer822->isActive())   pCurrentTargetTimer822->start(15000);
-        if (!pCurrentSettingTimer823->isActive())  pCurrentSettingTimer823->start(17000);
-        if (!pCurrentFunctionTimer825->isActive()) pCurrentFunctionTimer825->start(19000);
+        if (!pModuleStateTimer21->isActive())        pModuleStateTimer21->start(30000);
+        // if (!pCPTimer22->isActive())              pCPTimer22->start(6000);
+        if (!pModuleStatueTimer24->isActive())       pModuleStatueTimer24->start(10000);
+        if (!pNPTimer28->isActive())                 pNPTimer28->start(12000);
+        if (!pCurrentTargetTimer822->isActive())     pCurrentTargetTimer822->start(15000);
+        if (!pCurrentSettingTimer823->isActive())    pCurrentSettingTimer823->start(17000);
+        if (!pCurrentFunctionTimer825->isActive())   pCurrentFunctionTimer825->start(19000);
         break;
     }
     default:{
-        if(isDebugOut) {
+        if(m_isDebugOut) {
             sendLogMsg25("the regsiter state is unknown");
             sendNote2Operator26("the regsiter state is unknown");
         }
@@ -152,228 +152,236 @@ void RTMModule::stateMachine() {
 }
 
 void RTMModule::onRecvData() {
-    QByteArray buff = pTcpSocket->readAll();
-    GenericHeader genericHeader2;
-    memcpy(&genericHeader2, buff.data(), HEADER_LEN);
-    qint16 pkgID = genericHeader2.packType;
-    qDebug().noquote().nospace() << "recv 0x" << QString::number(pkgID, 16) << ": " << buff.toHex() << "," << buff.size();
-    qDebug() << QString("recv 0x%1").arg(QString::number(pkgID, 16), 3);
-    if (pkgsComm.contains(genericHeader2.packType)) {
-        onReadCommData(pkgID, buff);
+    QByteArray buf = pTcpSocket->readAll();
+    quint16 pkgID = 0;
+    memcpy(&pkgID, buf.mid(12, 2).constData(), 2);
+    if (pkgsComm.contains(pkgID)) {
+        onReadCommData(pkgID, buf);
     }
-    if (pkgsRTM.contains(genericHeader2.packType)) {
-        onReadRTMData(pkgID, buff);
+    if (pkgsRTM.contains(pkgID)) {
+        onReadRTMData(pkgID, buf);
     }
 }
 
-void RTMModule::onReadRTMData(qint16 pkgID, QByteArray& buff) {
+void RTMModule::onReadRTMData(qint16 pkgID, QByteArray& buf) {
     switch (pkgID) {
-        case 0x561: recvChangingRTMSettings561(buff);     break;
-        case 0x563: recvRequestForbiddenIRIList563(buff); break;
-        case 0x564: recvSettingForbiddenIRIList564(buff); break;
+        case 0x561: recvChangingRTMSettings561(buf);     break;
+        case 0x563: recvRequestForbiddenIRIList563(buf); break;
+        case 0x564: recvSettingForbiddenIRIList564(buf); break;
         default: {
             break;
         }
     }
 }
 
-// 修改频率、频段
-void RTMModule::recvChangingRTMSettings561(const QByteArray& buff) {
-    if(buff.length() > HEADER_LEN) {
-        m_oSubRezhRTR0x823.N = buff.at(HEADER_LEN + 0);
+// 修改频率、频段 561-823
+void RTMModule::recvChangingRTMSettings561(const QByteArray& buf) {
+    if(buf.length() > HEADER_LEN) {
+        m_oSubRezhRTR0x823.N = buf.at(HEADER_LEN + 0);
     }
     // 4 + 8 * n
     m_freqs823.clear();
-    for(qint8 i = HEADER_LEN + 4; i < buff.length(); i += 8) {
+    for(qint8 i = HEADER_LEN + 4; i < buf.length(); i += 8) {
         float freq1, dFreq1;
-        memcpy(&freq1,  buff.mid(i, 8).constData(), 4);
-        memcpy(&dFreq1, buff.mid(i, 8).constData() + 4, 4);
+        memcpy(&freq1,  buf.mid(i, 8).constData(), 4);
+        memcpy(&dFreq1, buf.mid(i, 8).constData() + 4, 4);
         m_freqs823.append({freq1, dFreq1});
     }
-    qDebug() << "N:"  << m_oSubRezhRTR0x823.N;
-    for(auto const &item : m_freqs823) {
-        qDebug() << "freq:" << item[0] << ",DFreq" << item[1];
-    }
     /* ------------------------------------------------------------------------ */
-    sendRTMSettings823();
+    qDebug() << "recv 0x561:" << buf.toHex()
+             << "pkgSize:"    << buf.length()
+             << "N:"          << m_oSubRezhRTR0x823.N;
+    // for(auto const &item : m_freqs823) {
+    //     qDebug() << "freq:" << item[0] << ",DFreq" << item[1];
+    // }
     sendControlledOrder23(0, this->m_genericHeader.packIdx);
+    sendRTMSettings823();
 }
 
+// 823-561
 void RTMModule::sendRTMSettings823() {
+    quint8 len1 = HEADER_LEN;
+    quint8 len2 = sizeof(OSubRezhRTR0x823);
+    quint8 len3 = m_freqs823.size() * sizeof(float) * 2;
+    /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x823;
-    m_genericHeader.dataSize = 8 + m_freqs823.size() * 8;
+    m_genericHeader.dataSize = len2 + len3;
     m_genericHeader.packIdx++;
     m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&m_genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
-    quint8 len1 = HEADER_LEN;
-    quint8 len2 = sizeof(OSubRezhRTR0x823);
-    quint8 len3 = m_freqs823.size() * 8;
-    char* data = (char*)malloc(HEADER_LEN + m_genericHeader.dataSize);
-    memcpy(data, &m_genericHeader, len1);
-    memcpy(data + len1, &m_oSubRezhRTR0x823, len2);
-    memcpy(data + len1 + len2, m_freqs823.data(), len3);
-    QByteArray byteArray(data, HEADER_LEN + m_genericHeader.dataSize);
-    pTcpSocket->write(byteArray);
+    QByteArray buf;
+    buf.resize(len1 + len2 + len3);
+    memcpy(buf.data(), &m_genericHeader, len1);
+    memcpy(buf.data() + len1, &m_oSubRezhRTR0x823, len2);
+    // 容器赋值错误，造成赋值失败
+    int offset = 0;
+    for (const QVector<float>& innerVec : m_freqs823) {
+        memcpy(buf.data() + len1 + len2 + offset, innerVec.data(), innerVec.size() * sizeof(float));
+        offset += innerVec.size() * sizeof(float);
+    }
+    pTcpSocket->write(buf);
     pTcpSocket->flush();
-    free(data);
     // 4c455001 02027900 10000080 23081a02 01000005 000080bf 500e4a16 6a010000
-    qDebug() << "send 0x823:" << byteArray.toHex()
-             << "N:"          << m_oSubRezhRTR0x823.N
-             << "curAz:"      << m_oSubRezhRTR0x823.curAz
-             << "m_freqs823:" << m_freqs823.data();
+    // 4c4550ff 02020100 10000080 2308a002 01003200 000080bf 40d0e000 00000000
+    // 4c4550ff 02020100 18000080 2308a802 02003200 000080bf b0d2e600 00000000 60cee600 00000000
+    // 4c4550ff 02020100 18000080 2308a802 02003200 000080bf 0000f142 00800243 0000f142 00800243
+    qDebug() << "send 0x823:" << buf.toHex()
+             << "pkgSize:"    << buf.length()
+             << "N:"          << m_oSubRezhRTR0x823.N;
     }
 
 //564修改IRI的中心评率 564-828
-void RTMModule::recvSettingForbiddenIRIList564(const QByteArray& buff) {
-    if(buff.length() > HEADER_LEN) {
-        m_oSetBanIRIlist0x828.NIRI = buff.at(HEADER_LEN + 0);
+void RTMModule::recvSettingForbiddenIRIList564(const QByteArray& buf) {
+    if(buf.length() > HEADER_LEN) {
+        m_oSetBanIRIlist0x828.NIRI = buf.at(HEADER_LEN + 0);
     }
     m_freqs828.clear();
-    for(qint8 i = HEADER_LEN + 4; i < buff.length(); i += 8) {
+    for(qint8 i = HEADER_LEN + 4; i < buf.length(); i += 8) {
         float freq1, dFreq1;
-        memcpy(&freq1,  buff.mid(i, 8).constData(), 4);
-        memcpy(&dFreq1, buff.mid(i, 8).constData() + 4, 4);
+        memcpy(&freq1,  buf.mid(i, 8).constData(), 4);
+        memcpy(&dFreq1, buf.mid(i, 8).constData() + 4, 4);
         m_freqs828.append({freq1, dFreq1});
     }
+    /* ------------------------------------------------------------------------ */
     // 494f5601 0202ae00 04000000 64050e02 00e4e652
-    qDebug() << "NIRI:"       << m_oSetBanIRIlist0x828.NIRI;
+    qDebug() << "recv 0x564:" << buf.toHex()
+             << "pkgSize:"    << buf.length()
+             << "NIRI:"       << m_oSetBanIRIlist0x828.NIRI;
     for(auto const &item : m_freqs828) {
         qDebug() << item[0] << "," << item[1];
     }
-    /* ------------------------------------------------------------------------ */
-    sendForbiddenIRIList828();
     sendControlledOrder23(0, this->m_genericHeader.packIdx);
+    sendForbiddenIRIList828();
 }
 
 // 修改频率、频段 828-564
 void RTMModule::sendForbiddenIRIList828() {
+    quint8 len1 = HEADER_LEN;
+    quint8 len2 = sizeof(OSetBanIRIlist0x828);
+    quint8 len3 = m_freqs828.size() * sizeof(float) * 2;
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x828;
-    m_genericHeader.dataSize = sizeof(OSetBanIRIlist0x828) + m_freqs828.size() * 8;
+    m_genericHeader.dataSize = len2 + len3;
     m_genericHeader.packIdx++;
     m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&m_genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
-    quint8 len1 = HEADER_LEN;
-    quint8 len2 = sizeof(OSetBanIRIlist0x828);
-    quint8 len3 = m_freqs828.size() * 8;
-    char* data = (char*)malloc(HEADER_LEN + m_genericHeader.dataSize);
-    memcpy(data, &m_genericHeader, len1);
-    memcpy(data + len1, &m_oSetBanIRIlist0x828, len2);
-    // 4c455001 02026d01 0c000080 28081002 01000000 c075b230 b3020000
-    // 4c455001 02022901 0c000080 2808cc01 01010000 700f4a16 6a010000
-    memcpy(data + len1 + len2, m_freqs828.data(), len3);
-    QByteArray byteArray(data, HEADER_LEN + m_genericHeader.dataSize);
-    pTcpSocket->write(byteArray);
+    QByteArray buf;
+    buf.resize(len1 + len2 + len3);
+    memcpy(buf.data(), &m_genericHeader, len1);
+    memcpy(buf.data() + len1, &m_oSetBanIRIlist0x828, len2);
+    int offset = 0;
+    for (const QVector<float>& innerVec : m_freqs828) {
+        memcpy(buf.data() + len1 + len2 + offset, innerVec.data(), innerVec.size() * sizeof(float));
+        offset += innerVec.size() * sizeof(float);
+    }
+    pTcpSocket->write(buf);
     pTcpSocket->flush();
-    free(data);
-    qDebug() << "send 0x828:" << byteArray.toHex()
+    qDebug() << "send 0x828:" << buf.toHex()
              << "NIRI:"       << m_oSetBanIRIlist0x828.NIRI;
 }
 
 // 563->828
-void RTMModule::recvRequestForbiddenIRIList563(const QByteArray& buff) {
+void RTMModule::recvRequestForbiddenIRIList563(const QByteArray& buf) {
+    qDebug() << "recv 0x563:" << buf.toHex()
+             << "pkgSize:"    << buf.length();
     sendForbiddenIRIList828();
 }
 
 void RTMModule::sendBearingMarker822() {
-    /* ------------------------------------------------------------------------ */
-    m_genericHeader.packType = 0x822;
-    m_genericHeader.dataSize = sizeof(OBearingMark0x822);
-    m_genericHeader.packIdx++;
-    m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&m_genericHeader), HEADER_LEN - 2);
-    /* ------------------------------------------------------------------------ */
+    quint8 len1 = HEADER_LEN;
+    quint8 len2 = sizeof(OBearingMark0x822);
     qint64 reqTimestamp = QDateTime::currentMSecsSinceEpoch();
     m_oBearingMark0x822.timePel1 = reqTimestamp & 0xFFFFFFFF;
     m_oBearingMark0x822.timePel2 = (reqTimestamp >> 32) & 0xFFFFFFFF;
     m_oBearingMark0x822.idxPoint++;
     /* ------------------------------------------------------------------------ */
-    quint8 len1 = HEADER_LEN;
-    quint8 len2 = sizeof(OBearingMark0x822);
-    char* data = (char*)malloc(len1 + len2);
-    memcpy(data, &m_genericHeader, len1);
-    memcpy(data + len1, &m_oBearingMark0x822, len2);
-    QByteArray byteArray(data, len1 + len2);
-    pTcpSocket->write(byteArray);
-    pTcpSocket->flush();
-    free(data);
-    /* ------------------------------------------------------------------------ */
-    if(isDebugOut) {
-        sendLogMsg25("a target has being detected");
-        sendNote2Operator26("a target has being detected");
-    }
-    qDebug() << "send 0x822:"   << byteArray.toHex() 
-             << "checksum:"<< m_genericHeader.checkSum
-             << "azim:"    << m_oBearingMark0x822.azim
-             << "elev:"    << m_oBearingMark0x822.elev
-             << "range:"   << m_oBearingMark0x822.range
-             << "freqMhz:" << m_oBearingMark0x822.freqMhz
-             << "dFreqMhz:"<< m_oBearingMark0x822.dFreqMhz
-             << "Pow_dBm:" << m_oBearingMark0x822.Pow_dBm
-             << "SNR_dB:"  << m_oBearingMark0x822.SNR_dB;
-}
-
-
-
-void RTMModule::sendRTMFunction825() {
-    /* ------------------------------------------------------------------------ */
-    m_genericHeader.packType = 0x825;
-    m_genericHeader.dataSize = sizeof(OSubPosobilRTR0x825);
+    m_genericHeader.packType = 0x822;
+    m_genericHeader.dataSize = len2;
     m_genericHeader.packIdx++;
     m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&m_genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
+    QByteArray buf;
+    buf.resize(len1 + len2);
+    memcpy(buf.data(), &m_genericHeader, len1);
+    memcpy(buf.data() + len1, &m_oBearingMark0x822, len2);
+    pTcpSocket->write(buf);
+    pTcpSocket->flush();
+    /* ------------------------------------------------------------------------ */
+    if(m_isDebugOut) {
+        sendLogMsg25("a target has being detected");
+        sendNote2Operator26("a target has being detected");
+    }
+    qDebug() << "send 0x822:" << buf.toHex()
+             << "pkgSize:"    << buf.length()
+             << "checksum:"   << m_genericHeader.checkSum
+             << "freqMhz:"    << m_oBearingMark0x822.freqMhz
+             << "dFreqMhz:"   << m_oBearingMark0x822.dFreqMhz;
+}
+
+void RTMModule::sendRTMFunction825() {
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OSubPosobilRTR0x825);
-    char* data = (char*)malloc(len1 + len2);
-    memcpy(data, &m_genericHeader, len1);
-    memcpy(data + len1, &m_oSubPosobilRTR0x825, len2);
-    QByteArray byteArray(data, len1 + len2);
-    pTcpSocket->write(byteArray);
+    /* ------------------------------------------------------------------------ */
+    m_genericHeader.packType = 0x825;
+    m_genericHeader.dataSize = len2;
+    m_genericHeader.packIdx++;
+    m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&m_genericHeader), HEADER_LEN - 2);
+    /* ------------------------------------------------------------------------ */
+    QByteArray buf;
+    buf.resize(len1 + len2);
+    memcpy(buf.data(), &m_genericHeader, len1);
+    memcpy(buf.data() + len1, &m_oSubPosobilRTR0x825, len2);
+    pTcpSocket->write(buf);
     pTcpSocket->flush();
-    free(data);
-    qDebug() << "send 0x825:"   << byteArray.toHex()
+    qDebug() << "send 0x825:"   << buf.toHex()
+             << "pkgSize:"      << buf.length()
              << "numDiap:"      << m_oSubPosobilRTR0x825.numDiap
              << "minFreqRTR:"   << m_oSubPosobilRTR0x825.minFreqRTR
              << "maxFreqRTR:"   << m_oSubPosobilRTR0x825.maxFreqRTR;
 }
 
 void RTMModule::sendBearingAndRoute827() {
+    QString jsonStr = "{'Number':12685126,'DateTime':'2018-09-28 13:11:37','StartPoint':{'Latitude':55.12345,'Longitude':38.12345,'Altitude':155.12},'TypeBLA':{'InfoName':'无人机类型','InfoValue':'phantom-3'}";
+    quint8 len1 = HEADER_LEN;
+    quint16 len2 = jsonStr.length();
+    /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x827;
-    m_genericHeader.dataSize = sizeof(OBearingMark0x822);
+    m_genericHeader.dataSize = len2;
     m_genericHeader.packIdx++;
     m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&m_genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
-    QString jsonStr = "{'Number':12685126,'DateTime':'2018-09-28 13:11:37','StartPoint':{'Latitude':55.12345,'Longitude':38.12345,'Altitude':155.12},'TypeBLA':{'InfoName':'无人机类型','InfoValue':'phantom-3'}";
-    /* ------------------------------------------------------------------------ */
-    QByteArray byteArray = jsonStr.toUtf8();
-    pTcpSocket->write(byteArray);
+    QByteArray buf;
+    buf.resize(len1 + len2);
+    memcpy(buf.data(), &m_genericHeader, len1);
+    memcpy(buf.data() + len1, jsonStr.toUtf8().constData(), len2);
+    pTcpSocket->write(buf);
     pTcpSocket->flush();
-    qDebug() << "send 0x827:"   << byteArray.toHex()
-             << "jsonStr:"      << jsonStr;
+    qDebug() << "send 0x827:" << buf.toHex()
+             << "pkgSize:"    << buf.length()
+             << "jsonStr:"    << jsonStr;
 }
 
-
-
 void RTMModule::sendWirelessEnvInfo829() {
-    m_genericHeader.packType = 0x829;
-    m_genericHeader.dataSize = sizeof(OSubRadioTime0x829);
-    m_genericHeader.packIdx++;
-    m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&m_genericHeader), HEADER_LEN - 2);
-    /* ------------------------------------------------------------------------ */
+    quint8 len1 = HEADER_LEN;
+    quint8 len2 = sizeof(OSubRadioTime0x829);
     qint64 reqTimestamp = QDateTime::currentMSecsSinceEpoch();
     m_oSubRadioTime0x829.time1 = reqTimestamp & 0xFFFFFFFF;
     m_oSubRadioTime0x829.time2 = (reqTimestamp >> 32) & 0xFFFFFFFF;
     /* ------------------------------------------------------------------------ */
-    quint8 len1 = HEADER_LEN;
-    quint8 len2 = sizeof(OSubRadioTime0x829);
-    char* data = (char*)malloc(len1 + len2);
-    memcpy(data, &m_genericHeader, len1);
-    memcpy(data + len1, &m_oSubRadioTime0x829, len2);
-    QByteArray byteArray(data, len1 + len2);
-    pTcpSocket->write(byteArray);
+    m_genericHeader.packType = 0x829;
+    m_genericHeader.dataSize = len2;
+    m_genericHeader.packIdx++;
+    m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&m_genericHeader), HEADER_LEN - 2);
+    /* ------------------------------------------------------------------------ */
+    QByteArray buf;
+    buf.resize(len1 + len2);
+    memcpy(buf.data(), &m_genericHeader, len1);
+    memcpy(buf.data() + len1, &m_oSubRadioTime0x829, len2);
+    pTcpSocket->write(buf);
     pTcpSocket->flush();
-    free(data);
-    qDebug() << "send 0x829:"     << byteArray.toHex()
-             << "N:"              << m_oSubRadioTime0x829.N
-             << "pow1:"           << m_oSubRadioTime0x829.pow1;
+    qDebug() << "send 0x829:" << buf.toHex()
+             << "pkgSize:"    << buf.length()
+             << "N:"          << m_oSubRadioTime0x829.N
+             << "pow1:"       << m_oSubRadioTime0x829.pow1;
 }
 }
