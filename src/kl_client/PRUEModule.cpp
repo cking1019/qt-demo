@@ -117,10 +117,6 @@ void PRUEModule::recvSettingBanSector201(const QByteArray& buff) {
     uint8_t len2 = sizeof(ORecvTrapFixed0x601);
     memcpy(&oTrapBanSector, buff.data() + len1, len2);
     QByteArray byteArray(reinterpret_cast<char*>(&oTrapBanSector), len2);
-    qDebug() << "recv 0x601:" << byteArray.toHex();
-    /*
-        deal with data
-    */
 }
 
 void PRUEModule::recvBanRadiation202(const QByteArray& buff) {
@@ -129,10 +125,6 @@ void PRUEModule::recvBanRadiation202(const QByteArray& buff) {
     uint8_t len2 = sizeof(OTrapRadiationBan0x202);
     memcpy(&oTrapRadiationBan, buff.data() + len1, len2);
     QByteArray byteArray(reinterpret_cast<char*>(&oTrapRadiationBan), len2);
-    qDebug() << "recv 0x601:" << byteArray.toHex();
-    /*
-        deal with data
-    */
 }
 
 void PRUEModule::recvUpdatePRUESetting601(const QByteArray& buff) {
@@ -141,10 +133,6 @@ void PRUEModule::recvUpdatePRUESetting601(const QByteArray& buff) {
     uint8_t len2 = sizeof(ORecvTrapFixed0x601);
     memcpy(&oRecvTrapFixed, buff.data() + len1, len2);
     QByteArray byteArray(reinterpret_cast<char*>(&oRecvTrapFixed), len2);
-    qDebug() << "recv 0x601:" << byteArray.toHex();
-    /*
-        deal with data
-    */
 }
 
 void PRUEModule::sendInstalledBanSectorD01() {
@@ -192,7 +180,6 @@ void PRUEModule::sendPRUESettingsD21() {
     this->m_genericHeader.packIdx++;
     this->m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->m_genericHeader), HEADER_LEN - 2);
 
-    // 消息体
     OSendTrapFixed0xD21 oSendTrapFixed;
     oSendTrapFixed.taskREB = 0;
     oSendTrapFixed.taskGeo = 0;
@@ -220,7 +207,6 @@ void PRUEModule::sendPRUEFunctionD22() {
     this->m_genericHeader.packIdx++;
     this->m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->m_genericHeader), HEADER_LEN - 2);
 
-    // 消息体
     OTrapFunc0xD22 oTrapFunc;
     oTrapFunc.numDiap = 0;
     oTrapFunc.isGeo = 0;
@@ -252,7 +238,5 @@ void PRUEModule::sendPRUEFunctionD22() {
     this->pTcpSocket->flush();
     free(data);
 }
-
-
 
 }  // namespace NEBULA

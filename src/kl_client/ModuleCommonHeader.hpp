@@ -307,7 +307,6 @@ struct OSubRezhRTR0x823 {
     uint32_t reserve :24;
 
     float curAz;
-    
 };
 
 // 0x825,RTM功能
@@ -327,10 +326,7 @@ struct OSubPosobilRTR0x825 {
 struct OSetBanIRIlist0x828 {
     uint32_t NIRI :8;
     uint32_t reserve :24;
-
-    
 };
-
 
 // 0x829，当前无线电环境信息
 struct OSubRadioTime0x829 {
@@ -346,8 +342,6 @@ struct OSubRadioTime0x829 {
     uint32_t N;
     uint32_t pow1;
 };
-
-
 
 // ==================PRUE===========================================
 // 0xD21,发送当前PRUE设置

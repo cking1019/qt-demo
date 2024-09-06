@@ -70,15 +70,15 @@ void RTMModule::stateMachine() {
     switch (connStatus)
     {
     case ConnStatus::unConnected:
-        if (!pReconnectTimer->isActive())                 pReconnectTimer->start(1000);
+        if (!pReconnectTimer->isActive())                   pReconnectTimer->start(1000);
         if (m_isSendRegister01)                             m_isSendRegister01 = false;
-        if (registerStatus == RegisterStatus::registered) registerStatus = RegisterStatus::unRegister;
+        if (registerStatus == RegisterStatus::registered)   registerStatus = RegisterStatus::unRegister;
         break;
     case ConnStatus::connecting:
         break;
     case ConnStatus::connected:
         if (pReconnectTimer->isActive())    pReconnectTimer->stop();
-        if (!m_isSendRegister01)              sendRegister01();
+        if (!m_isSendRegister01)            sendRegister01();
         break;
     default: {
         if(isDebugOut) {
@@ -100,6 +100,7 @@ void RTMModule::stateMachine() {
         break;
     case RegisterStatus::registered:
         if (!pRequestTimer03->isActive())         pRequestTimer03->start(1000);
+        if(m_isSendForbiddenIRIList828)           sendForbiddenIRIList828();
         break;
     default:{
         if(isDebugOut) {
@@ -116,6 +117,7 @@ void RTMModule::stateMachine() {
     case TimeStatus::unTime: {
         if (m_isModuleLocation05)                   m_isModuleLocation05  = false;
         if (m_isModuleConfigure20)                  m_isModuleConfigure20 = false;
+        if (m_isSendForbiddenIRIList828)            m_isSendForbiddenIRIList828 = false;
         if (pModuleStateTimer21->isActive())               pModuleStateTimer21->stop();
         if (pCPTimer22->isActive())               pCPTimer22->stop();
         if (pModuleStatueTimer24->isActive())     pModuleStatueTimer24->stop();
@@ -154,7 +156,8 @@ void RTMModule::onRecvData() {
     GenericHeader genericHeader2;
     memcpy(&genericHeader2, buff.data(), HEADER_LEN);
     qint16 pkgID = genericHeader2.packType;
-    qDebug() << "recv 0x" << QString::number(pkgID, 16) << ":" << buff.toHex() << "," << buff.size();
+    qDebug().noquote().nospace() << "recv 0x" << QString::number(pkgID, 16) << ": " << buff.toHex() << "," << buff.size();
+    qDebug() << QString("recv 0x%1").arg(QString::number(pkgID, 16), 3);
     if (pkgsComm.contains(genericHeader2.packType)) {
         onReadCommData(pkgID, buff);
     }
@@ -189,11 +192,11 @@ void RTMModule::recvChangingRTMSettings561(const QByteArray& buff) {
     }
     qDebug() << "N:"  << m_oSubRezhRTR0x823.N;
     for(auto const &item : m_freqs823) {
-        qDebug() << item[0] << "," << item[1];
+        qDebug() << "freq:" << item[0] << ",DFreq" << item[1];
     }
     /* ------------------------------------------------------------------------ */
-    sendControlledOrder23(0);
     sendRTMSettings823();
+    sendControlledOrder23(0, this->m_genericHeader.packIdx);
 }
 
 void RTMModule::sendRTMSettings823() {
@@ -213,12 +216,14 @@ void RTMModule::sendRTMSettings823() {
     pTcpSocket->write(byteArray);
     pTcpSocket->flush();
     free(data);
+    // 4c455001 02027900 10000080 23081a02 01000005 000080bf 500e4a16 6a010000
     qDebug() << "send 0x823:" << byteArray.toHex()
              << "N:"          << m_oSubRezhRTR0x823.N
-             << "curAz:"      << m_oSubRezhRTR0x823.curAz;
-}
+             << "curAz:"      << m_oSubRezhRTR0x823.curAz
+             << "m_freqs823:" << m_freqs823.data();
+    }
 
-//564修改IRI的中心评率
+//564修改IRI的中心评率 564-828
 void RTMModule::recvSettingForbiddenIRIList564(const QByteArray& buff) {
     if(buff.length() > HEADER_LEN) {
         m_oSetBanIRIlist0x828.NIRI = buff.at(HEADER_LEN + 0);
@@ -230,13 +235,14 @@ void RTMModule::recvSettingForbiddenIRIList564(const QByteArray& buff) {
         memcpy(&dFreq1, buff.mid(i, 8).constData() + 4, 4);
         m_freqs828.append({freq1, dFreq1});
     }
+    // 494f5601 0202ae00 04000000 64050e02 00e4e652
     qDebug() << "NIRI:"       << m_oSetBanIRIlist0x828.NIRI;
     for(auto const &item : m_freqs828) {
         qDebug() << item[0] << "," << item[1];
     }
     /* ------------------------------------------------------------------------ */
     sendForbiddenIRIList828();
-    sendControlledOrder23(0);
+    sendControlledOrder23(0, this->m_genericHeader.packIdx);
 }
 
 // 修改频率、频段 828-564
@@ -253,6 +259,8 @@ void RTMModule::sendForbiddenIRIList828() {
     char* data = (char*)malloc(HEADER_LEN + m_genericHeader.dataSize);
     memcpy(data, &m_genericHeader, len1);
     memcpy(data + len1, &m_oSetBanIRIlist0x828, len2);
+    // 4c455001 02026d01 0c000080 28081002 01000000 c075b230 b3020000
+    // 4c455001 02022901 0c000080 2808cc01 01010000 700f4a16 6a010000
     memcpy(data + len1 + len2, m_freqs828.data(), len3);
     QByteArray byteArray(data, HEADER_LEN + m_genericHeader.dataSize);
     pTcpSocket->write(byteArray);
@@ -264,7 +272,6 @@ void RTMModule::sendForbiddenIRIList828() {
 
 // 563->828
 void RTMModule::recvRequestForbiddenIRIList563(const QByteArray& buff) {
-    sendControlledOrder23(0);
     sendForbiddenIRIList828();
 }
 
@@ -330,7 +337,6 @@ void RTMModule::sendRTMFunction825() {
 }
 
 void RTMModule::sendBearingAndRoute827() {
-    /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x827;
     m_genericHeader.dataSize = sizeof(OBearingMark0x822);
     m_genericHeader.packIdx++;
@@ -348,7 +354,6 @@ void RTMModule::sendBearingAndRoute827() {
 
 
 void RTMModule::sendWirelessEnvInfo829() {
-    /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x829;
     m_genericHeader.dataSize = sizeof(OSubRadioTime0x829);
     m_genericHeader.packIdx++;

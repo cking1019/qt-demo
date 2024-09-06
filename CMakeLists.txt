@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(Qt-Demo)
 
-message(STATUS "正在构建: "${PROJECT_NAME})
-message(STATUS "CMake命令: "${CMAKE_COMMAND})
+message(STATUS "正在构建: ${PROJECT_NAME}")
+message(STATUS "CMake命令: ${CMAKE_COMMAND}")
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)

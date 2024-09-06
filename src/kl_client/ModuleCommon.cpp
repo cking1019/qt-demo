@@ -40,6 +40,7 @@ CommonModule::CommonModule(QObject *parent):QObject(parent) {
     m_isSendRegister01    = false;
     m_isModuleLocation05  = false;
     m_isModuleConfigure20 = false;
+    m_isSendForbiddenIRIList828 = false;
     
     m_iStampResult = 0;
     m_iN = 1;
@@ -369,7 +370,7 @@ void CommonModule::sendModuleStatus24() {
     qDebug() << "send 0x24:" << byteArray.toHex();
 }
 
-void CommonModule::sendControlledOrder23(uint8_t code) {
+void CommonModule::sendControlledOrder23(uint8_t code, quint16 pkgId) {
     m_genericHeader.packType = 0x23;
     m_genericHeader.dataSize = sizeof(OReqCtl0x23);
     m_genericHeader.packIdx++;
@@ -379,8 +380,9 @@ void CommonModule::sendControlledOrder23(uint8_t code) {
     quint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     oReqCtl.time1 = timestamp & 0xFFFFFFFF;
     oReqCtl.time2 = (timestamp >> 32) & 0xFFFFFFFF;
-    oReqCtl.n_id_Com = 0x1;
+    oReqCtl.n_id_Com = pkgId; // unknown
     oReqCtl.n_code = code;
+    
     
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OReqCtl0x23);
@@ -391,7 +393,8 @@ void CommonModule::sendControlledOrder23(uint8_t code) {
     pTcpSocket->write(byteArray);
     pTcpSocket->flush();
     free(data);
-    qDebug() << "send 0x23: " << byteArray.toHex();
+    qDebug() << "send 0x23: " << byteArray.toHex()
+             << "n_id_Com: "  << oReqCtl.n_id_Com;
 }
 
 void CommonModule::sendLogMsg25(QString msg) {
@@ -480,28 +483,18 @@ void CommonModule::sendModuleCPStatus28() {
 
 
 void CommonModule::recvStart40(const QByteArray& buff) {
-    quint8 code = 0;
-    sendControlledOrder23(code);
 }
 
 void CommonModule::recvStop41(const QByteArray& buff) {
-    quint8 code = 0;
-    sendControlledOrder23(code);
 }
 
 void CommonModule::recvRestart42(const QByteArray& buff) {
-    quint8 code = 0;
-    sendControlledOrder23(code);
 }
 
 void CommonModule::recvReset43(const QByteArray& buff) {
-    quint8 code = 0;
-    sendControlledOrder23(code);
 }
 
 void CommonModule::recvUpdate44(const QByteArray& buff) {
-    quint8 code = 0;
-    sendControlledOrder23(code);
 }
 
 void CommonModule::recvNote4Operator45(const QByteArray& buff) {
@@ -512,8 +505,6 @@ void CommonModule::recvNote4Operator45(const QByteArray& buff) {
 }
 
 void CommonModule::recvSettingLang47(const QByteArray& buff) {
-    quint8 code = 0;
-    sendControlledOrder23(code);
 }
 
 void CommonModule::recvRadioAndSatellite48(const QByteArray& buff) {

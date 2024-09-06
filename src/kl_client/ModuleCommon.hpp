@@ -14,6 +14,9 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
+
+#include <QDir>
+#include <QMutex>
 #include "ModuleCommonHeader.hpp"
 // #include "Logger.hpp"
 #define RELAY_PATH "./conf/module.ini"
@@ -31,13 +34,6 @@ struct RTMCustomizedCfg {
     QString moduleAddress;
     qint16 serverPort;
     qint16 modulePort;
-    
-    float elev;
-    float range;
-    float freqMhz;
-    float dFreqMhz;
-    float Pow_dBm;
-    float SNR_dB;
 };
 
 enum class ConnStatus{unConnected, connecting, connected};
@@ -68,7 +64,7 @@ class CommonModule : public QObject {
 	void sendModuleCPStatus22();
 	void sendModuleStatus24();
 
-	void sendControlledOrder23(uint8_t code);
+	void sendControlledOrder23(uint8_t code, quint16 pkgId);
 
 	void sendLogMsg25(QString msg);
 	void sendNote2Operator26(QString msg);
@@ -117,6 +113,7 @@ class CommonModule : public QObject {
 	bool m_isSendRegister01;
 	bool m_isModuleLocation05;
 	bool m_isModuleConfigure20;
+	bool m_isSendForbiddenIRIList828;
 
 	// 再次连接定时器器
 	QTimer* pReconnectTimer;
