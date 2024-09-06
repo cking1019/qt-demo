@@ -4,7 +4,7 @@ namespace NEBULA
 {
 PRUEModule::PRUEModule() {
     this->pkgsPRUE = {0x601, 0x201, 0x202};
-    this->genericHeader = {0x524542, 0xff, 0x2, 0x2, 0x0, 0x0, 0x1, 0x0, 0x0};
+    this->m_genericHeader = {0x524542, 0xff, 0x2, 0x2, 0x0, 0x0, 0x1, 0x0, 0x0};
     
     this->pStateMachineTimer =       new QTimer();
     this->pCurrentSettingTimerD21 =  new QTimer();
@@ -31,14 +31,14 @@ void PRUEModule::stateMachine() {
     {
     case ConnStatus::unConnected:
         if (!this->pReconnectTimer->isActive())                 this->pReconnectTimer->start(1000);
-        if (this->isSendRegister01)                             this->isSendRegister01 = false;
+        if (this->m_isSendRegister01)                             this->m_isSendRegister01 = false;
         if (this->registerStatus == RegisterStatus::registered) this->registerStatus = RegisterStatus::unRegister;
         break;
     case ConnStatus::connecting:
         break;
     case ConnStatus::connected:
         if (this->pReconnectTimer->isActive())    this->pReconnectTimer->stop();
-        if (!this->isSendRegister01)              this->sendRegister01();
+        if (!this->m_isSendRegister01)              this->sendRegister01();
         break;
     default:
         break;
@@ -48,8 +48,8 @@ void PRUEModule::stateMachine() {
     {
     case RegisterStatus::unRegister:
         if (this->pRequestTimer03->isActive())          this->pRequestTimer03->stop();
-        if (this->isModuleLocation05)                   this->isModuleLocation05  = false;
-        if (this->isModuleConfigure20)                  this->isModuleConfigure20 = false;
+        if (this->m_isModuleLocation05)                   this->m_isModuleLocation05  = false;
+        if (this->m_isModuleConfigure20)                  this->m_isModuleConfigure20 = false;
         if (this->pModuleStateTimer21->isActive())               this->pModuleStateTimer21->stop();
         if (this->pCPTimer22->isActive())               this->pCPTimer22->stop();
         if (this->pModuleStatueTimer24->isActive())     this->pModuleStatueTimer24->stop();
@@ -61,8 +61,8 @@ void PRUEModule::stateMachine() {
         break;
     case RegisterStatus::registered:
         if (!this->pRequestTimer03->isActive())          this->pRequestTimer03->start(1000);
-        if (!this->isModuleLocation05)                   this->sendModuleLocation05();
-        if (!this->isModuleConfigure20)                  this->sendModuleFigure20();
+        if (!this->m_isModuleLocation05)                   this->sendModuleLocation05();
+        if (!this->m_isModuleConfigure20)                  this->sendModuleFigure20();
         if (!this->pModuleStateTimer21->isActive())               this->pModuleStateTimer21->start(5000);
         if (!this->pCPTimer22->isActive())               this->pCPTimer22->start(5000);
         if (!this->pModuleStatueTimer24->isActive())     this->pModuleStatueTimer24->start(1000);
@@ -92,10 +92,10 @@ void PRUEModule::onRecvData() {
     qDebug().nospace() << "recv 0x" << QString::number(pkgID, 16) << ": " << buff.toHex();
     qDebug("===================================================================");
     // 策略模式，根据包类型决定转发至哪个函数
-    if (this->pkgsComm.contains(this->genericHeader.packType)) {
+    if (this->pkgsComm.contains(this->m_genericHeader.packType)) {
         this->onReadCommData(pkgID, buff);
     }
-    if (this->pkgsPRUE.contains(this->genericHeader.packType)) {
+    if (this->pkgsPRUE.contains(this->m_genericHeader.packType)) {
         this->onReadPRUEData(pkgID, buff);
     }
 }
@@ -148,10 +148,10 @@ void PRUEModule::recvUpdatePRUESetting601(const QByteArray& buff) {
 }
 
 void PRUEModule::sendInstalledBanSectorD01() {
-    this->genericHeader.packType = 0xD01;
-    this->genericHeader.dataSize = sizeof(OSendTrapFixed0xD21);
-    this->genericHeader.packIdx++;
-    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), HEADER_LEN - 2);
+    this->m_genericHeader.packType = 0xD01;
+    this->m_genericHeader.dataSize = sizeof(OSendTrapFixed0xD21);
+    this->m_genericHeader.packIdx++;
+    this->m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->m_genericHeader), HEADER_LEN - 2);
 
     // 消息体
     OTrapBanSector oTrapBanSector;
@@ -177,7 +177,7 @@ void PRUEModule::sendInstalledBanSectorD01() {
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OTrapBanSector);
     char* data = (char*)malloc(len1 + len2);
-    memcpy(data, &this->genericHeader, len1);
+    memcpy(data, &this->m_genericHeader, len1);
     memcpy(data + len1, &oTrapBanSector, len2);
     QByteArray byteArray(data, len1 + len2);
     qDebug() << "send 0xD01:" << byteArray.toHex();
@@ -187,10 +187,10 @@ void PRUEModule::sendInstalledBanSectorD01() {
 }
 
 void PRUEModule::sendPRUESettingsD21() {
-    this->genericHeader.packType = 0xD21;
-    this->genericHeader.dataSize = sizeof(OSendTrapFixed0xD21);
-    this->genericHeader.packIdx++;
-    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), HEADER_LEN - 2);
+    this->m_genericHeader.packType = 0xD21;
+    this->m_genericHeader.dataSize = sizeof(OSendTrapFixed0xD21);
+    this->m_genericHeader.packIdx++;
+    this->m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->m_genericHeader), HEADER_LEN - 2);
 
     // 消息体
     OSendTrapFixed0xD21 oSendTrapFixed;
@@ -205,7 +205,7 @@ void PRUEModule::sendPRUESettingsD21() {
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OSendTrapFixed0xD21);
     char* data = (char*)malloc(len1 + len2);
-    memcpy(data, &this->genericHeader, len1);
+    memcpy(data, &this->m_genericHeader, len1);
     memcpy(data + len1, &oSendTrapFixed, len2);
     QByteArray byteArray(data, len1 + len2);
     qDebug() << "send 0xD21:" << byteArray.toHex();
@@ -215,10 +215,10 @@ void PRUEModule::sendPRUESettingsD21() {
 }
 
 void PRUEModule::sendPRUEFunctionD22() {
-    this->genericHeader.packType = 0xD22;
-    this->genericHeader.dataSize = sizeof(OSendTrapFixed0xD21);
-    this->genericHeader.packIdx++;
-    this->genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->genericHeader), HEADER_LEN - 2);
+    this->m_genericHeader.packType = 0xD22;
+    this->m_genericHeader.dataSize = sizeof(OSendTrapFixed0xD21);
+    this->m_genericHeader.packIdx++;
+    this->m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&this->m_genericHeader), HEADER_LEN - 2);
 
     // 消息体
     OTrapFunc0xD22 oTrapFunc;
@@ -244,7 +244,7 @@ void PRUEModule::sendPRUEFunctionD22() {
     quint8 len1 = sizeof(OTrapFunc0xD22);
     quint8 len2 = sizeof(OSendTrapFixed0xD21);
     char* data = (char*)malloc(len1 + len2);
-    memcpy(data, &this->genericHeader, len1);
+    memcpy(data, &this->m_genericHeader, len1);
     memcpy(data + len1, &oTrapFunc, len2);
     QByteArray byteArray(data, len1 + len2);
     qDebug() << "send 0xD22:" << byteArray.toHex();

@@ -5,7 +5,7 @@
 #include <QDateTime>
 #include <iostream>
 #include "Demo.hpp"
-#include "../kl_client/CommonHeader.hpp"
+#include "../kl_client/ModuleCommonHeader.hpp"
 
 struct OSubRezhRTR0x8233 {
     uint32_t N    :8;

@@ -1,7 +1,7 @@
 #ifndef _RTMMODULE_H_
 #define _RTMMODULE_H_
 
-#include "CommonModule.hpp"
+#include "ModuleCommon.hpp"
 
 namespace NEBULA {
 class RTMModule : public CommonModule {
@@ -29,12 +29,14 @@ class RTMModule : public CommonModule {
     void recvRequestForbiddenIRIList563(const QByteArray& buff);
     void recvSettingForbiddenIRIList564(const QByteArray& buff);
 
-    RTMCustomizedCfg rtmCustomizedCfg;
-    OBearingMark0x822 oBearingMark0x822;
-    OSubRezhRTR0x823 oSubRezhRTR0x823;
-    OSubPosobilRTR0x825 oSubPosobilRTR0x825;
-    OSetBanIRIlist0x828 oSetBanIRIlist0x828;
-    OSubRadioTime0x829 oSubRadioTime0x829;
+    RTMCustomizedCfg m_rtmCustomizedCfg;
+    OBearingMark0x822 m_oBearingMark0x822;
+    OSubRezhRTR0x823 m_oSubRezhRTR0x823;
+    OSubPosobilRTR0x825 m_oSubPosobilRTR0x825;
+    OSetBanIRIlist0x828 m_oSetBanIRIlist0x828;
+    OSubRadioTime0x829 m_oSubRadioTime0x829;
+    QVector<QVector<float>> m_freqs823;
+    QVector<QVector<float>> m_freqs828;
 
  public slots:
     void onReadRTMData(qint16 pkgID, QByteArray& buff);

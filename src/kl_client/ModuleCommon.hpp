@@ -14,7 +14,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
-#include "CommonHeader.hpp"
+#include "ModuleCommonHeader.hpp"
 // #include "Logger.hpp"
 #define RELAY_PATH "./conf/module.ini"
 
@@ -102,7 +102,7 @@ class CommonModule : public QObject {
 	// Socket网络传输
 	QTcpSocket* pTcpSocket;
 	// 公共包头
-	GenericHeader genericHeader;
+	GenericHeader m_genericHeader;
 	// 公共包类型
 	QSet<qint16> pkgsComm;
 
@@ -114,9 +114,9 @@ class CommonModule : public QObject {
 	TimeStatus timeStatus;
 
 	// 连接状态,此类协议不是定期发送，因此用bool类型判断是否已发送
-	bool isSendRegister01;
-	bool isModuleLocation05;
-	bool isModuleConfigure20;
+	bool m_isSendRegister01;
+	bool m_isModuleLocation05;
+	bool m_isModuleConfigure20;
 
 	// 再次连接定时器器
 	QTimer* pReconnectTimer;
@@ -127,8 +127,8 @@ class CommonModule : public QObject {
 	QTimer* pNPTimer28;
 
 	// 时间和位置需要设置，所以单独用变量保存
-	ModuleTimeControl0x3 myModuleTimeControl0x3;
-	ModuleGeoLocation0x5 myModuleGeoLocation0x5;
+	ModuleTimeControl0x3 m_moduleTimeControl0x3;
+	ModuleGeoLocation0x5 m_ModuleGeoLocation0x5;
 
  private:
 	// 时间差结果

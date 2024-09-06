@@ -25,15 +25,15 @@ void ModuleController::init() {
         p->commCfg.serverPort = serverPort;
         p->commCfg.moduleCfg20 = readJson(relayConfig->value("DetectDev1/DevConfig20").toString());
 
-        p->rtmCustomizedCfg.serverPort = serverPort;
-        p->rtmCustomizedCfg.moduleAddress = relayConfig->value(QString("DetectDev%1/DevIP").arg(i)).toString();
-        p->rtmCustomizedCfg.modulePort = relayConfig->value(QString("DetectDev%1/DevPort").arg(i)).toInt();
-        p->rtmCustomizedCfg.elev = relayConfig->value(QString("DetectDev%1/elev").arg(i)).toFloat();
-        p->rtmCustomizedCfg.range = relayConfig->value(QString("DetectDev%1/range").arg(i)).toFloat();
-        p->rtmCustomizedCfg.freqMhz = relayConfig->value(QString("DetectDev%1/freqMhz").arg(i)).toFloat();
-        p->rtmCustomizedCfg.dFreqMhz = relayConfig->value(QString("DetectDev%1/dFreqMhz").arg(i)).toFloat();
-        p->rtmCustomizedCfg.Pow_dBm = relayConfig->value(QString("DetectDev%1/Pow_dBm").arg(i)).toFloat();
-        p->rtmCustomizedCfg.SNR_dB = relayConfig->value(QString("DetectDev%1/SNR_dB").arg(i)).toFloat();
+        p->m_rtmCustomizedCfg.serverPort = serverPort;
+        p->m_rtmCustomizedCfg.moduleAddress = relayConfig->value(QString("DetectDev%1/DevIP").arg(i)).toString();
+        p->m_rtmCustomizedCfg.modulePort = relayConfig->value(QString("DetectDev%1/DevPort").arg(i)).toInt();
+        p->m_rtmCustomizedCfg.elev = relayConfig->value(QString("DetectDev%1/elev").arg(i)).toFloat();
+        p->m_rtmCustomizedCfg.range = relayConfig->value(QString("DetectDev%1/range").arg(i)).toFloat();
+        p->m_rtmCustomizedCfg.freqMhz = relayConfig->value(QString("DetectDev%1/freqMhz").arg(i)).toFloat();
+        p->m_rtmCustomizedCfg.dFreqMhz = relayConfig->value(QString("DetectDev%1/dFreqMhz").arg(i)).toFloat();
+        p->m_rtmCustomizedCfg.Pow_dBm = relayConfig->value(QString("DetectDev%1/Pow_dBm").arg(i)).toFloat();
+        p->m_rtmCustomizedCfg.SNR_dB = relayConfig->value(QString("DetectDev%1/SNR_dB").arg(i)).toFloat();
         
         p->isDebugOut = relayConfig->value("Common/debugOut").toBool();
         this->rtmVec.append(p);

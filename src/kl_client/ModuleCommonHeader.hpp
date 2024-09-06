@@ -307,7 +307,7 @@ struct OSubRezhRTR0x823 {
     uint32_t reserve :24;
 
     float curAz;
-    QVector<QVector<float>> freqs;
+    
 };
 
 // 0x825,RTM功能
@@ -328,7 +328,7 @@ struct OSetBanIRIlist0x828 {
     uint32_t NIRI :8;
     uint32_t reserve :24;
 
-    QVector<QVector<float>> freqs;
+    
 };
 
 

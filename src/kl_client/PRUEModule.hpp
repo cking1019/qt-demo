@@ -1,7 +1,7 @@
 #ifndef _PRUEMODULE_H_
 #define _PRUEMODULE_H_
 
-#include "CommonModule.hpp"
+#include "ModuleCommon.hpp"
 
 namespace NEBULA {
 class PRUEModule : public CommonModule {

@@ -1,7 +1,7 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QMutex>
-#include "CommonModule.hpp"
+#include "ModuleCommon.hpp"
 #include "ModuleController.hpp"
 // using namespace CUR_NAMESPACE;
 
