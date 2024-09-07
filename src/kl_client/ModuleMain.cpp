@@ -6,7 +6,7 @@
 // 写日志功能
 void MessWriteLog(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
-    QString logDir = QCoreApplication::applicationDirPath() + "\\RunLog\\" + QDateTime::currentDateTime().toString("yyyy_MM_dd")+"\\";
+    QString logDir = QCoreApplication::applicationDirPath() + "\\logs\\" + QDateTime::currentDateTime().toString("yyyy_MM_dd")+"\\";
     QDir curDir(logDir);
     if(!curDir.exists(logDir))//如果路径不存在则创建
     {
@@ -27,22 +27,19 @@ void MessWriteLog(QtMsgType type, const QMessageLogContext &context, const QStri
     case QtWarningMsg:
         logFile = logDir + "Warning";
         contextType = QString("Warning");
-        qDebug().noquote() << msg;
         break;
     case QtCriticalMsg:
         logFile = logDir + "Critical";
         contextType = QString("Critical");
-        qDebug().noquote() << msg;
         break;
     case QtFatalMsg:
         logFile = logDir + "Fatal";
         contextType = QString("Fatal");
-        qDebug().noquote() << msg;
     }
-    QString contextInfo = QString("[%1: %2]").arg(QString(context.file)).arg(context.line);//代码所在文件及行数
+    QString contextInfo = QString("[%1:%2]").arg(QString(context.file)).arg(context.line);//代码所在文件及行数
     QString contextTime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.mmm");
  
-    QString mess = QString("%1: [%2]: %3").arg(contextTime).arg(contextType).arg(msg);
+    QString mess = QString("%1:[%2]:%3::%4").arg(contextTime).arg(contextType).arg(contextInfo).arg(msg);
     QFile contextFile(logFile + ".log");
     contextFile.open(QIODevice::WriteOnly | QIODevice::Append);
     QTextStream contextStream(&contextFile);
@@ -60,6 +57,8 @@ int main(int argc, char *argv[])
     NEBULA::ModuleController moduleController;
     moduleController.init();
 
+    QEventLoop loop;
+    loop.exec();
 
     return a.exec();
 }

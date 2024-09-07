@@ -14,6 +14,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
+#include <QThread>
 
 #include <QDir>
 #include <QMutex>
@@ -27,14 +28,15 @@ namespace NEBULA {
 struct CommonCfg {
     QString serverAddress;
     qint16 serverPort;
+    QString moduleAddress;
+    qint16 modulePort;
     QString moduleCfg20;
 };
 
-struct RTMCustomizedCfg {
-    QString moduleAddress;
-    qint16 serverPort;
-    qint16 modulePort;
-};
+// struct RTMCustomizedCfg {
+//     QString moduleAddress;
+//     qint16 modulePort;
+// };
 
 enum class ConnStatus{unConnected, connecting, connected};
 enum class RegisterStatus{unRegister, registering, registered};
@@ -93,12 +95,12 @@ class CommonModule : public QObject {
 	CommonCfg m_commCfg;
 	// 是否发送日志	
 	bool m_isDebugOut;
+    // 公共包头
+	GenericHeader m_genericHeader;
 
  protected:
 	// Socket网络传输
 	QTcpSocket* pTcpSocket;
-	// 公共包头
-	GenericHeader m_genericHeader;
 	// 公共包类型
 	QSet<qint16> pkgsComm;
 

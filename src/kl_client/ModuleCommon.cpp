@@ -118,7 +118,7 @@ void CommonModule::startup() {
     connect(pReconnectTimer, &QTimer::timeout, [=](){
         while (!pTcpSocket->waitForConnected(1000))
         {
-            // qDebug() << "Attempting to connect...";
+            qDebug() << "Attempting to connect...";
             connStatus = ConnStatus::connecting; // 只需关注连接状态，因为连接会影响注册，注册会影响对时
             pTcpSocket->connectToHost(m_commCfg.serverAddress, m_commCfg.serverPort);
         }
@@ -406,7 +406,7 @@ void CommonModule::sendControlledOrder23(uint8_t code, quint16 pkgId) {
     pTcpSocket->write(buf);
     pTcpSocket->flush();
     /* ------------------------------------------------------------------------ */
-    qDebug() << "send 0x023: " << buf.toHex()
+    qDebug() << "send 0x023:" << buf.toHex()
              << "pkgSize:"    << buf.length()
              << "n_id_Com: "  << m_oReqCtl0x23.n_id_Com;
              

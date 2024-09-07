@@ -10,13 +10,15 @@ class RTMModule : public CommonModule {
     QTimer* pCurrentSettingTimer823;
     QTimer* pCurrentFunctionTimer825;
     QTimer* pStateMachineTimer;
+    QThread* pSTateMachinethread;
     QSet<qint16> pkgsRTM;
+    
 
  public:
     RTMModule();
     ~RTMModule();
     void onRecvData();
-    void stateMachine();
+    
 
     void sendBearingMarker822();
     void sendRTMSettings823();
@@ -29,7 +31,7 @@ class RTMModule : public CommonModule {
     void recvRequestForbiddenIRIList563(const QByteArray& buf);
     void recvSettingForbiddenIRIList564(const QByteArray& buf);
 
-    RTMCustomizedCfg m_rtmCustomizedCfg;
+    // RTMCustomizedCfg m_rtmCustomizedCfg;
     OBearingMark0x822 m_oBearingMark0x822;
     OSubRezhRTR0x823 m_oSubRezhRTR0x823;
     OSubPosobilRTR0x825 m_oSubPosobilRTR0x825;
@@ -40,6 +42,8 @@ class RTMModule : public CommonModule {
 
  public slots:
     void onReadRTMData(qint16 pkgID, QByteArray& buf);
+    // 状态机线程执行函数
+    void stateMachine();
 };
 }  // namespace NEBULA
 #endif // _RTMMODULE_H_

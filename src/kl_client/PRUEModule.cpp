@@ -88,10 +88,6 @@ void PRUEModule::onRecvData() {
     GenericHeader genericHeader2;
     memcpy(&genericHeader2, buf.data(), HEADER_LEN);
     qint16 pkgID = genericHeader2.packType;
-    qDebug("===================================================================");
-    qDebug().nospace() << "recv 0x" << QString::number(pkgID, 16) << ": " << buf.toHex();
-    qDebug("===================================================================");
-    // 策略模式，根据包类型决定转发至哪个函数
     if (this->pkgsComm.contains(this->m_genericHeader.packType)) {
         this->onReadCommData(pkgID, buf);
     }

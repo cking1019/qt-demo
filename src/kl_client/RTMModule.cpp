@@ -4,9 +4,9 @@ namespace NEBULA
 {
 RTMModule::RTMModule() {
     pkgsRTM = {0x561, 0x563, 0x564};
-    m_genericHeader = {0x50454C, 0xff, 0x02, 0x02, 0x0000, 0x000000, 0x01, 0x0000, 0x0000};
 
     pStateMachineTimer =       new QTimer();
+    pSTateMachinethread =      new QThread();
     pCurrentTargetTimer822 =   new QTimer();
     pCurrentSettingTimer823 =  new QTimer();
     pCurrentFunctionTimer825 = new QTimer();
@@ -16,57 +16,32 @@ RTMModule::RTMModule() {
     connect(pCurrentTargetTimer822,   &QTimer::timeout, this, &RTMModule::sendBearingMarker822);
     connect(pCurrentSettingTimer823,  &QTimer::timeout, this, &RTMModule::sendRTMSettings823);
     connect(pCurrentFunctionTimer825, &QTimer::timeout, this, &RTMModule::sendRTMFunction825);
+    // 线程会阻塞主线程
+    connect(pSTateMachinethread,      &QThread::started, this, [=](){
+        while(true) {
+            stateMachine();
+            QThread::msleep(100);
+            qDebug() << "pSTateMachinethread";
+        }
+    });
     
     // 启动状态机定时器
     pStateMachineTimer->start();
-
-    m_oBearingMark0x822.idxCeilVOI = 0xffff;
-    m_oBearingMark0x822.idxCeilSPP = 1;
-    m_oBearingMark0x822.idxPoint = 0;
-    m_oBearingMark0x822.typeCeilSPP = 4;
-    m_oBearingMark0x822.typeChannel = 0;
-    m_oBearingMark0x822.typeSignal = 0;
-    m_oBearingMark0x822.azim = 180;
-    m_oBearingMark0x822.elev = 10.5;
-    m_oBearingMark0x822.range = 1060;
-    m_oBearingMark0x822.freqMhz = 5840;
-    m_oBearingMark0x822.dFreqMhz = 10;
-    m_oBearingMark0x822.Pow_dBm = -80;
-    m_oBearingMark0x822.SNR_dB = 15;
-
-    m_oSubRezhRTR0x823.N = 1;
-    m_oSubRezhRTR0x823.curAz = -1;
-    m_freqs823.append({5850.5, 120.5});
-
-    m_oSubPosobilRTR0x825.isRotate = 0;
-    m_oSubPosobilRTR0x825.maxTasks = 5;
-    m_oSubPosobilRTR0x825.numDiap = 1;
-    m_oSubPosobilRTR0x825.dAz = -1;
-    m_oSubPosobilRTR0x825.dElev = -1;
-    m_oSubPosobilRTR0x825.minFreqRTR = 300;
-    m_oSubPosobilRTR0x825.maxFreqRTR = 6000;
-
-    m_oSetBanIRIlist0x828.NIRI = 1;
-    m_freqs828.append({5850.5, 120.5});
-
-    m_oSubRadioTime0x829.taskNum = 0;
-    m_oSubRadioTime0x829.powType = 0;
-    m_oSubRadioTime0x829.freqBegin = 0;
-    m_oSubRadioTime0x829.freqStep = 0;
-    m_oSubRadioTime0x829.N = 1;
-    m_oSubRadioTime0x829.pow1 = 100;
+    // pSTateMachinethread->start();
+    // moveToThread(pSTateMachinethread);
 }
 
 RTMModule::~RTMModule() {
     if (pStateMachineTimer == nullptr)       delete pStateMachineTimer;
+    if (pSTateMachinethread == nullptr)      delete pSTateMachinethread;
     if (pCurrentTargetTimer822 == nullptr)   delete pCurrentTargetTimer822;
     if (pCurrentSettingTimer823 == nullptr)  delete pCurrentSettingTimer823;
     if (pCurrentFunctionTimer825 == nullptr) delete pCurrentFunctionTimer825;
 }
 
-// 状态机
+// 状态机,连接->注册->对时
 void RTMModule::stateMachine() {
-    // 连接状态,连接->注册->对时
+    // 连接状态,
     switch (connStatus)
     {
     case ConnStatus::unConnected:
@@ -80,14 +55,12 @@ void RTMModule::stateMachine() {
         if (pReconnectTimer->isActive())    pReconnectTimer->stop();
         if (!m_isSendRegister01)            sendRegister01();
         break;
-    default: {
+    default: 
         if(m_isDebugOut) {
             sendLogMsg25("the connection state is unknown");
             sendNote2Operator26("the connection state is unknown");
         }
         break;
-    }
-        
     }
     // 注册状态
     switch (registerStatus)
@@ -102,53 +75,50 @@ void RTMModule::stateMachine() {
         if (!pRequestTimer03->isActive())         pRequestTimer03->start(1000);
         if(m_isSendForbiddenIRIList828)           sendForbiddenIRIList828();
         break;
-    default:{
+    default:
         if(m_isDebugOut) {
             sendLogMsg25("the regsiter state is unknown");
             sendNote2Operator26("the regsiter state is unknown");
         }
         break;
-    }
-        
     }
     // 对时状态
     switch (timeStatus)
-    {
-    case TimeStatus::unTime: {
-        if (m_isModuleLocation05)                   m_isModuleLocation05  = false;
-        if (m_isModuleConfigure20)                  m_isModuleConfigure20 = false;
-        if (m_isSendForbiddenIRIList828)            m_isSendForbiddenIRIList828 = false;
-        if (pModuleStateTimer21->isActive())        pModuleStateTimer21->stop();
-        if (pCPTimer22->isActive())                 pCPTimer22->stop();
-        if (pModuleStatueTimer24->isActive())       pModuleStatueTimer24->stop();
-        if (pNPTimer28->isActive())                 pNPTimer28->stop();
-        if (pCurrentTargetTimer822->isActive())     pCurrentTargetTimer822->stop();
-        if (pCurrentSettingTimer823->isActive())    pCurrentSettingTimer823->stop();
-        if (pCurrentFunctionTimer825->isActive())   pCurrentFunctionTimer825->stop();
-        break;
-    }
-    case TimeStatus::timing: break;
-    case TimeStatus::timed:
-    {
-        if (!m_isModuleLocation05)                   sendModuleLocation05();
-        if (!m_isModuleConfigure20)                  sendModuleFigure20();
-        if (!pModuleStateTimer21->isActive())        pModuleStateTimer21->start(30000);
-        // if (!pCPTimer22->isActive())              pCPTimer22->start(6000);
-        if (!pModuleStatueTimer24->isActive())       pModuleStatueTimer24->start(10000);
-        if (!pNPTimer28->isActive())                 pNPTimer28->start(12000);
-        if (!pCurrentTargetTimer822->isActive())     pCurrentTargetTimer822->start(15000);
-        if (!pCurrentSettingTimer823->isActive())    pCurrentSettingTimer823->start(17000);
-        if (!pCurrentFunctionTimer825->isActive())   pCurrentFunctionTimer825->start(19000);
-        break;
-    }
-    default:{
-        if(m_isDebugOut) {
-            sendLogMsg25("the regsiter state is unknown");
-            sendNote2Operator26("the regsiter state is unknown");
+        {
+        case TimeStatus::unTime: {
+            if (m_isModuleLocation05)                   m_isModuleLocation05  = false;
+            if (m_isModuleConfigure20)                  m_isModuleConfigure20 = false;
+            if (m_isSendForbiddenIRIList828)            m_isSendForbiddenIRIList828 = false;
+            if (pModuleStateTimer21->isActive())        pModuleStateTimer21->stop();
+            if (pCPTimer22->isActive())                 pCPTimer22->stop();
+            if (pModuleStatueTimer24->isActive())       pModuleStatueTimer24->stop();
+            if (pNPTimer28->isActive())                 pNPTimer28->stop();
+            if (pCurrentTargetTimer822->isActive())     pCurrentTargetTimer822->stop();
+            if (pCurrentSettingTimer823->isActive())    pCurrentSettingTimer823->stop();
+            if (pCurrentFunctionTimer825->isActive())   pCurrentFunctionTimer825->stop();
+            break;
         }
-        break;
-    }
-    }
+        case TimeStatus::timing: break;
+        case TimeStatus::timed:
+        {
+            if (!m_isModuleLocation05)                   sendModuleLocation05();
+            if (!m_isModuleConfigure20)                  sendModuleFigure20();
+            if (!pModuleStateTimer21->isActive())        pModuleStateTimer21->start(30000);
+            // if (!pCPTimer22->isActive())              pCPTimer22->start(6000);
+            if (!pModuleStatueTimer24->isActive())       pModuleStatueTimer24->start(10000);
+            if (!pNPTimer28->isActive())                 pNPTimer28->start(12000);
+            if (!pCurrentTargetTimer822->isActive())     pCurrentTargetTimer822->start(15000);
+            if (!pCurrentSettingTimer823->isActive())    pCurrentSettingTimer823->start(17000);
+            if (!pCurrentFunctionTimer825->isActive())   pCurrentFunctionTimer825->start(19000);
+            break;
+        }
+        default:
+            if(m_isDebugOut) {
+                sendLogMsg25("the regsiter state is unknown");
+                sendNote2Operator26("the regsiter state is unknown");
+            }
+            break;
+        }
 }
 
 void RTMModule::onRecvData() {
