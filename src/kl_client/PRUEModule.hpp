@@ -6,10 +6,12 @@
 namespace NEBULA {
 class PRUEModule : public CommonModule {
  private:
-   QTimer* pCurrentSettingTimerD21;
-   QTimer* pCurrentFunctionTimerD22;
-   QTimer* pStateMachineTimer;
+   QTimer* m_pCurrentSettingTimerD21;
+   QTimer* m_pStateMachineTimer;
    QSet<qint16> pkgsPRUE;
+
+   bool m_isSendInstalledBanSectorD01;
+   bool m_isSendPRUEFunctionD22;
 
  public:
    PRUEModule();

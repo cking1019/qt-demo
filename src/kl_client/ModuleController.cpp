@@ -70,13 +70,6 @@ void ModuleController::init() {
         float dFreqMhz2 = rtmCfg->value("828/dFreqMhz").toFloat();
         p->m_freqs828   = {{freqMhz2, dFreqMhz2}};
 
-        p->m_oSubRadioTime0x829.taskNum   = rtmCfg->value("829/taskNum").toInt();
-        p->m_oSubRadioTime0x829.powType   = rtmCfg->value("829/powType").toInt();
-        p->m_oSubRadioTime0x829.freqBegin = rtmCfg->value("829/freqBegin").toInt();
-        p->m_oSubRadioTime0x829.freqStep  = rtmCfg->value("829/freqStep").toInt();
-        p->m_oSubRadioTime0x829.N         = rtmCfg->value("829/N").toInt();
-        p->m_oSubRadioTime0x829.pow1      = rtmCfg->value("829/pow1").toInt();
-
         rtmVec.append(p);
     }
 

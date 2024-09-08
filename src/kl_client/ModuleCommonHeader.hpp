@@ -50,6 +50,11 @@ struct GenericHeader
     uint32_t checkSum :16;  // 头校验和
 };
 
+struct OTime {
+    uint32_t time1;
+    uint32_t time2;
+};
+
 // 0x1,请求注册
 struct ModuleRegister0x1 {
     uint32_t idManuf     :8;   // 制造商标识符
@@ -94,11 +99,10 @@ struct ModuleGeoLocation0x5 {
     float    zHeight;
 };
 
+
+
 // 0x21,设备元素状态
 struct OElemStatus0x21 {
-    uint32_t time1;
-    uint32_t time2;
-
     uint32_t IDElem  :16;
     uint32_t status  :4;
     uint32_t workF1  :4;
@@ -109,9 +113,6 @@ struct OElemStatus0x21 {
 
 // 0x22,设备CP状态
 struct OCPStatus0x22 {
-    uint32_t time1;
-    uint32_t time2;
-
     uint32_t IDParam;
 
     uint32_t status      :8;
@@ -125,9 +126,6 @@ struct OCPStatus0x22 {
 
 // 0x28,设备NP状态
 struct CustomisedNP0x28 {
-    uint32_t time1;
-    uint32_t time2;
-
     uint32_t IDParam;
 
     uint32_t size    : 8;
@@ -177,14 +175,6 @@ struct LogMsg0x25 {
     quint8 reserve  :8;
 };
 
-// 0x26,发送消息给操作员
-struct Msg2Oprator0x26 {
-    uint32_t time1;
-    uint32_t time2;
-
-    // msg
-};
-
 // 0x27,发送扩展命令收据
 struct ExtendedOrder0x27 {
     uint32_t time1;
@@ -194,14 +184,6 @@ struct ExtendedOrder0x27 {
     uint32_t code  : 16;
 
     // msg
-};
-
-
-
-// 时间头
-struct OTimeReq {
-    uint32_t time1;
-    uint32_t time2;
 };
 
 
@@ -278,7 +260,7 @@ struct ReqSettingCustomizedParam0x4B {
 
 
 // ==================RTM===========================================
-// 0x822，方位标记
+// 0x822，目标标记
 struct OBearingMark0x822
 {
     uint32_t idxCeilVOI :16;
@@ -328,21 +310,6 @@ struct OSubPosobilRTR0x825 {
 struct OSetBanIRIlist0x828 {
     uint32_t NIRI :8;
     uint32_t reserve :24;
-};
-
-// 0x829，当前无线电环境信息
-struct OSubRadioTime0x829 {
-    uint32_t time1;
-    uint32_t time2;
-
-    uint32_t taskNum  :24;
-    uint32_t powType :8;
-
-    float freqBegin;
-    float freqStep;
-
-    uint32_t N;
-    uint32_t pow1;
 };
 
 // ==================PRUE===========================================

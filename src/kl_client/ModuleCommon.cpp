@@ -26,20 +26,20 @@ CommonModule::CommonModule(QObject *parent):QObject(parent) {
     pkgsComm = {0x2, 0x4, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B};
 
     pTcpSocket =           new QTcpSocket(this);
-    pReconnectTimer =      new QTimer();
+    m_pReconnectTimer =      new QTimer();
 
-    pRequestTimer03 =      new QTimer();
-    pModuleStateTimer21 =  new QTimer();
-    pCPTimer22 =           new QTimer();
-    pModuleStatueTimer24 = new QTimer();
-    pNPTimer28 =           new QTimer();
+    m_pRequestTimer03 =      new QTimer();
+    m_pModuleStateTimer21 =  new QTimer();
+    m_pCPTimer22 =           new QTimer();
+    m_pModuleStatueTimer24 = new QTimer();
+    m_pNPTimer28 =           new QTimer();
 
     connStatus =     ConnStatus::unConnected;
     registerStatus = RegisterStatus::unRegister;
     timeStatus =     TimeStatus::unTime;
     m_isSendRegister01    = false;
-    m_isModuleLocation05  = false;
-    m_isModuleConfigure20 = false;
+    m_isSendModuleLocation05  = false;
+    m_isSendModuleConfigure20 = false;
     m_isSendForbiddenIRIList828 = false;
     
     m_iStampResult = 0;
@@ -61,20 +61,28 @@ CommonModule::CommonModule(QObject *parent):QObject(parent) {
     m_ModuleGeoLocation0x5.yLong = 20;
     m_ModuleGeoLocation0x5.zHeight = 30;
 
+    OElemStatus0x21 m_oElemStatus0x21;
     m_oElemStatus0x21.IDElem = 0;
     m_oElemStatus0x21.status = 1;
     m_oElemStatus0x21.workF1 = 1;
     m_oElemStatus0x21.local = 0;
     m_oElemStatus0x21.isImit = 0;
-    m_oElemStatus0x21.reserve = 0;
+    m_vecOElemStatus0x21.append(m_oElemStatus0x21);
 
-    m_oCPStatus0x22.IDParam = 0; // 包索引
+    OCPStatus0x22 m_oCPStatus0x22;
+    m_oCPStatus0x22.IDParam = 0; // 20中CP参数的IDParamID，决定哪种受控状态
     m_oCPStatus0x22.status = 4;  // 参数不受控
     m_oCPStatus0x22.size = 0;
     m_oCPStatus0x22.isNewStatus = 0;
     m_oCPStatus0x22.isNewValue = 0;
-    m_oCPStatus0x22.reserve = 0;
     m_oCPStatus0x22.n_val = 2;   // "Value": 2, "Text": "PrepareWork"
+    m_vecOCPStatus0x22.append(m_oCPStatus0x22);
+
+    CustomisedNP0x28 m_customisedNPx28;
+    m_customisedNPx28.IDParam = 0;
+    m_customisedNPx28.size = 4;   // 如果0x20中传输了values数据，那么设置为4
+    m_customisedNPx28.np_v = 1;   // 0x20中索引的值
+    m_vecCustomisedNP0x28.append(m_customisedNPx28);
 
     m_oModuleStatus0x24.status = 1;
     m_oModuleStatus0x24.work = 1;
@@ -90,31 +98,29 @@ CommonModule::CommonModule(QObject *parent):QObject(parent) {
     m_oModuleStatus0x24.statusTwp = 0;
     m_oModuleStatus0x24.mode = 0;
 
-    m_customisedNPx28.IDParam = 0;
-    m_customisedNPx28.size = 4;   // 如果0x20中传输了value数据，那么设置为4
-    m_customisedNPx28.np_v = 1;   // 0x20中中索引的值
+
 }
 
 CommonModule::~CommonModule() {
     if (pTcpSocket != nullptr)              delete pTcpSocket;
-    if (pReconnectTimer != nullptr)         delete pReconnectTimer;
+    if (m_pReconnectTimer != nullptr)         delete m_pReconnectTimer;
 
-    if (pRequestTimer03 != nullptr)         delete pRequestTimer03;
-    if (pModuleStateTimer21 != nullptr)     delete pModuleStateTimer21;
-    if (pCPTimer22 != nullptr)              delete pCPTimer22;
-    if (pModuleStatueTimer24 != nullptr)    delete pModuleStatueTimer24;
-    if (pNPTimer28 != nullptr)              delete pNPTimer28;
+    if (m_pRequestTimer03 != nullptr)         delete m_pRequestTimer03;
+    if (m_pModuleStateTimer21 != nullptr)     delete m_pModuleStateTimer21;
+    if (m_pCPTimer22 != nullptr)              delete m_pCPTimer22;
+    if (m_pModuleStatueTimer24 != nullptr)    delete m_pModuleStatueTimer24;
+    if (m_pNPTimer28 != nullptr)              delete m_pNPTimer28;
 }
 
 // 初始化成员变量
 void CommonModule::startup() {
-    connect(pRequestTimer03,      &QTimer::timeout, this, &CommonModule::sendRequestTime03);
-    connect(pModuleStateTimer21,  &QTimer::timeout, this, &CommonModule::sendModuleStatus21);
-    connect(pCPTimer22,           &QTimer::timeout, this, &CommonModule::sendModuleCPStatus22);
-    connect(pModuleStatueTimer24, &QTimer::timeout, this, &CommonModule::sendModuleStatus24);
-    connect(pNPTimer28,           &QTimer::timeout, this, &CommonModule::sendModuleCPStatus28);
+    connect(m_pRequestTimer03,      &QTimer::timeout, this, &CommonModule::sendRequestTime03);
+    connect(m_pModuleStateTimer21,  &QTimer::timeout, this, &CommonModule::sendModuleStatus21);
+    connect(m_pCPTimer22,           &QTimer::timeout, this, &CommonModule::sendModuleCPStatus22);
+    connect(m_pModuleStatueTimer24, &QTimer::timeout, this, &CommonModule::sendModuleStatus24);
+    connect(m_pNPTimer28,           &QTimer::timeout, this, &CommonModule::sendModuleCPStatus28);
 
-    connect(pReconnectTimer, &QTimer::timeout, [=](){
+    connect(m_pReconnectTimer, &QTimer::timeout, [=](){
         while (!pTcpSocket->waitForConnected(1000))
         {
             // qDebug() << "Attempting to connect...";
@@ -145,7 +151,6 @@ void CommonModule::onReadCommData(qint16 pkgID, const QByteArray& buf) {
         case 0x44: recvUpdate44(buf); break;
         case 0x45: recvNote4Operator45(buf); break;
         case 0x46: recvRequestModuleFigure46(buf); break;
-        case 0x47: recvSettingLang47(buf); break;
         case 0x48: recvRadioAndSatellite48(buf); break;
         case 0x49: recvSettingTime49(buf); break;
         case 0x4A: recvModuleLocation4A(buf); break;
@@ -271,7 +276,7 @@ void CommonModule::recvRequestTime04(const QByteArray& buf) {
 void CommonModule::sendModuleLocation05() {
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(ModuleGeoLocation0x5);
-    m_isModuleLocation05 = true;
+    m_isSendModuleLocation05 = true;
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x5;
     m_genericHeader.dataSize = len2;
@@ -292,13 +297,15 @@ void CommonModule::sendModuleLocation05() {
 }
 
 void CommonModule::recvRequestModuleFigure46(const QByteArray& buf) {
+    qDebug() << "recv 0x046:" << buf.toHex()
+             << "pkgSize:"    << buf.length();
     sendModuleFigure20();
 }
 
 void CommonModule::sendModuleFigure20() {
     quint8  len1 = HEADER_LEN;
     quint16 len2 = m_commCfg.moduleCfg20.length();
-    m_isModuleConfigure20 = true;
+    m_isSendModuleConfigure20 = true;
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x20;
     m_genericHeader.dataSize = len2;
@@ -319,48 +326,68 @@ void CommonModule::sendModuleFigure20() {
 
 void CommonModule::sendModuleStatus21() {
     quint8 len1 = HEADER_LEN;
-    quint8 len2 = sizeof(OElemStatus0x21);
+    quint8 len2 = sizeof(OTime);
+    quint8 len3 = m_vecOElemStatus0x21.size() * sizeof(OElemStatus0x21);
+    OTime otime;
     quint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    m_oElemStatus0x21.time1 = timestamp & 0xFFFFFFFF;
-    m_oElemStatus0x21.time2 = (timestamp >> 32) & 0xFFFFFFFF;
+    otime.time1 = timestamp & 0xFFFFFFFF;
+    otime.time2 = (timestamp >> 32) & 0xFFFFFFFF;
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x21;
-    m_genericHeader.dataSize = len2;
+    m_genericHeader.dataSize = len2 + len3;
     m_genericHeader.packIdx++;
     m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&m_genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
     QByteArray buf;
-    buf.resize(len1 + len2);
+    buf.resize(len1 + len2 + len3);
     memcpy(buf.data(), &m_genericHeader, len1);
-    memcpy(buf.data() + len1, &m_oElemStatus0x21, len2);
+    memcpy(buf.data() + len1, &otime, len2);
+    qint16 offset = len1 + len2;
+    for(auto& item : m_vecOElemStatus0x21) {
+        memcpy(buf.data() + offset, &item, sizeof(OElemStatus0x21));
+        offset += sizeof(OElemStatus0x21);
+    }
+    
     pTcpSocket->write(buf);
     pTcpSocket->flush();
     /* ------------------------------------------------------------------------ */
     qDebug() << "send 0x021:" << buf.toHex()
-             << "pkgSize:"   << buf.length();
+             << "pkgSize:"    << buf.length();
+    for(auto& item : m_vecOElemStatus0x21) {
+        qDebug() << QString("IDElem:%1,status:%2,workF1:%3").arg(item.IDElem).arg(item.status).arg(item.workF1);
+    }
 }
 
 void CommonModule::sendModuleCPStatus22() {
     quint8 len1 = HEADER_LEN;
-    quint8 len2 = sizeof(OCPStatus0x22);
+    quint8 len2 = sizeof(OTime);
+    quint8 len3 = m_vecOCPStatus0x22.size() * sizeof(OCPStatus0x22);
+    OTime otime;
     quint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    m_oCPStatus0x22.time1 = timestamp & 0xFFFFFFFF;
-    m_oCPStatus0x22.time2 = (timestamp >> 32) & 0xFFFFFFFF;
+    otime.time1 = timestamp & 0xFFFFFFFF;
+    otime.time2 = (timestamp >> 32) & 0xFFFFFFFF;
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x22;
-    m_genericHeader.dataSize = len2;
+    m_genericHeader.dataSize = len2 + len3;
     m_genericHeader.packIdx++;
     m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&m_genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
     QByteArray buf;
-    buf.resize(len1 + len2);
     memcpy(buf.data(), &m_genericHeader, len1);
-    memcpy(buf.data() + len1, &m_oCPStatus0x22, len2);
+    memcpy(buf.data() + len1, &otime, len2);
+    qint16 offset = len1 + len2;
+    for(auto& item : m_vecOCPStatus0x22) {
+        memcpy(buf.data() + offset, &item, sizeof(OCPStatus0x22));
+        offset += sizeof(OCPStatus0x22);
+    }
     pTcpSocket->write(buf);
     pTcpSocket->flush();
     /* ------------------------------------------------------------------------ */
     qDebug() << "send 0x022:" << buf.toHex()
              << "pkgSize:"   << buf.length();
+    for(auto& item : m_vecOCPStatus0x22) {
+        qDebug() << QString("IDParam:%1,size:%2,n_val:%3").arg(item.IDParam).arg(item.size).arg(item.n_val);
+    }
 }
 
 void CommonModule::sendModuleStatus24() {
@@ -444,12 +471,12 @@ void CommonModule::sendLogMsg25(QString msg) {
 
 void CommonModule::sendNote2Operator26(QString msg) {
     quint8 len1 = HEADER_LEN;
-    quint8 len2 = sizeof(OTimeReq);
+    quint8 len2 = sizeof(OTime);
     quint8 len3 = msg.length();
-    OTimeReq oTimeReq;
+    OTime oTime;
     quint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    oTimeReq.time1 = timestamp & 0xFFFFFFFF;
-    oTimeReq.time2 = (timestamp >> 32) & 0xFFFFFFFF;
+    oTime.time1 = timestamp & 0xFFFFFFFF;
+    oTime.time2 = (timestamp >> 32) & 0xFFFFFFFF;
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x26;
     m_genericHeader.dataSize = len2 + len3;
@@ -459,7 +486,7 @@ void CommonModule::sendNote2Operator26(QString msg) {
     QByteArray buf;
     buf.resize(len1 + len2 + len3);
     memcpy(buf.data(), &m_genericHeader, len1);
-    memcpy(buf.data() + len1, &oTimeReq, len2);
+    memcpy(buf.data() + len1, &oTime, len2);
     memcpy(buf.data() + len1 + len2, msg.toUtf8().constData(), len3);
     pTcpSocket->write(buf);
     pTcpSocket->flush();
@@ -470,28 +497,35 @@ void CommonModule::sendNote2Operator26(QString msg) {
 
 void CommonModule::sendModuleCPStatus28() {
     quint8 len1 = HEADER_LEN;
-    quint8 len2 = sizeof(CustomisedNP0x28);
+    quint8 len2 = sizeof(OTime);
+    quint8 len3 = m_vecCustomisedNP0x28.size() * sizeof(CustomisedNP0x28);
+    OTime oTime;
     quint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    m_customisedNPx28.time1 = timestamp & 0xFFFFFFFF;
-    m_customisedNPx28.time2 = (timestamp >> 32) & 0xFFFFFFFF;
+    oTime.time1 = timestamp & 0xFFFFFFFF;
+    oTime.time2 = (timestamp >> 32) & 0xFFFFFFFF;
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x28;
     m_genericHeader.packIdx++;
-    m_genericHeader.dataSize = len2;
+    m_genericHeader.dataSize = len2 + len3;
     m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&m_genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
     QByteArray buf;
     buf.resize(len1 + len2);
     memcpy(buf.data(), &m_genericHeader, len1);
-    memcpy(buf.data() + len1, &m_customisedNPx28, len2);
+    memcpy(buf.data() + len1, &oTime, len2);
+    qint16 offset = len1 + len2;
+    for(auto& item : m_vecCustomisedNP0x28) {
+        memcpy(buf.data() + offset, &item, sizeof(CustomisedNP0x28));
+        offset += sizeof(CustomisedNP0x28);
+    }
     pTcpSocket->write(buf);
     pTcpSocket->flush();
     /* ------------------------------------------------------------------------ */
     qDebug() << "send 0x028:" << buf.toHex()
-             << "pkgSize:"    << buf.length()
-             << "IDParam:"    << m_customisedNPx28.IDParam
-             << "size:"       << m_customisedNPx28.size
-             << "np_v:"       << m_customisedNPx28.np_v;
+             << "pkgSize:"    << buf.length();
+    for(auto& item : m_vecCustomisedNP0x28) {
+        qDebug() << QString("IDParam:%1,size:%2,np_v:%3").arg(item.IDParam).arg(item.size).arg(item.np_v);
+    }
 }
 
 
@@ -517,11 +551,8 @@ void CommonModule::recvNote4Operator45(const QByteArray& buf) {
     QString msg = QString::fromUtf8(stringData);
     /* ------------------------------------------------------------------------ */
     qDebug() << "recv 0x045:" << buf.toHex()
-            << "pkgSize:"     << buf.length()
-            << "msg:"         << msg;
-}
-
-void CommonModule::recvSettingLang47(const QByteArray& buf) {
+             << "pkgSize:"    << buf.length()
+             << "msg:"        << msg;
 }
 
 void CommonModule::recvRadioAndSatellite48(const QByteArray& buf) {
@@ -564,7 +595,7 @@ void CommonModule::recvSettingTime49(const QByteArray& buf) {
 // 4A -> 05
 void CommonModule::recvModuleLocation4A(const QByteArray& buf) {
     quint16 pkgIdx = 0;
-    memcpy(&pkgIdx, buf.mid(6, 2).constData(), 2);
+    memcpy(&pkgIdx, buf.data() + 6, 2);
     qint8 len1 = HEADER_LEN;
     qint8 len2 = sizeof(ReqSettingLocation0x4A);
     ReqSettingLocation0x4A reqSettingLocation0x4A;
@@ -587,6 +618,8 @@ void CommonModule::recvModuleLocation4A(const QByteArray& buf) {
 
 // 4B -> 28
 void CommonModule::recvCustomizedParam4B(const QByteArray& buf) {
+    quint16 pkgIdx = 0;
+    memcpy(&pkgIdx, buf.data() + 6, 2);
     qint8 len1 = HEADER_LEN;
     qint8 len2 = sizeof(ReqSettingCustomizedParam0x4B);
     ReqSettingCustomizedParam0x4B reqSettingCustomizedParam0x4B;
@@ -604,6 +637,7 @@ void CommonModule::recvCustomizedParam4B(const QByteArray& buf) {
         if(reqSettingCustomizedParam0x4B.isSave == 0) sendLogMsg25("zero is saving new value and not save harddisk");
         if(reqSettingCustomizedParam0x4B.isSave == 1) sendLogMsg25("one is saving new value and need to save harddisk");
     }
+    sendControlledOrder23(0, pkgIdx);
     sendModuleCPStatus28();
 }
 

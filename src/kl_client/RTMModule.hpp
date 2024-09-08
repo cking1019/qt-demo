@@ -6,13 +6,11 @@
 namespace NEBULA {
 class RTMModule : public CommonModule {
  private:
-    QTimer* pCurrentTargetTimer822;
-    QTimer* pCurrentSettingTimer823;
-    QTimer* pCurrentFunctionTimer825;
-    QTimer* pStateMachineTimer;
-    QThread* pSTateMachinethread;
+    QTimer* m_pCurrentSettingTimer823;
+    QTimer* m_pStateMachineTimer;
+    // QThread* m_pSTateMachinethread;
     QSet<qint16> pkgsRTM;
-    
+    bool m_isSendRTMFunction825;
 
  public:
     RTMModule();
@@ -22,9 +20,7 @@ class RTMModule : public CommonModule {
     void sendBearingMarker822();
     void sendRTMSettings823();
     void sendRTMFunction825();
-    void sendBearingAndRoute827();
     void sendForbiddenIRIList828();
-    void sendWirelessEnvInfo829();
 
     void recvChangingRTMSettings561(const QByteArray& buf);
     void recvRequestForbiddenIRIList563(const QByteArray& buf);
@@ -35,9 +31,8 @@ class RTMModule : public CommonModule {
     OSubRezhRTR0x823 m_oSubRezhRTR0x823;
     OSubPosobilRTR0x825 m_oSubPosobilRTR0x825;
     OSetBanIRIlist0x828 m_oSetBanIRIlist0x828;
-    OSubRadioTime0x829 m_oSubRadioTime0x829;
-    QVector<QVector<float>> m_freqs823;
-    QVector<QVector<float>> m_freqs828;
+    QVector<FreqAndDFreq> m_freqs823;
+    QVector<FreqAndDFreq> m_freqs828;
 
  public slots:
     void onReadRTMData(qint16 pkgID, QByteArray& buf);

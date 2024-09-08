@@ -6,22 +6,21 @@ PRUEModule::PRUEModule() {
     pkgsPRUE = {0x601, 0x201, 0x202};
     m_genericHeader = {0x524542, 0xff, 0x2, 0x2, 0x0, 0x0, 0x1, 0x0, 0x0};
     
-    pStateMachineTimer =       new QTimer();
-    pCurrentSettingTimerD21 =  new QTimer();
-    pCurrentFunctionTimerD22 = new QTimer();
+    m_pStateMachineTimer =       new QTimer();
+    m_pCurrentSettingTimerD21 =  new QTimer();
+    m_isSendInstalledBanSectorD01 = false;
+    m_isSendPRUEFunctionD22 = false;
 
     connect(pTcpSocket,         &QTcpSocket::readyRead, this, &PRUEModule::onRecvData);
-    connect(pStateMachineTimer,       &QTimer::timeout, this, &PRUEModule::stateMachine);
-    connect(pCurrentSettingTimerD21,  &QTimer::timeout, this, &PRUEModule::sendPRUESettingsD21);
-    connect(pCurrentFunctionTimerD22, &QTimer::timeout, this, &PRUEModule::sendPRUEFunctionD22);
+    connect(m_pStateMachineTimer,       &QTimer::timeout, this, &PRUEModule::stateMachine);
+    connect(m_pCurrentSettingTimerD21,  &QTimer::timeout, this, &PRUEModule::sendPRUESettingsD21);
     
-    pStateMachineTimer->start();
+    m_pStateMachineTimer->start();
 }
 
 PRUEModule::~PRUEModule() {
-    if (pStateMachineTimer == nullptr)       delete pStateMachineTimer;
-    if (pCurrentSettingTimerD21 == nullptr)  delete pCurrentSettingTimerD21;
-    if (pCurrentFunctionTimerD22 == nullptr) delete pCurrentFunctionTimerD22;
+    if (m_pStateMachineTimer == nullptr)       delete m_pStateMachineTimer;
+    if (m_pCurrentSettingTimerD21 == nullptr)  delete m_pCurrentSettingTimerD21;
 }
 
 // 状态机
@@ -30,55 +29,76 @@ void PRUEModule::stateMachine() {
     switch (connStatus)
     {
     case ConnStatus::unConnected:
-        if (!pReconnectTimer->isActive())                 pReconnectTimer->start(1000);
+        if (!m_pReconnectTimer->isActive())                 m_pReconnectTimer->start(1000);
         if (m_isSendRegister01)                             m_isSendRegister01 = false;
-        if (registerStatus == RegisterStatus::registered) registerStatus = RegisterStatus::unRegister;
+        if (registerStatus == RegisterStatus::registered)   registerStatus = RegisterStatus::unRegister;
         break;
     case ConnStatus::connecting:
         break;
     case ConnStatus::connected:
-        if (pReconnectTimer->isActive())    pReconnectTimer->stop();
+        if (m_pReconnectTimer->isActive())    m_pReconnectTimer->stop();
         if (!m_isSendRegister01)              sendRegister01();
         break;
     default:
+        if(m_isDebugOut) {
+            sendLogMsg25("the connection state is unknown");
+            sendNote2Operator26("the connection state is unknown");
+        }
         break;
     }
     // 注册状态
     switch (registerStatus)
     {
     case RegisterStatus::unRegister:
-        if (pRequestTimer03->isActive())          pRequestTimer03->stop();
-        if (m_isModuleLocation05)                   m_isModuleLocation05  = false;
-        if (m_isModuleConfigure20)                  m_isModuleConfigure20 = false;
-        if (pModuleStateTimer21->isActive())               pModuleStateTimer21->stop();
-        if (pCPTimer22->isActive())               pCPTimer22->stop();
-        if (pModuleStatueTimer24->isActive())     pModuleStatueTimer24->stop();
-        if (pCurrentSettingTimerD21->isActive())  pCurrentSettingTimerD21->stop();
-        if (pCurrentFunctionTimerD22->isActive()) pCurrentFunctionTimerD22->stop();
-        if (timeStatus == TimeStatus::timed)      timeStatus = TimeStatus::unTime;
+        if (m_pRequestTimer03->isActive())            m_pRequestTimer03->stop();
+        if (m_isSendModuleLocation05)                 m_isSendModuleLocation05  = false;
+        if (m_isSendModuleConfigure20)                m_isSendModuleConfigure20 = false;
+        if (m_isSendInstalledBanSectorD01)            m_isSendInstalledBanSectorD01 = false;
+        if (m_isSendPRUEFunctionD22)                  m_isSendPRUEFunctionD22 = false;
+        if (timeStatus == TimeStatus::timed)          timeStatus = TimeStatus::unTime;
         break;
     case RegisterStatus::registering:
         break;
     case RegisterStatus::registered:
-        if (!pRequestTimer03->isActive())          pRequestTimer03->start(1000);
-        if (!m_isModuleLocation05)                   sendModuleLocation05();
-        if (!m_isModuleConfigure20)                  sendModuleFigure20();
-        if (!pModuleStateTimer21->isActive())               pModuleStateTimer21->start(5000);
-        if (!pCPTimer22->isActive())               pCPTimer22->start(5000);
-        if (!pModuleStatueTimer24->isActive())     pModuleStatueTimer24->start(1000);
-        if (!pCurrentSettingTimerD21->isActive())  pCurrentSettingTimerD21->start(1000);
-        if (!pCurrentFunctionTimerD22->isActive()) pCurrentFunctionTimerD22->start(1000);
+        if (!m_pRequestTimer03->isActive())          m_pRequestTimer03->start(1000);
+        if (!m_isSendModuleLocation05)               sendModuleLocation05();
+        if (!m_isSendModuleConfigure20)              sendModuleFigure20();
+        if (!m_isSendInstalledBanSectorD01)          sendInstalledBanSectorD01();
+        if (!m_isSendPRUEFunctionD22)                sendPRUEFunctionD22();
         break;
     default:
+        if(m_isDebugOut) {
+            sendLogMsg25("the regsiter state is unknown");
+            sendNote2Operator26("the regsiter state is unknown");
+        }
         break;
     }
     // 对时状态
     switch (timeStatus)
     {
-    case TimeStatus::unTime: break;
+    case TimeStatus::unTime: {
+        if (m_pModuleStateTimer21->isActive())        m_pModuleStateTimer21->stop();
+        if (m_pCPTimer22->isActive())                 m_pCPTimer22->stop();
+        if (m_pModuleStatueTimer24->isActive())       m_pModuleStatueTimer24->stop();
+        if (m_pNPTimer28->isActive())                 m_pNPTimer28->stop();
+        if (m_pCurrentSettingTimerD21->isActive())    m_pCurrentSettingTimerD21->stop();
+        break;
+    }
     case TimeStatus::timing: break;
-    case TimeStatus::timed:  break;
+    case TimeStatus::timed:
+    {
+        if (!m_pModuleStateTimer21->isActive())        m_pModuleStateTimer21->start(30000);
+        if (!m_pCPTimer22->isActive())                 m_pCPTimer22->start(6000);
+        if (!m_pModuleStatueTimer24->isActive())       m_pModuleStatueTimer24->start(10000);
+        if (!m_pNPTimer28->isActive())                 m_pNPTimer28->start(12000);
+        if (!m_pCurrentSettingTimerD21->isActive())    m_pCurrentSettingTimerD21->start(17000);
+        break;
+    }
     default:
+        if(m_isDebugOut) {
+            sendLogMsg25("the regsiter state is unknown");
+            sendNote2Operator26("the regsiter state is unknown");
+        }
         break;
     }
 }
@@ -108,21 +128,23 @@ void PRUEModule::onReadPRUEData(qint16 pkgID, const QByteArray& buf) {
 
 // 0xD01-0x201,发送已安装的辐射禁止扇区或接收设置辐射禁止扇区
 void PRUEModule::recvSettingBanSector201(const QByteArray& buf) {
+    qint8 len1 = HEADER_LEN;
+    qint8 len2 = sizeof(OTrapBanSectorD01);
     quint16 pkgIdx = 0;
     memcpy(&pkgIdx, buf.mid(6, 2).constData(), 2);
     quint8 num = 0;
     if(buf.length() > HEADER_LEN) {
         num = buf.at(HEADER_LEN + 8);
     }
-    qint16 offset = HEADER_LEN + sizeof(OTrapBanSectorD01);
+    qint16 offset = len1 + len2;
     for(int i = 0; i < num; i++) {
         OTrapBanSector201 oTrapBanSector201;
-        memcpy(&oTrapBanSector201, buf.mid(offset).constData(), sizeof(OTrapBanSector201));
+        memcpy(&oTrapBanSector201, buf.data() + offset, sizeof(OTrapBanSector201));
         m_vecOTrapBanSector201.append(oTrapBanSector201);
         offset += sizeof(OTrapBanSector201);
     }
     /* ------------------------------------------------------------------------ */
-    qDebug() << "recv 0x561:" << buf.toHex()
+    qDebug() << "recv 0x201:" << buf.toHex()
              << "pkgSize:"    << buf.length()
              << "num:"        << m_oTrapBanSectorD01.num
              << "pkgIdx:"     << pkgIdx;
@@ -136,12 +158,15 @@ void PRUEModule::recvSettingBanSector201(const QByteArray& buf) {
                     .arg(item.delFreq);
     }
     sendControlledOrder23(0, pkgIdx);
+    sendInstalledBanSectorD01();
 }
 
 void PRUEModule::recvBanRadiation202(const QByteArray& buf) {
+    qint8 len1 = HEADER_LEN;
+    qint8 len2 = sizeof(OTrapRadiationBan0x202);
     quint16 pkgIdx = 0;
     memcpy(&pkgIdx, buf.mid(6, 2).constData(), 2);
-    memcpy(&m_oTrapRadiationBan0x202, buf.data(), sizeof(OTrapRadiationBan0x202));
+    memcpy(&m_oTrapRadiationBan0x202, buf.data() + len1, len2);
     qDebug() << "recv 0x202:" << buf.toHex()
              << "pkgSize:"    << buf.length()
              << "num:"        << m_oTrapBanSectorD01.num
@@ -151,11 +176,12 @@ void PRUEModule::recvBanRadiation202(const QByteArray& buf) {
 }
 
 void PRUEModule::recvUpdatePRUESetting601(const QByteArray& buf) {
+    qint8 len1 = HEADER_LEN;
+    qint8 len2 = sizeof(OTrapRadiationBan0x202);
     quint16 pkgIdx = 0;
     memcpy(&pkgIdx, buf.mid(6, 2).constData(), 2);
-    qint16 offset = HEADER_LEN;
-    memcpy(&m_oRecvTrapFixed0x601, buf.data() + offset, sizeof(ORecvTrapFixed0x601));
-    offset += sizeof(ORecvTrapFixed0x601);
+    memcpy(&m_oRecvTrapFixed0x601, buf.data() + len1, len2);
+    qint16 offset = len1 + len2;
     for(uint32_t i = 0; i < m_oRecvTrapFixed0x601.N; i++) {
         FreqAndDFreq freqAndDFreq;
         memcpy(&freqAndDFreq, buf.data() + offset, sizeof(FreqAndDFreq));
@@ -172,6 +198,7 @@ void PRUEModule::recvUpdatePRUESetting601(const QByteArray& buf) {
              << "pkgIdx:"     << pkgIdx
              << QString("lat=%1,long=%2").arg(m_NavigationInfluence.latitude).arg(m_NavigationInfluence.longitude);
     sendControlledOrder23(0, pkgIdx);
+    sendPRUESettingsD21();
 }
 
 void PRUEModule::sendInstalledBanSectorD01() {
@@ -188,9 +215,9 @@ void PRUEModule::sendInstalledBanSectorD01() {
     buf.resize(len1 + len2 + len3);
     memcpy(buf.data(), &m_genericHeader, len1);
     memcpy(buf.data() + len1, &m_oTrapBanSectorD01, len2);
-    qint16 offset = 0;
-    for(const auto& item : m_vecOTrapBanSector201) {
-        memcpy(buf.data() + len1 + len2 + offset, buf.mid(HEADER_LEN + 12 + offset), sizeof(OTrapBanSector201));
+    qint16 offset = len1 + len2;
+    for(auto& item : m_vecOTrapBanSector201) {
+        memcpy(buf.data() + offset, &item, sizeof(OTrapBanSector201));
         offset += sizeof(OTrapBanSector201);
     }
     pTcpSocket->write(buf);

@@ -1,7 +1,6 @@
 #ifndef _COMMONMODULE_H_
 #define _COMMONMODULE_H_
 
-
 #include <QObject>
 #include <QTcpSocket>
 #include <QDebug>
@@ -15,7 +14,6 @@
 #include <QJsonObject>
 #include <QJsonValue>
 #include <QThread>
-
 #include <QDir>
 #include <QMutex>
 #include "ModuleCommonHeader.hpp"
@@ -30,15 +28,11 @@ namespace NEBULA {
 struct CommonCfg {
     QString serverAddress;
     qint16 serverPort;
+
     QString moduleAddress;
     qint16 modulePort;
     QString moduleCfg20;
 };
-
-// struct RTMCustomizedCfg {
-//     QString moduleAddress;
-//     qint16 modulePort;
-// };
 
 enum class ConnStatus{unConnected, connecting, connected};
 enum class RegisterStatus{unRegister, registering, registered};
@@ -66,14 +60,13 @@ class CommonModule : public QObject {
 	void sendModuleFigure20();
 	void sendModuleStatus21();
 	void sendModuleCPStatus22();
+    void sendModuleCPStatus28();
 	void sendModuleStatus24();
 
 	void sendControlledOrder23(uint8_t code, quint16 pkgId);
 
 	void sendLogMsg25(QString msg);
 	void sendNote2Operator26(QString msg);
-
-	void sendModuleCPStatus28();
 
 	void recvRegister02(const QByteArray& buf);
 	void recvRequestTime04(const QByteArray& buf);
@@ -87,7 +80,6 @@ class CommonModule : public QObject {
 	void recvNote4Operator45(const QByteArray& buf);
 	void recvRequestModuleFigure46(const QByteArray& buf);
 
-	void recvSettingLang47(const QByteArray& buf);
 	void recvRadioAndSatellite48(const QByteArray& buf);
 	void recvSettingTime49(const QByteArray& buf);
 	void recvModuleLocation4A(const QByteArray& buf);
@@ -115,27 +107,28 @@ class CommonModule : public QObject {
 
 	// 连接状态,此类协议不是定期发送，因此用bool类型判断是否已发送
 	bool m_isSendRegister01;
-	bool m_isModuleLocation05;
-	bool m_isModuleConfigure20;
+	bool m_isSendModuleLocation05;
+	bool m_isSendModuleConfigure20;
 	bool m_isSendForbiddenIRIList828;
 
 	// 再次连接定时器器
-	QTimer* pReconnectTimer;
-	QTimer* pRequestTimer03;
-	QTimer* pCPTimer22;
-	QTimer* pModuleStateTimer21;
-	QTimer* pModuleStatueTimer24;
-	QTimer* pNPTimer28;
+	QTimer* m_pReconnectTimer;
+	QTimer* m_pRequestTimer03;
+	QTimer* m_pCPTimer22;
+	QTimer* m_pModuleStateTimer21;
+	QTimer* m_pModuleStatueTimer24;
+	QTimer* m_pNPTimer28;
 
     ModuleRegister0x1 m_moduleRegister0x1;
 	ModuleTimeControl0x3 m_moduleTimeControl0x3;
 	ModuleGeoLocation0x5 m_ModuleGeoLocation0x5;
-    OElemStatus0x21 m_oElemStatus0x21;
-    OCPStatus0x22 m_oCPStatus0x22;
     OModuleStatus0x24 m_oModuleStatus0x24;
     OReqCtl0x23 m_oReqCtl0x23;
     LogMsg0x25 m_logMsg0x25;
-    CustomisedNP0x28 m_customisedNPx28;
+
+    QVector<OElemStatus0x21> m_vecOElemStatus0x21;
+    QVector<OCPStatus0x22> m_vecOCPStatus0x22;
+    QVector<CustomisedNP0x28> m_vecCustomisedNP0x28;
 
  private:
 	// 时间差结果
