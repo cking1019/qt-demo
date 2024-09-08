@@ -18,7 +18,6 @@ class RTMModule : public CommonModule {
     RTMModule();
     ~RTMModule();
     void onRecvData();
-    
 
     void sendBearingMarker822();
     void sendRTMSettings823();

@@ -146,6 +146,8 @@ void RTMModule::onReadRTMData(qint16 pkgID, QByteArray& buf) {
 
 // 修改频率、频段 561-823
 void RTMModule::recvChangingRTMSettings561(const QByteArray& buf) {
+    quint16 pkgIdx = 0;
+    memcpy(&pkgIdx, buf.mid(6, 2).constData(), 2);
     if(buf.length() > HEADER_LEN) {
         m_oSubRezhRTR0x823.N = buf.at(HEADER_LEN + 0);
     }
@@ -160,11 +162,12 @@ void RTMModule::recvChangingRTMSettings561(const QByteArray& buf) {
     /* ------------------------------------------------------------------------ */
     qDebug() << "recv 0x561:" << buf.toHex()
              << "pkgSize:"    << buf.length()
-             << "N:"          << m_oSubRezhRTR0x823.N;
-    // for(auto const &item : m_freqs823) {
-    //     qDebug() << "freq:" << item[0] << ",DFreq" << item[1];
-    // }
-    sendControlledOrder23(0, this->m_genericHeader.packIdx);
+             << "N:"          << m_oSubRezhRTR0x823.N
+             << "pkgIdx:"     << pkgIdx;
+    for(auto const &item : m_freqs823) {
+        qDebug() << "freq:" << item[0] << ",DFreq" << item[1];
+    }
+    sendControlledOrder23(0, pkgIdx);
     sendRTMSettings823();
 }
 
@@ -172,7 +175,7 @@ void RTMModule::recvChangingRTMSettings561(const QByteArray& buf) {
 void RTMModule::sendRTMSettings823() {
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OSubRezhRTR0x823);
-    quint8 len3 = m_freqs823.size() * sizeof(float) * 2;
+    qint32 len3 = m_freqs823.size() * sizeof(float) * 2;
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x823;
     m_genericHeader.dataSize = len2 + len3;
@@ -202,6 +205,8 @@ void RTMModule::sendRTMSettings823() {
 
 //564修改IRI的中心评率 564-828
 void RTMModule::recvSettingForbiddenIRIList564(const QByteArray& buf) {
+    quint16 pkgIdx = 0;
+    memcpy(&pkgIdx, buf.mid(6, 2).constData(), 2);
     if(buf.length() > HEADER_LEN) {
         m_oSetBanIRIlist0x828.NIRI = buf.at(HEADER_LEN + 0);
     }
@@ -214,13 +219,15 @@ void RTMModule::recvSettingForbiddenIRIList564(const QByteArray& buf) {
     }
     /* ------------------------------------------------------------------------ */
     // 494f5601 0202ae00 04000000 64050e02 00e4e652
+    // 对方发送数据有问题，需要核实
     qDebug() << "recv 0x564:" << buf.toHex()
              << "pkgSize:"    << buf.length()
-             << "NIRI:"       << m_oSetBanIRIlist0x828.NIRI;
+             << "NIRI:"       << m_oSetBanIRIlist0x828.NIRI
+             << "pkgIdx:"     << pkgIdx;
     for(auto const &item : m_freqs828) {
         qDebug() << item[0] << "," << item[1];
     }
-    sendControlledOrder23(0, this->m_genericHeader.packIdx);
+    sendControlledOrder23(0, pkgIdx);
     sendForbiddenIRIList828();
 }
 
@@ -228,7 +235,7 @@ void RTMModule::recvSettingForbiddenIRIList564(const QByteArray& buf) {
 void RTMModule::sendForbiddenIRIList828() {
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OSetBanIRIlist0x828);
-    quint8 len3 = m_freqs828.size() * sizeof(float) * 2;
+    qint32 len3 = m_freqs828.size() * sizeof(float) * 2;
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x828;
     m_genericHeader.dataSize = len2 + len3;
@@ -252,8 +259,12 @@ void RTMModule::sendForbiddenIRIList828() {
 
 // 563->828
 void RTMModule::recvRequestForbiddenIRIList563(const QByteArray& buf) {
-    qDebug() << "recv 0x563:" << buf.toHex()
-             << "pkgSize:"    << buf.length();
+    quint16 pkgIdx = 0;
+    memcpy(&pkgIdx, buf.mid(6, 2).constData(), 2);
+    qDebug() << "recv 0x563:"<< buf.toHex()
+            << "pkgSize:"    << buf.length()
+            << "pkgIdx:"     << pkgIdx;
+    sendControlledOrder23(0, pkgIdx);
     sendForbiddenIRIList828();
 }
 

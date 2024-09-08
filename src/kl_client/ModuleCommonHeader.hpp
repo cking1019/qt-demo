@@ -94,8 +94,8 @@ struct ModuleGeoLocation0x5 {
     float    zHeight;
 };
 
-// 0x21,设备np状态
-struct ONPStatus0x21 {
+// 0x21,设备元素状态
+struct OElemStatus0x21 {
     uint32_t time1;
     uint32_t time2;
 
@@ -107,7 +107,7 @@ struct ONPStatus0x21 {
     uint32_t reserve :6;
 };
 
-// 0x22,设备cp状态
+// 0x22,设备CP状态
 struct OCPStatus0x22 {
     uint32_t time1;
     uint32_t time2;
@@ -121,6 +121,19 @@ struct OCPStatus0x22 {
     uint32_t reserve     :14;
 
     uint32_t n_val;
+};
+
+// 0x28,设备NP状态
+struct CustomisedNP0x28 {
+    uint32_t time1;
+    uint32_t time2;
+
+    uint32_t IDParam;
+
+    uint32_t size    : 8;
+    uint32_t reserve : 24;
+
+    uint32_t np_v;
 };
 
 // 0x23,控制指令;0x27,扩展指令
@@ -183,18 +196,7 @@ struct ExtendedOrder0x27 {
     // msg
 };
 
-// 0x28,发送电路元件自定义参数值
-struct CustomisedParm0x28 {
-    uint32_t time1;
-    uint32_t time2;
 
-    uint32_t IDParam;
-
-    uint32_t size    : 8;
-    uint32_t reserve : 24;
-
-    uint32_t np_v;
-};
 
 // 时间头
 struct OTimeReq {
@@ -377,14 +379,16 @@ struct OTrapFunc0xD22 {
     float maxDFreq;
 };
 
-// 0xD01 & 0x201,发送已安装的辐射禁止扇区或接收设置辐射禁止扇区
-struct OTrapBanSector {
+// 0xD01-0x201,发送已安装的辐射禁止扇区或接收设置辐射禁止扇区
+struct OTrapBanSectorD01 {
     uint32_t time1;
     uint32_t time2;
 
     uint32_t num     :8;
     uint32_t reserve :24;
+};
 
+struct OTrapBanSector201 {
     uint32_t type       :1;
     uint32_t isUse      :1;
     uint32_t isUseEps   :1;
@@ -410,13 +414,27 @@ struct OTrapRadiationBan0x202 {
 
 // 0x601,接收更改当前PRUE设置
 struct ORecvTrapFixed0x601 {
-    uint32_t i_Num   :8;
+    uint32_t N   :8;
     uint32_t taskREB :8;
     uint32_t reserve :16;
 
     float azREB;
     float elevREB;
     float kGainREB;
+};
+
+struct FreqAndDFreq {
+    float freq;
+    float dfreq;
+};
+
+struct NavigationInfluence {
+    uint32_t flags;
+    float latitude;
+    float longitude;
+    float altitude;
+    float speed;
+    float course;
 };
 
 #pragma pack(pop)

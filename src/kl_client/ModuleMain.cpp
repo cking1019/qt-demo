@@ -56,9 +56,5 @@ int main(int argc, char *argv[])
     qInstallMessageHandler(MessWriteLog);//安装消息处理程序
     NEBULA::ModuleController moduleController;
     moduleController.init();
-
-    QEventLoop loop;
-    loop.exec();
-
     return a.exec();
 }

@@ -20,7 +20,9 @@
 #include <QMutex>
 #include "ModuleCommonHeader.hpp"
 // #include "Logger.hpp"
-#define RELAY_PATH "./conf/module.ini"
+#define COMM_CFG "./conf/common.ini"
+#define RTM_CFG "./conf/RTMCfg.ini"
+#define PRUE_CFG "./conf/PRUECfg.ini"
 
 
 namespace NEBULA {
@@ -43,9 +45,9 @@ enum class RegisterStatus{unRegister, registering, registered};
 enum class TimeStatus{unTime, timing, timed};
 
 // 包头长度
-const qint8 HEADER_LEN = 16;
+const qint8 HEADER_LEN = sizeof(GenericHeader);
 
-quint16 calcChcekSum(const char* sMess,int nCnt);
+quint16 calcChcekSum(const char* sMess, int nCnt);
 QString readJson(QString DevConfig20);
 
 class CommonModule : public QObject {
@@ -128,12 +130,12 @@ class CommonModule : public QObject {
     ModuleRegister0x1 m_moduleRegister0x1;
 	ModuleTimeControl0x3 m_moduleTimeControl0x3;
 	ModuleGeoLocation0x5 m_ModuleGeoLocation0x5;
-    ONPStatus0x21 m_oNPStatus0x21;
+    OElemStatus0x21 m_oElemStatus0x21;
     OCPStatus0x22 m_oCPStatus0x22;
     OModuleStatus0x24 m_oModuleStatus0x24;
     OReqCtl0x23 m_oReqCtl0x23;
     LogMsg0x25 m_logMsg0x25;
-    CustomisedParm0x28 m_customisedParm0x28;
+    CustomisedNP0x28 m_customisedNPx28;
 
  private:
 	// 时间差结果
