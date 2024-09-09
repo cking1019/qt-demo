@@ -97,12 +97,10 @@ CommonModule::CommonModule(QObject *parent):QObject(parent) {
     m_oModuleStatus0x24.isWpValid = 0;
     m_oModuleStatus0x24.statusTwp = 0;
     m_oModuleStatus0x24.mode = 0;
-
-
 }
 
 CommonModule::~CommonModule() {
-    if (pTcpSocket != nullptr)              delete pTcpSocket;
+    if (pTcpSocket != nullptr)                delete pTcpSocket;
     if (m_pReconnectTimer != nullptr)         delete m_pReconnectTimer;
 
     if (m_pRequestTimer03 != nullptr)         delete m_pRequestTimer03;
@@ -124,7 +122,7 @@ void CommonModule::startup() {
         while (!pTcpSocket->waitForConnected(1000))
         {
             // qDebug() << "Attempting to connect...";
-            connStatus = ConnStatus::connecting; // 只需关注连接状态，因为连接会影响注册，注册会影响对时
+            connStatus = ConnStatus::connecting;
             pTcpSocket->connectToHost(m_commCfg.serverAddress, m_commCfg.serverPort);
         }
     });
@@ -327,7 +325,7 @@ void CommonModule::sendModuleFigure20() {
 void CommonModule::sendModuleStatus21() {
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OTime);
-    quint8 len3 = m_vecOElemStatus0x21.size() * sizeof(OElemStatus0x21);
+    quint32 len3 = m_vecOElemStatus0x21.size() * sizeof(OElemStatus0x21);
     OTime otime;
     quint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     otime.time1 = timestamp & 0xFFFFFFFF;
@@ -361,7 +359,7 @@ void CommonModule::sendModuleStatus21() {
 void CommonModule::sendModuleCPStatus22() {
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OTime);
-    quint8 len3 = m_vecOCPStatus0x22.size() * sizeof(OCPStatus0x22);
+    quint32 len3 = m_vecOCPStatus0x22.size() * sizeof(OCPStatus0x22);
     OTime otime;
     quint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     otime.time1 = timestamp & 0xFFFFFFFF;
@@ -373,6 +371,7 @@ void CommonModule::sendModuleCPStatus22() {
     m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&m_genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
     QByteArray buf;
+    buf.resize(len1 + len2 + len3);
     memcpy(buf.data(), &m_genericHeader, len1);
     memcpy(buf.data() + len1, &otime, len2);
     qint16 offset = len1 + len2;
@@ -389,6 +388,7 @@ void CommonModule::sendModuleCPStatus22() {
         qDebug() << QString("IDParam:%1,size:%2,n_val:%3").arg(item.IDParam).arg(item.size).arg(item.n_val);
     }
 }
+
 
 void CommonModule::sendModuleStatus24() {
     quint8 len1 = HEADER_LEN;
@@ -410,7 +410,12 @@ void CommonModule::sendModuleStatus24() {
     pTcpSocket->flush();
     /* ------------------------------------------------------------------------ */
     qDebug() << "send 0x024:" << buf.toHex()
-             << "pkgSize:"   << buf.length();
+             << "pkgSize:"    << buf.length()
+             << "status:"     << m_oModuleStatus0x24.status
+             << "work:"       << m_oModuleStatus0x24.work
+             << "isRGDV:"     << m_oModuleStatus0x24.isRGDV
+             << "isRAF:"      << m_oModuleStatus0x24.isRAF
+             << "mode:"       << m_oModuleStatus0x24.mode;
 }
 
 void CommonModule::sendControlledOrder23(uint8_t code, quint16 pkgidx) {
@@ -498,7 +503,7 @@ void CommonModule::sendNote2Operator26(QString msg) {
 void CommonModule::sendModuleCPStatus28() {
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OTime);
-    quint8 len3 = m_vecCustomisedNP0x28.size() * sizeof(CustomisedNP0x28);
+    quint32 len3 = m_vecCustomisedNP0x28.size() * sizeof(CustomisedNP0x28);
     OTime oTime;
     quint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     oTime.time1 = timestamp & 0xFFFFFFFF;
@@ -510,7 +515,7 @@ void CommonModule::sendModuleCPStatus28() {
     m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&m_genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
     QByteArray buf;
-    buf.resize(len1 + len2);
+    buf.resize(len1 + len2 + len3);
     memcpy(buf.data(), &m_genericHeader, len1);
     memcpy(buf.data() + len1, &oTime, len2);
     qint16 offset = len1 + len2;

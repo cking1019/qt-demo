@@ -8,6 +8,7 @@ RTMModule::RTMModule() {
     m_pStateMachineTimer =       new QTimer();
     // m_pSTateMachinethread =      new QThread();
     m_pCurrentSettingTimer823 =  new QTimer();
+    m_isSendRTMFunction825 = false;
 
     connect(pTcpSocket,         &QTcpSocket::readyRead, this, &RTMModule::onRecvData);
     connect(m_pStateMachineTimer,       &QTimer::timeout, this, &RTMModule::stateMachine);
@@ -97,11 +98,11 @@ void RTMModule::stateMachine() {
     case TimeStatus::timing: break;
     case TimeStatus::timed:
     {
-        if (!m_pModuleStateTimer21->isActive())        m_pModuleStateTimer21->start(30000);
-        if (!m_pCPTimer22->isActive())                 m_pCPTimer22->start(6000);
-        if (!m_pModuleStatueTimer24->isActive())       m_pModuleStatueTimer24->start(10000);
-        if (!m_pNPTimer28->isActive())                 m_pNPTimer28->start(12000);
-        if (!m_pCurrentSettingTimer823->isActive())    m_pCurrentSettingTimer823->start(17000);
+        if (!m_pModuleStateTimer21->isActive())        m_pModuleStateTimer21->start(5000);
+        if (!m_pCPTimer22->isActive())                 m_pCPTimer22->start(5000);
+        if (!m_pModuleStatueTimer24->isActive())       m_pModuleStatueTimer24->start(1000);
+        if (!m_pNPTimer28->isActive())                 m_pNPTimer28->start(5000);
+        if (!m_pCurrentSettingTimer823->isActive())    m_pCurrentSettingTimer823->start(1000);
         break;
     }
     default:
@@ -294,6 +295,7 @@ void RTMModule::sendBearingMarker822() {
 void RTMModule::sendRTMFunction825() {
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OSubPosobilRTR0x825);
+    m_isSendRTMFunction825 = true;
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x825;
     m_genericHeader.dataSize = len2;

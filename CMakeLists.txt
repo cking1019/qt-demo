@@ -7,6 +7,8 @@ message(STATUS "CMake命令: ${CMAKE_COMMAND}")
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
+# 使得QMessageLogContext组件生效
+# add_definitions(-DQT_MESSAGELOGCONTEXT)
 
 set(ENV{QT_VERSION_NUM} "5.15.1")
 message(STATUS "QT_VERSION_NUM is: $ENV{QT_VERSION_NUM}")

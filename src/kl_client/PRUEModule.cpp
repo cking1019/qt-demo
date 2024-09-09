@@ -87,11 +87,11 @@ void PRUEModule::stateMachine() {
     case TimeStatus::timing: break;
     case TimeStatus::timed:
     {
-        if (!m_pModuleStateTimer21->isActive())        m_pModuleStateTimer21->start(30000);
-        if (!m_pCPTimer22->isActive())                 m_pCPTimer22->start(6000);
-        if (!m_pModuleStatueTimer24->isActive())       m_pModuleStatueTimer24->start(10000);
-        if (!m_pNPTimer28->isActive())                 m_pNPTimer28->start(12000);
-        if (!m_pCurrentSettingTimerD21->isActive())    m_pCurrentSettingTimerD21->start(17000);
+        if (!m_pModuleStateTimer21->isActive())        m_pModuleStateTimer21->start(60000);
+        if (!m_pCPTimer22->isActive())                 m_pCPTimer22->start(60000);
+        if (!m_pModuleStatueTimer24->isActive())       m_pModuleStatueTimer24->start(60000);
+        if (!m_pNPTimer28->isActive())                 m_pNPTimer28->start(60000);
+        if (!m_pCurrentSettingTimerD21->isActive())    m_pCurrentSettingTimerD21->start(60000);
         break;
     }
     default:
@@ -161,20 +161,7 @@ void PRUEModule::recvSettingBanSector201(const QByteArray& buf) {
     sendInstalledBanSectorD01();
 }
 
-void PRUEModule::recvBanRadiation202(const QByteArray& buf) {
-    qint8 len1 = HEADER_LEN;
-    qint8 len2 = sizeof(OTrapRadiationBan0x202);
-    quint16 pkgIdx = 0;
-    memcpy(&pkgIdx, buf.mid(6, 2).constData(), 2);
-    memcpy(&m_oTrapRadiationBan0x202, buf.data() + len1, len2);
-    qDebug() << "recv 0x202:" << buf.toHex()
-             << "pkgSize:"    << buf.length()
-             << "num:"        << m_oTrapBanSectorD01.num
-             << "pkgIdx:"     << pkgIdx
-             << "isOn:"       << m_oTrapRadiationBan0x202.isOn;
-    sendControlledOrder23(0, pkgIdx);
-}
-
+// 0x601,接收更改设置
 void PRUEModule::recvUpdatePRUESetting601(const QByteArray& buf) {
     qint8 len1 = HEADER_LEN;
     qint8 len2 = sizeof(OTrapRadiationBan0x202);
@@ -201,10 +188,32 @@ void PRUEModule::recvUpdatePRUESetting601(const QByteArray& buf) {
     sendPRUESettingsD21();
 }
 
+// 0xD21,发送设置
+void PRUEModule::sendPRUESettingsD21() {
+    quint8 len1 = HEADER_LEN;
+    quint8 len2 = sizeof(OSendTrapFixed0xD21);
+    /* ------------------------------------------------------------------------ */
+    m_genericHeader.packType = 0xD21;
+    m_genericHeader.dataSize = len2;
+    m_genericHeader.packIdx++;
+    m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&m_genericHeader), HEADER_LEN - 2);
+    /* ------------------------------------------------------------------------ */
+    QByteArray buf;
+    buf.resize(len1 + len2);
+    memcpy(buf.data(), &m_genericHeader, len1);
+    memcpy(buf.data() + len1, &m_oSendTrapFixed0xD21, len2);
+    pTcpSocket->write(buf);
+    pTcpSocket->flush();
+    qDebug() << "send 0xD21:" << buf.toHex()
+             << "pkgSize:"    << buf.length();
+}
+
+// 0xD01-0x201,发送辐射禁止扇区,其中num值是禁止扇区个数，其参数是OTrapBanSector201结构体
 void PRUEModule::sendInstalledBanSectorD01() {
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OTrapBanSectorD01);
     qint32 len3 = m_vecOTrapBanSector201.size() * sizeof(m_vecOTrapBanSector201);
+    m_isSendInstalledBanSectorD01 = true;
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0xD01;
     m_genericHeader.dataSize = len2 + len3;
@@ -226,28 +235,12 @@ void PRUEModule::sendInstalledBanSectorD01() {
              << "pkgSize:"    << buf.length();
 }
 
-void PRUEModule::sendPRUESettingsD21() {
-    quint8 len1 = HEADER_LEN;
-    quint8 len2 = sizeof(OSendTrapFixed0xD21);
-    /* ------------------------------------------------------------------------ */
-    m_genericHeader.packType = 0xD21;
-    m_genericHeader.dataSize = len2;
-    m_genericHeader.packIdx++;
-    m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&m_genericHeader), HEADER_LEN - 2);
-    /* ------------------------------------------------------------------------ */
-    QByteArray buf;
-    buf.resize(len1 + len2);
-    memcpy(buf.data(), &m_genericHeader, len1);
-    memcpy(buf.data() + len1, &m_oSendTrapFixed0xD21, len2);
-    pTcpSocket->write(buf);
-    pTcpSocket->flush();
-    qDebug() << "send 0xD21:" << buf.toHex()
-             << "pkgSize:"    << buf.length();
-}
-
+// 0xD22,发送功能，其中numDiap2值是频率、频段、最大暴露范围结构体的数量
 void PRUEModule::sendPRUEFunctionD22() {
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OTrapFunc0xD22);
+    quint32 len3 = m_vecOTrapFunc0xD22_2.size() * sizeof(OTrapFunc0xD22_2);
+    m_isSendPRUEFunctionD22 = true;
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0xD22;
     m_genericHeader.dataSize = len2;
@@ -255,13 +248,32 @@ void PRUEModule::sendPRUEFunctionD22() {
     m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&m_genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
     QByteArray buf;
-    buf.resize(len1 + len2);
+    buf.resize(len1 + len2 + len3);
     memcpy(buf.data(), &m_genericHeader, len1);
     memcpy(buf.data() + len1, &m_oTrapFunc0xD22, len2);
+    quint16 offset = len1 + len2;
+    for(auto& item : m_vecOTrapFunc0xD22_2) {
+        memcpy(buf.data() + offset, &item, sizeof(OTrapFunc0xD22_2));
+        offset += sizeof(OTrapFunc0xD22_2);
+    }
     pTcpSocket->write(buf);
     pTcpSocket->flush();
     qDebug() << "send 0xD22:" << buf.toHex()
              << "pkgSize:"    << buf.length();
+}
+
+// 0x202,接收设置辐射禁止
+void PRUEModule::recvBanRadiation202(const QByteArray& buf) {
+    qint8 len1 = HEADER_LEN;
+    qint8 len2 = sizeof(OTrapRadiationBan0x202);
+    quint16 pkgIdx = 0;
+    memcpy(&pkgIdx, buf.data() + 6, 2);
+    memcpy(&m_oTrapRadiationBan0x202, buf.data() + len1, len2);
+    qDebug() << "recv 0x202:" << buf.toHex()
+             << "pkgSize:"    << buf.length()
+             << "pkgIdx:"     << pkgIdx
+             << "isOn:"       << m_oTrapRadiationBan0x202.isOn;
+    sendControlledOrder23(0, pkgIdx);
 }
 
 }  // namespace NEBULA

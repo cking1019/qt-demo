@@ -35,6 +35,8 @@ class PRUEModule : public CommonModule {
 
    QVector<OTrapBanSector201> m_vecOTrapBanSector201;
    QVector<FreqAndDFreq> m_vecORecvTrapFixed0x601;
+   QVector<OTrapFunc0xD22_2> m_vecOTrapFunc0xD22_2;
+   
    NavigationInfluence m_NavigationInfluence;
     
  public slots:

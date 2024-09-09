@@ -36,7 +36,7 @@ void MessWriteLog(QtMsgType type, const QMessageLogContext &context, const QStri
         logFile = logDir + "Fatal";
         contextType = QString("Fatal");
     }
-    QString contextInfo = QString("[%1:%2]").arg(QString(context.file)).arg(context.line);//代码所在文件及行数
+    QString contextInfo = QString("[%1:%2]").arg(QString(context.file)).arg(context.line); //代码所在文件及行数
     QString contextTime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.mmm");
  
     QString mess = QString("%1:[%2]:%3::%4").arg(contextTime).arg(contextType).arg(contextInfo).arg(msg);
@@ -56,5 +56,6 @@ int main(int argc, char *argv[])
     qInstallMessageHandler(MessWriteLog);//安装消息处理程序
     NEBULA::ModuleController moduleController;
     moduleController.init();
+    
     return a.exec();
 }

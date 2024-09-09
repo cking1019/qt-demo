@@ -74,15 +74,45 @@ void ModuleController::init() {
     }
 
     // 诱骗设备配置
-    auto iTrapNum = prueCfg->value("TrapDevNum/DevNum").toInt();
+    auto iTrapNum = prueCfg->value("JamDevNum/num").toInt();
     for (int i = 1; i <= iTrapNum; i++) {
         auto p = new PRUEModule();
+        p->m_commCfg.serverAddress  = serverAddress;
+        p->m_commCfg.serverPort     = serverPort;
+        p->m_commCfg.moduleAddress  = prueCfg->value("common/clientIP").toString();
+        p->m_commCfg.modulePort     = prueCfg->value("common/clientPort").toInt();
+        p->m_commCfg.moduleCfg20    = readJson(prueCfg->value("common/devconfig20").toString());
+        p->m_isDebugOut             = isDebugout;
+
+        p->m_oSendTrapFixed0xD21.taskREB   = prueCfg->value("D21/taskREB").toInt();
+        p->m_oSendTrapFixed0xD21.taskGeo   = prueCfg->value("D21/taskGeo").toInt();
+        p->m_oSendTrapFixed0xD21.curAzREB  = prueCfg->value("D21/curAzREB").toFloat();
+        p->m_oSendTrapFixed0xD21.curEpsREB = prueCfg->value("D21/curEpsREB").toFloat();
+        p->m_oSendTrapFixed0xD21.kGainREB  = prueCfg->value("D21/kGainREB").toFloat();
+
+        p->m_oTrapFunc0xD22.numDiap      = prueCfg->value("D22/numDiap").toInt();
+        p->m_oTrapFunc0xD22.isGeo        = prueCfg->value("D22/isGeo").toInt();
+        p->m_oTrapFunc0xD22.numDiap2     = prueCfg->value("D22/numDiap2").toInt();
+        p->m_oTrapFunc0xD22.dTgeo        = prueCfg->value("D22/dTgeo").toInt();
+        p->m_oTrapFunc0xD22.maxPowREB    = prueCfg->value("D22/maxPowREB").toFloat();
+        p->m_oTrapFunc0xD22.dAzREB       = prueCfg->value("D22/dAzREB").toFloat();
+        p->m_oTrapFunc0xD22.dElevREB     = prueCfg->value("D22/dElevREB").toFloat();
+        p->m_oTrapFunc0xD22.azMinREB     = prueCfg->value("D22/azMinREB").toFloat();
+        p->m_oTrapFunc0xD22.azMaxREB     = prueCfg->value("D22/azMaxREB").toFloat();
+        p->m_oTrapFunc0xD22.dAzGeo       = prueCfg->value("D22/dAzGeo").toFloat();
+        p->m_oTrapFunc0xD22.dElevGeo     = prueCfg->value("D22/dElevGeo").toFloat();
+        p->m_oTrapFunc0xD22.azMinGeo     = prueCfg->value("D22/azMinGeo").toFloat();
+        p->m_oTrapFunc0xD22.azMaxGeo     = prueCfg->value("D22/azMaxGeo").toFloat();
+        
         prueVec.append(p);
     }
 
     // 启动所有设备
     for (auto& item : rtmVec) {
         item->startup();
+    }
+    for (auto& item : prueVec) {
+        // item->startup();
     }
 }
 

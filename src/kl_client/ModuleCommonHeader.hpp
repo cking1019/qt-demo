@@ -341,6 +341,8 @@ struct OTrapFunc0xD22 {
     float dElevGeo;
     float azMinGeo;
     float azMaxGeo;
+};
+struct OTrapFunc0xD22_2 {
     float minFreqREB;
     float maxFreqREB;
     float maxDFreq;
@@ -354,7 +356,6 @@ struct OTrapBanSectorD01 {
     uint32_t num     :8;
     uint32_t reserve :24;
 };
-
 struct OTrapBanSector201 {
     uint32_t type       :1;
     uint32_t isUse      :1;
