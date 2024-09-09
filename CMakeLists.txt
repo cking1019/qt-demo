@@ -52,5 +52,5 @@ add_subdirectory(src/kl_client)
 add_subdirectory(src/kl_test)
 
 add_custom_target(${PROJECT_NAME} ALL 
-                    DEPENDS Nebula.RelayModuleCK test 
+                    DEPENDS Nebula.RelayModuleCK Nebula.test 
                     COMMENT "cmake is building target")

@@ -14,33 +14,35 @@ class PRUEModule : public CommonModule {
    bool m_isSendPRUEFunctionD22;
 
  public:
-   PRUEModule();
-   ~PRUEModule();
-   void onRecvData();
+    PRUEModule();
+    ~PRUEModule();
+    void onRecvData();
 
+    void sendInstalledBanSectorD01();
+    void sendPRUESettingsD21();
+    void sendPRUEFunctionD22();
 
-   void sendInstalledBanSectorD01();
-   void sendPRUESettingsD21();
-   void sendPRUEFunctionD22();
+    void recvSettingBanSector201(const QByteArray& buf);
+    void recvBanRadiation202(const QByteArray& buf);
+    void recvUpdatePRUESetting601(const QByteArray& buf);
 
-   void recvSettingBanSector201(const QByteArray& buf);
-   void recvBanRadiation202(const QByteArray& buf);
-   void recvUpdatePRUESetting601(const QByteArray& buf);
+    OTrapSettings0xD21 m_oTrapSettings0xD21;
+    QVector<OTrapSettings0xD21_1> m_vecOTrapSettings0xD21_1;
 
-   OSendTrapFixed0xD21 m_oSendTrapFixed0xD21;
-   OTrapFunc0xD22 m_oTrapFunc0xD22;
-   OTrapBanSectorD01 m_oTrapBanSectorD01;
-   OTrapRadiationBan0x202 m_oTrapRadiationBan0x202;
-   ORecvTrapFixed0x601 m_oRecvTrapFixed0x601;
+    OTrapFunc0xD22 m_oTrapFunc0xD22;
+    QVector<OTrapFunc0xD22_2> m_vecOTrapFunc0xD22_2;
 
-   QVector<OTrapBanSector201> m_vecOTrapBanSector201;
-   QVector<FreqAndDFreq> m_vecORecvTrapFixed0x601;
-   QVector<OTrapFunc0xD22_2> m_vecOTrapFunc0xD22_2;
+    ORecvTrapFixed0x601 m_oRecvTrapFixed0x601;
+    QVector<FreqAndDFreq> m_vecORecvTrapFixed0x601;
+    NavigationInfluence601 m_NavigationInfluence601;
+
+    OTrapBanSectorD01 m_oTrapBanSectorD01;
+    OTrapRadiationBan0x202 m_oTrapRadiationBan0x202;
+    QVector<OTrapBanSector201> m_vecOTrapBanSector201;
    
-   NavigationInfluence m_NavigationInfluence;
+    
     
  public slots:
-   void onReadPRUEData(qint16 pkgID, const QByteArray& buf);
    void stateMachine();
 };
 }  // namespace NEBULA

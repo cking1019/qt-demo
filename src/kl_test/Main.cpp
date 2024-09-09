@@ -14,6 +14,7 @@ int main(int argc, char *argv[])
 
     worker.moveToThread(thread);
     thread->start();
+    qDebug() << "hello wrold";
 
     return a.exec();
 }

@@ -8,7 +8,7 @@ class RTMModule : public CommonModule {
  private:
     QTimer* m_pCurrentSettingTimer823;
     QTimer* m_pStateMachineTimer;
-    // QThread* m_pSTateMachinethread;
+    QThread* m_pSTateMachinethread;
     QSet<qint16> pkgsRTM;
     bool m_isSendRTMFunction825;
 
@@ -35,7 +35,6 @@ class RTMModule : public CommonModule {
     QVector<FreqAndDFreq> m_freqs828;
 
  public slots:
-    void onReadRTMData(qint16 pkgID, QByteArray& buf);
     // 状态机线程执行函数
     void stateMachine();
 };

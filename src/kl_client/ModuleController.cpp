@@ -84,11 +84,11 @@ void ModuleController::init() {
         p->m_commCfg.moduleCfg20    = readJson(prueCfg->value("common/devconfig20").toString());
         p->m_isDebugOut             = isDebugout;
 
-        p->m_oSendTrapFixed0xD21.taskREB   = prueCfg->value("D21/taskREB").toInt();
-        p->m_oSendTrapFixed0xD21.taskGeo   = prueCfg->value("D21/taskGeo").toInt();
-        p->m_oSendTrapFixed0xD21.curAzREB  = prueCfg->value("D21/curAzREB").toFloat();
-        p->m_oSendTrapFixed0xD21.curEpsREB = prueCfg->value("D21/curEpsREB").toFloat();
-        p->m_oSendTrapFixed0xD21.kGainREB  = prueCfg->value("D21/kGainREB").toFloat();
+        p->m_oTrapSettings0xD21.taskREB   = prueCfg->value("D21/taskREB").toInt();
+        p->m_oTrapSettings0xD21.taskGeo   = prueCfg->value("D21/taskGeo").toInt();
+        p->m_oTrapSettings0xD21.curAzREB  = prueCfg->value("D21/curAzREB").toFloat();
+        p->m_oTrapSettings0xD21.curEpsREB = prueCfg->value("D21/curEpsREB").toFloat();
+        p->m_oTrapSettings0xD21.kGainREB  = prueCfg->value("D21/kGainREB").toFloat();
 
         p->m_oTrapFunc0xD22.numDiap      = prueCfg->value("D22/numDiap").toInt();
         p->m_oTrapFunc0xD22.isGeo        = prueCfg->value("D22/isGeo").toInt();
@@ -112,7 +112,7 @@ void ModuleController::init() {
         item->startup();
     }
     for (auto& item : prueVec) {
-        // item->startup();
+        item->startup();
     }
 }
 

@@ -99,8 +99,6 @@ struct ModuleGeoLocation0x5 {
     float    zHeight;
 };
 
-
-
 // 0x21,设备元素状态
 struct OElemStatus0x21 {
     uint32_t IDElem  :16;
@@ -285,7 +283,7 @@ struct OBearingMark0x822
     float SNR_dB;
 };
 
-// 0x823，RTM设置
+// 0x823,RTM设置
 struct OSubRezhRTR0x823 {
     uint32_t N    :8;
     uint32_t reserve :24;
@@ -314,7 +312,7 @@ struct OSetBanIRIlist0x828 {
 
 // ==================PRUE===========================================
 // 0xD21,发送当前PRUE设置
-struct OSendTrapFixed0xD21 {
+struct OTrapSettings0xD21 {
     uint32_t taskREB :8;
     uint32_t taskGeo :8;
     uint32_t reserve :16;
@@ -323,6 +321,19 @@ struct OSendTrapFixed0xD21 {
     float curEpsREB;
     float kGainREB;
 };
+struct OTrapSettings0xD21_1 {
+    float curFreq;
+    float curPow;
+    float curDFreq;
+};
+struct OTrapSettings0xD21_2 {
+    uint32_t time1;
+    uint32_t time2;
+    float lat;
+    float lon;
+    float height;
+};
+//********************************** */
 
 // 0xD22,发送当前PRUE功能
 struct OTrapFunc0xD22 {
@@ -370,6 +381,7 @@ struct OTrapBanSector201 {
     float Freq;
     float delFreq;
 };
+//********************************** */
 
 // 0x202,接收设置辐射禁止
 struct OTrapRadiationBan0x202 {
@@ -380,6 +392,7 @@ struct OTrapRadiationBan0x202 {
     uint32_t reserve :31;
 };
 
+//********************************** */
 // 0x601,接收更改当前PRUE设置
 struct ORecvTrapFixed0x601 {
     uint32_t N   :8;
@@ -390,13 +403,11 @@ struct ORecvTrapFixed0x601 {
     float elevREB;
     float kGainREB;
 };
-
 struct FreqAndDFreq {
     float freq;
     float dfreq;
 };
-
-struct NavigationInfluence {
+struct NavigationInfluence601 {
     uint32_t flags;
     float latitude;
     float longitude;
@@ -404,6 +415,7 @@ struct NavigationInfluence {
     float speed;
     float course;
 };
+//********************************** */
 
 #pragma pack(pop)
 #endif  // _COMMONHEADER_H_

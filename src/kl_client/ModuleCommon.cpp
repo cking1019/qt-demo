@@ -25,7 +25,7 @@ QString readJson(QString DevConfig20) {
 CommonModule::CommonModule(QObject *parent):QObject(parent) {
     pkgsComm = {0x2, 0x4, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B};
 
-    pTcpSocket =           new QTcpSocket(this);
+    pTcpSocket =             new QTcpSocket(this);
     m_pReconnectTimer =      new QTimer();
 
     m_pRequestTimer03 =      new QTimer();
@@ -37,9 +37,9 @@ CommonModule::CommonModule(QObject *parent):QObject(parent) {
     connStatus =     ConnStatus::unConnected;
     registerStatus = RegisterStatus::unRegister;
     timeStatus =     TimeStatus::unTime;
-    m_isSendRegister01    = false;
-    m_isSendModuleLocation05  = false;
-    m_isSendModuleConfigure20 = false;
+    m_isSendRegister01 =          false;
+    m_isSendModuleLocation05 =    false;
+    m_isSendModuleConfigure20 =   false;
     m_isSendForbiddenIRIList828 = false;
     
     m_iStampResult = 0;
@@ -290,8 +290,7 @@ void CommonModule::sendModuleLocation05() {
     /* ------------------------------------------------------------------------ */
     qDebug() << "send 0x005:" << buf.toHex()
              << "pkgSize:"    << buf.length()
-             << "Lat:"        << m_ModuleGeoLocation0x5.xLat
-             << "lon:"        << m_ModuleGeoLocation0x5.yLong;
+             << QString("Lat=%1, lon=%2").arg(m_ModuleGeoLocation0x5.xLat).arg(m_ModuleGeoLocation0x5.yLong);
 }
 
 void CommonModule::recvRequestModuleFigure46(const QByteArray& buf) {
@@ -345,14 +344,13 @@ void CommonModule::sendModuleStatus21() {
         memcpy(buf.data() + offset, &item, sizeof(OElemStatus0x21));
         offset += sizeof(OElemStatus0x21);
     }
-    
     pTcpSocket->write(buf);
     pTcpSocket->flush();
     /* ------------------------------------------------------------------------ */
     qDebug() << "send 0x021:" << buf.toHex()
              << "pkgSize:"    << buf.length();
     for(auto& item : m_vecOElemStatus0x21) {
-        qDebug() << QString("IDElem:%1,status:%2,workF1:%3").arg(item.IDElem).arg(item.status).arg(item.workF1);
+        qDebug() << QString("IDElem=%1, status=%2, workF1=%3").arg(item.IDElem).arg(item.status).arg(item.workF1);
     }
 }
 
@@ -385,7 +383,7 @@ void CommonModule::sendModuleCPStatus22() {
     qDebug() << "send 0x022:" << buf.toHex()
              << "pkgSize:"   << buf.length();
     for(auto& item : m_vecOCPStatus0x22) {
-        qDebug() << QString("IDParam:%1,size:%2,n_val:%3").arg(item.IDParam).arg(item.size).arg(item.n_val);
+        qDebug() << QString("IDParam=%1, size=%2, n_val=%3").arg(item.IDParam).arg(item.size).arg(item.n_val);
     }
 }
 
@@ -411,11 +409,12 @@ void CommonModule::sendModuleStatus24() {
     /* ------------------------------------------------------------------------ */
     qDebug() << "send 0x024:" << buf.toHex()
              << "pkgSize:"    << buf.length()
-             << "status:"     << m_oModuleStatus0x24.status
-             << "work:"       << m_oModuleStatus0x24.work
-             << "isRGDV:"     << m_oModuleStatus0x24.isRGDV
-             << "isRAF:"      << m_oModuleStatus0x24.isRAF
-             << "mode:"       << m_oModuleStatus0x24.mode;
+             << QString("status=%1, work=%2, isRGDV=%3, isRAF=%4, mode=%5")
+             .arg(m_oModuleStatus0x24.status)
+             .arg(m_oModuleStatus0x24.work)
+             .arg(m_oModuleStatus0x24.isRGDV)
+             .arg(m_oModuleStatus0x24.isRAF)
+             .arg(m_oModuleStatus0x24.mode);
 }
 
 void CommonModule::sendControlledOrder23(uint8_t code, quint16 pkgidx) {
@@ -441,9 +440,7 @@ void CommonModule::sendControlledOrder23(uint8_t code, quint16 pkgidx) {
     /* ------------------------------------------------------------------------ */
     qDebug() << "send 0x023:" << buf.toHex()
              << "pkgSize:"    << buf.length()
-             << "n_id_Com: "  << m_oReqCtl0x23.n_id_Com
-             << "n_code: "    << m_oReqCtl0x23.n_code;
-             
+             << QString("n_id_Com=%1, n_code=%2").arg(m_oReqCtl0x23.n_id_Com).arg(m_oReqCtl0x23.n_code);
 }
 
 void CommonModule::sendLogMsg25(QString msg) {
@@ -529,7 +526,7 @@ void CommonModule::sendModuleCPStatus28() {
     qDebug() << "send 0x028:" << buf.toHex()
              << "pkgSize:"    << buf.length();
     for(auto& item : m_vecCustomisedNP0x28) {
-        qDebug() << QString("IDParam:%1,size:%2,np_v:%3").arg(item.IDParam).arg(item.size).arg(item.np_v);
+        qDebug() << QString("IDParam=%1, size=%2, np_v=%3").arg(item.IDParam).arg(item.size).arg(item.np_v);
     }
 }
 
@@ -599,8 +596,6 @@ void CommonModule::recvSettingTime49(const QByteArray& buf) {
 
 // 4A -> 05
 void CommonModule::recvModuleLocation4A(const QByteArray& buf) {
-    quint16 pkgIdx = 0;
-    memcpy(&pkgIdx, buf.data() + 6, 2);
     qint8 len1 = HEADER_LEN;
     qint8 len2 = sizeof(ReqSettingLocation0x4A);
     ReqSettingLocation0x4A reqSettingLocation0x4A;
@@ -618,13 +613,13 @@ void CommonModule::recvModuleLocation4A(const QByteArray& buf) {
         sendLogMsg25("recvModuleLocation4A");
         sendNote2Operator26("recvModuleLocation4A");
     }
+    quint16 pkgIdx = 0;
+    memcpy(&pkgIdx, buf.data() + 6, 2);
     sendControlledOrder23(0, pkgIdx);
 }
 
 // 4B -> 28
 void CommonModule::recvCustomizedParam4B(const QByteArray& buf) {
-    quint16 pkgIdx = 0;
-    memcpy(&pkgIdx, buf.data() + 6, 2);
     qint8 len1 = HEADER_LEN;
     qint8 len2 = sizeof(ReqSettingCustomizedParam0x4B);
     ReqSettingCustomizedParam0x4B reqSettingCustomizedParam0x4B;
@@ -642,6 +637,8 @@ void CommonModule::recvCustomizedParam4B(const QByteArray& buf) {
         if(reqSettingCustomizedParam0x4B.isSave == 0) sendLogMsg25("zero is saving new value and not save harddisk");
         if(reqSettingCustomizedParam0x4B.isSave == 1) sendLogMsg25("one is saving new value and need to save harddisk");
     }
+    quint16 pkgIdx = 0;
+    memcpy(&pkgIdx, buf.data() + 6, 2);
     sendControlledOrder23(0, pkgIdx);
     sendModuleCPStatus28();
 }
