@@ -13,6 +13,16 @@
                     "Open",
                     "Close"
                 ]
+            },
+            {
+                "IDConfigParam": 1,
+                "NameConfig": "OpenUnknowTargetDetect2",
+                "TypeConfig": 1,
+                "IsSave": true,
+                "Values": [
+                    "Open",
+                    "Close"
+                ]
             }
         ],
         "Params": [

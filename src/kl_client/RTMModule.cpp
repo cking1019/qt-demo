@@ -26,7 +26,8 @@ RTMModule::RTMModule() {
     m_pStateMachineTimer->start();
     // m_pSTateMachinethread->start();
     // moveToThread(m_pSTateMachinethread);
-
+    
+    // 初始化成员变量
     init();
 }
 
@@ -59,9 +60,7 @@ void RTMModule::init() {
 
     m_oSetting0x823.N = 1;
     m_oSetting0x823.curAz = -1;
-    float freqMhz = 5850.5;
-    float dFreqMhz = 120.5;
-    m_freqs823 = {{freqMhz, dFreqMhz}};
+    m_freqs823 = {{5850.5, 120.5}};
 
     m_oFunc0x825.isRotate   = 0;
     m_oFunc0x825.maxTasks   = 5;
@@ -72,9 +71,9 @@ void RTMModule::init() {
     m_oFunc0x825.maxFreqRTR = 6000;
 
     m_oSetBanIRIlist0x828.NIRI = 1;
-    float freqMhz2  = 5850.5;
-    float dFreqMhz2 = 120.5;
-    m_freqs828   = {{freqMhz2, dFreqMhz2}};
+    m_freqs828   = {{5850.5, 120.5}};
+    
+
 }
 
 // 状态机,连接->注册->对时
@@ -135,17 +134,17 @@ void RTMModule::stateMachine() {
         if (m_pCPTimer22->isActive())                 m_pCPTimer22->stop();
         if (m_pModuleStatueTimer24->isActive())       m_pModuleStatueTimer24->stop();
         if (m_pNPTimer28->isActive())                 m_pNPTimer28->stop();
-        if (m_pSettingTimer823->isActive())    m_pSettingTimer823->stop();
+        if (m_pSettingTimer823->isActive())           m_pSettingTimer823->stop();
         break;
     }
     case TimeStatus::timing: break;
     case TimeStatus::timed:
     {
-        if (!m_pModuleStateTimer21->isActive())        m_pModuleStateTimer21->start(50000);
-        if (!m_pCPTimer22->isActive())                 m_pCPTimer22->start(50000);
+        if (!m_pModuleStateTimer21->isActive())        m_pModuleStateTimer21->start(5000);
+        if (!m_pCPTimer22->isActive())                 m_pCPTimer22->start(5000);
         if (!m_pModuleStatueTimer24->isActive())       m_pModuleStatueTimer24->start(10000);
-        if (!m_pNPTimer28->isActive())                 m_pNPTimer28->start(50000);
-        if (!m_pSettingTimer823->isActive())    m_pSettingTimer823->start(10000);
+        if (!m_pNPTimer28->isActive())                 m_pNPTimer28->start(5000);
+        if (!m_pSettingTimer823->isActive())           m_pSettingTimer823->start(10000);
         break;
     }
     default:

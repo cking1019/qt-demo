@@ -49,8 +49,6 @@ class CommonModule : public QObject {
  public:
 	explicit CommonModule(QObject *parent = nullptr);
 	~CommonModule();
-	void init();
-	// 设备启动
 	void startup();
 	void reqAndResTime(quint64 time1, quint64 time2);
 
@@ -72,12 +70,6 @@ class CommonModule : public QObject {
 	void recvRegister02(const QByteArray& buf);
 	void recvRequestTime04(const QByteArray& buf);
 
-	void recvStart40(const QByteArray& buf);
-	void recvStop41(const QByteArray& buf);
-	void recvRestart42(const QByteArray& buf);
-	void recvReset43(const QByteArray& buf);
-	void recvUpdate44(const QByteArray& buf);
-
 	void recvNote4Operator45(const QByteArray& buf);
 	void recvRequestModuleFigure46(const QByteArray& buf);
 
@@ -86,14 +78,14 @@ class CommonModule : public QObject {
 	void recvModuleLocation4A(const QByteArray& buf);
 	void recvCustomizedParam4B(const QByteArray& buf);
 
-	// 公共配置
+	// 公共配置,包括0x20配置信息
 	CommonCfg m_commCfg;
+   
+protected:
 	// 是否发送日志	
 	bool m_isDebugOut;
     // 公共包头
 	GenericHeader m_genericHeader;
-
- protected:
 	// Socket网络传输
 	QTcpSocket* pTcpSocket;
 	// 公共包类型
