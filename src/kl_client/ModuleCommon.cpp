@@ -46,6 +46,21 @@ CommonModule::CommonModule(QObject *parent):QObject(parent) {
     m_iN = 1;
     m_isDebugOut = 0;
 
+    init();
+}
+
+CommonModule::~CommonModule() {
+    if (pTcpSocket != nullptr)                delete pTcpSocket;
+    if (m_pReconnectTimer != nullptr)         delete m_pReconnectTimer;
+
+    if (m_pRequestTimer03 != nullptr)         delete m_pRequestTimer03;
+    if (m_pModuleStateTimer21 != nullptr)     delete m_pModuleStateTimer21;
+    if (m_pCPTimer22 != nullptr)              delete m_pCPTimer22;
+    if (m_pModuleStatueTimer24 != nullptr)    delete m_pModuleStatueTimer24;
+    if (m_pNPTimer28 != nullptr)              delete m_pNPTimer28;
+}
+
+void CommonModule::init() {
     m_moduleRegister0x1.idManuf = 0x1;
     m_moduleRegister0x1.serialNum = 0x0;
     m_moduleRegister0x1.versHardMaj = m_genericHeader.vMajor;
@@ -97,17 +112,6 @@ CommonModule::CommonModule(QObject *parent):QObject(parent) {
     m_oModuleStatus0x24.isWpValid = 0;
     m_oModuleStatus0x24.statusTwp = 0;
     m_oModuleStatus0x24.mode = 0;
-}
-
-CommonModule::~CommonModule() {
-    if (pTcpSocket != nullptr)                delete pTcpSocket;
-    if (m_pReconnectTimer != nullptr)         delete m_pReconnectTimer;
-
-    if (m_pRequestTimer03 != nullptr)         delete m_pRequestTimer03;
-    if (m_pModuleStateTimer21 != nullptr)     delete m_pModuleStateTimer21;
-    if (m_pCPTimer22 != nullptr)              delete m_pCPTimer22;
-    if (m_pModuleStatueTimer24 != nullptr)    delete m_pModuleStatueTimer24;
-    if (m_pNPTimer28 != nullptr)              delete m_pNPTimer28;
 }
 
 // 初始化成员变量

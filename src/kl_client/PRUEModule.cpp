@@ -23,6 +23,34 @@ PRUEModule::~PRUEModule() {
     if (m_pCurrentSettingTimerD21 == nullptr)  delete m_pCurrentSettingTimerD21;
 }
 
+void PRUEModule::init() {
+    // 配置信息
+    m_oTrapSettings0xD21.curAzREB = 0;
+    m_oTrapSettings0xD21.curEpsREB = 0;
+    m_oTrapSettings0xD21.kGainREB = 0;
+    m_oTrapSettings0xD21.taskGeo = 0;
+    m_oTrapSettings0xD21.taskREB = 0;
+    m_vecOTrapSettings0xD21_1.append({100, 20, 1000});
+    // 功能信息
+    m_oTrapFunc0xD22.numDiap = 0;
+    m_oTrapFunc0xD22.isGeo = 0;
+    m_oTrapFunc0xD22.numDiap2 = 1;
+    m_oTrapFunc0xD22.maxPowREB = 0;
+    m_oTrapFunc0xD22.dAzREB = 0;
+    m_oTrapFunc0xD22.dElevREB = 0;
+    m_oTrapFunc0xD22.azMinREB = 0;
+    m_oTrapFunc0xD22.azMaxREB = 0;
+    m_oTrapFunc0xD22.dAzGeo = 0;
+    m_oTrapFunc0xD22.dElevGeo = 0;
+    m_oTrapFunc0xD22.azMinGeo = 0;
+    m_oTrapFunc0xD22.azMaxGeo = 0;
+    m_vecOTrapFunc0xD22_2.append({100, 200, 1000});
+
+    // 辐射禁止扇区
+    m_oTrapBanSectorD01.num = 1;
+
+}
+
 // 状态机
 void PRUEModule::stateMachine() {
     // 连接状态
@@ -146,11 +174,12 @@ void PRUEModule::recvSettingBanSector201(const QByteArray& buf) {
     qint8 len2 = sizeof(OTrapBanSectorD01);
     quint8 num = buf.at(len1 + 8);
     qint16 offset = len1 + len2;
+    m_vecOTrapBanSectorD01_1.clear();
     for(int i = 0; i < num; i++) {
-        OTrapBanSector201 oTrapBanSector201;
-        memcpy(&oTrapBanSector201, buf.data() + offset, sizeof(OTrapBanSector201));
-        m_vecOTrapBanSector201.append(oTrapBanSector201);
-        offset += sizeof(OTrapBanSector201);
+        OTrapBanSectorD01_1 oTrapBanSector201;
+        memcpy(&oTrapBanSector201, buf.data() + offset, sizeof(OTrapBanSectorD01_1));
+        m_vecOTrapBanSectorD01_1.append(oTrapBanSector201);
+        offset += sizeof(OTrapBanSectorD01_1);
     }
     /* ------------------------------------------------------------------------ */
     quint16 pkgIdx = 0;
@@ -159,7 +188,7 @@ void PRUEModule::recvSettingBanSector201(const QByteArray& buf) {
              << "pkgSize:"    << buf.length()
              << "num:"        << m_oTrapBanSectorD01.num
              << "pkgIdx:"     << pkgIdx;
-    for(auto& item : m_vecOTrapBanSector201) {
+    for(auto& item : m_vecOTrapBanSectorD01_1) {
         qDebug() << QString("AzBegin=%1,AzEnd=%2,EpsBegin=%3,EpsEnd=%4,Freq=%5,delFreq=%6")
                     .arg(item.AzBegin).arg(item.AzEnd).arg(item.EpsBegin)
                     .arg(item.EpsEnd).arg(item.Freq).arg(item.delFreq);
@@ -168,11 +197,11 @@ void PRUEModule::recvSettingBanSector201(const QByteArray& buf) {
     sendInstalledBanSectorD01();
 }
 
-// 0xD01-0x201,发送辐射禁止扇区,其中num值是禁止扇区个数，其参数是OTrapBanSector201结构体
+// 0xD01-0x201,发送辐射禁止扇区,其中num值是禁止扇区个数，其参数是OTrapBanSectorD01_1结构体
 void PRUEModule::sendInstalledBanSectorD01() {
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OTrapBanSectorD01);
-    qint32 len3 = m_vecOTrapBanSector201.size() * sizeof(m_vecOTrapBanSector201);
+    qint32 len3 = m_vecOTrapBanSectorD01_1.size() * sizeof(m_vecOTrapBanSectorD01_1);
     m_isSendInstalledBanSectorD01 = true;
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0xD01;
@@ -185,9 +214,9 @@ void PRUEModule::sendInstalledBanSectorD01() {
     memcpy(buf.data(), &m_genericHeader, len1);
     memcpy(buf.data() + len1, &m_oTrapBanSectorD01, len2);
     qint16 offset = len1 + len2;
-    for(auto& item : m_vecOTrapBanSector201) {
-        memcpy(buf.data() + offset, &item, sizeof(OTrapBanSector201));
-        offset += sizeof(OTrapBanSector201);
+    for(auto& item : m_vecOTrapBanSectorD01_1) {
+        memcpy(buf.data() + offset, &item, sizeof(OTrapBanSectorD01_1));
+        offset += sizeof(OTrapBanSectorD01_1);
     }
     pTcpSocket->write(buf);
     pTcpSocket->flush();
@@ -198,13 +227,14 @@ void PRUEModule::sendInstalledBanSectorD01() {
 // 0x601,接收更改设置
 void PRUEModule::recvUpdatePRUESetting601(const QByteArray& buf) {
     qint8 len1 = HEADER_LEN;
-    qint8 len2 = sizeof(OTrapRadiationBan0x202);
+    qint8 len2 = sizeof(ORecvSetting0x601);
+    ORecvSetting0x601 m_oRecvTrapFixed0x601;
     memcpy(&m_oRecvTrapFixed0x601, buf.data() + len1, len2);
     qint16 offset = len1 + len2;
     for(uint32_t i = 0; i < m_oRecvTrapFixed0x601.N; i++) {
         FreqAndDFreq freqAndDFreq;
         memcpy(&freqAndDFreq, buf.data() + offset, sizeof(FreqAndDFreq));
-        m_vecORecvTrapFixed0x601.append(freqAndDFreq);
+        m_vecORecvSetting0x601.append(freqAndDFreq);
         offset += sizeof(FreqAndDFreq);
     }
     if(m_oRecvTrapFixed0x601.taskREB == 3) {
@@ -216,8 +246,11 @@ void PRUEModule::recvUpdatePRUESetting601(const QByteArray& buf) {
     qDebug() << "recv 0x601:" << buf.toHex()
              << "pkgSize:"    << buf.length()
              << "num:"        << m_oTrapBanSectorD01.num
-             << "pkgIdx:"     << pkgIdx
-             << QString("lat=%1, long=%2").arg(m_NavigationInfluence601.latitude).arg(m_NavigationInfluence601.longitude);
+             << "pkgIdx:"     << pkgIdx;
+    for(auto& item : m_vecORecvSetting0x601) {
+        qDebug() << QString("lat=%1, long=%2").arg(item.freq).arg(item.dfreq);
+    }
+    qDebug() << QString("m_NavigationInfluence601,latitude=%1").arg(m_NavigationInfluence601.latitude).arg(m_NavigationInfluence601.longitude);
     sendControlledOrder23(0, pkgIdx);
     sendPRUESettingsD21();
 }

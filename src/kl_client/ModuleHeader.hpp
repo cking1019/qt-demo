@@ -259,7 +259,7 @@ struct ReqSettingCustomizedParam0x4B {
 
 // ==================RTM===========================================
 // 0x822，目标标记
-struct OBearingMark0x822
+struct OTargetMark0x822
 {
     uint32_t idxCeilVOI :16;
     uint32_t iReserve   :16;
@@ -284,15 +284,16 @@ struct OBearingMark0x822
 };
 
 // 0x823,RTM设置
-struct OSubRezhRTR0x823 {
-    uint32_t N    :8;
+struct OSetting0x823 {
+    // 频段数量
+    uint32_t N    :8; 
     uint32_t reserve :24;
 
     float curAz;
 };
 
 // 0x825,RTM功能
-struct OSubPosobilRTR0x825 {
+struct OFunc0x825 {
     uint32_t isRotate   :1;
     uint32_t maxTasks    :7;
     uint32_t numDiap :8;
@@ -306,6 +307,7 @@ struct OSubPosobilRTR0x825 {
 
 // 0x828,禁用IRI列表
 struct OSetBanIRIlist0x828 {
+    // IRI的数量
     uint32_t NIRI :8;
     uint32_t reserve :24;
 };
@@ -334,11 +336,12 @@ struct OTrapSettings0xD21_2 {
     float height;
 };
 //********************************** */
-
 // 0xD22,发送当前PRUE功能
 struct OTrapFunc0xD22 {
+    // 无线电数量
     uint32_t numDiap  :8;
     uint32_t isGeo    :1;
+    // 频段数量
     uint32_t numDiap2 :8;
     uint32_t reserve  :7;
     uint32_t dTgeo    :8;
@@ -358,7 +361,7 @@ struct OTrapFunc0xD22_2 {
     float maxFreqREB;
     float maxDFreq;
 };
-
+//********************************** */
 // 0xD01-0x201,发送已安装的辐射禁止扇区或接收设置辐射禁止扇区
 struct OTrapBanSectorD01 {
     uint32_t time1;
@@ -367,12 +370,12 @@ struct OTrapBanSectorD01 {
     uint32_t num     :8;
     uint32_t reserve :24;
 };
-struct OTrapBanSector201 {
+struct OTrapBanSectorD01_1 {
     uint32_t type       :1;
     uint32_t isUse      :1;
     uint32_t isUseEps   :1;
     uint32_t isUseFrep  :1;
-    uint32_t reserve2   :28;
+    uint32_t reserve   :28;
 
     float AzBegin;
     float AzEnd;
@@ -381,20 +384,10 @@ struct OTrapBanSector201 {
     float Freq;
     float delFreq;
 };
-//********************************** */
-
-// 0x202,接收设置辐射禁止
-struct OTrapRadiationBan0x202 {
-    uint32_t time1;
-    uint32_t time2;
-
-    uint32_t isOn    :1;
-    uint32_t reserve :31;
-};
 
 //********************************** */
 // 0x601,接收更改当前PRUE设置
-struct ORecvTrapFixed0x601 {
+struct ORecvSetting0x601 {
     uint32_t N   :8;
     uint32_t taskREB :8;
     uint32_t reserve :16;
@@ -417,5 +410,13 @@ struct NavigationInfluence601 {
 };
 //********************************** */
 
+// 0x202,接收设置辐射禁止
+struct OTrapRadiationBan0x202 {
+    uint32_t time1;
+    uint32_t time2;
+
+    uint32_t isOn    :1;
+    uint32_t reserve :31;
+};
 #pragma pack(pop)
 #endif  // _COMMONHEADER_H_

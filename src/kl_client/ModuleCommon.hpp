@@ -16,7 +16,7 @@
 #include <QThread>
 #include <QDir>
 #include <QMutex>
-#include "ModuleCommonHeader.hpp"
+#include "ModuleHeader.hpp"
 // #include "Logger.hpp"
 #define COMM_CFG "./conf/common.ini"
 #define RTM_CFG "./conf/RTMCfg.ini"
@@ -49,6 +49,7 @@ class CommonModule : public QObject {
  public:
 	explicit CommonModule(QObject *parent = nullptr);
 	~CommonModule();
+	void init();
 	// 设备启动
 	void startup();
 	void reqAndResTime(quint64 time1, quint64 time2);
