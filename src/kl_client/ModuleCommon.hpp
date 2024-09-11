@@ -19,8 +19,6 @@
 #include "ModuleHeader.hpp"
 // #include "Logger.hpp"
 #define COMM_CFG "./conf/common.ini"
-#define RTM_CFG "./conf/RTMCfg.ini"
-#define PRUE_CFG "./conf/PRUECfg.ini"
 
 
 namespace NEBULA {
@@ -49,7 +47,7 @@ class CommonModule : public QObject {
  public:
 	explicit CommonModule(QObject *parent = nullptr);
 	~CommonModule();
-	void startup();
+	virtual void startup();
 	void reqAndResTime(quint64 time1, quint64 time2);
 
 	void sendRegister01();
@@ -80,10 +78,10 @@ class CommonModule : public QObject {
 
 	// 公共配置,包括0x20配置信息
 	CommonCfg m_commCfg;
+	bool m_isDebugOut;
    
 protected:
-	// 是否发送日志	
-	bool m_isDebugOut;
+
     // 公共包头
 	GenericHeader m_genericHeader;
 	// Socket网络传输
@@ -111,8 +109,7 @@ protected:
 	QTimer* m_pModuleStateTimer21;
 	QTimer* m_pModuleStatueTimer24;
 	QTimer* m_pNPTimer28;
-
-    ModuleRegister0x1 m_moduleRegister0x1;
+  
 	ModuleTimeControl0x3 m_moduleTimeControl0x3;
 	ModuleGeoLocation0x5 m_ModuleGeoLocation0x5;
     OModuleStatus0x24 m_oModuleStatus0x24;

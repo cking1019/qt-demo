@@ -6,7 +6,9 @@
 
 namespace NEBULA {
 
-class ModuleController {
+class ModuleController : public QObject
+{
+Q_OBJECT
  private:
     QVector<RTMModule*> rtmVec;
     QVector<PRUEModule*> prueVec;

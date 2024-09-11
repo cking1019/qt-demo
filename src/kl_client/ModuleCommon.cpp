@@ -34,98 +34,6 @@ CommonModule::CommonModule(QObject *parent):QObject(parent) {
     m_pModuleStatueTimer24 = new QTimer();
     m_pNPTimer28 =           new QTimer();
 
-    connStatus =     ConnStatus::unConnected;
-    registerStatus = RegisterStatus::unRegister;
-    timeStatus =     TimeStatus::unTime;
-    m_isSendRegister01 =          false;
-    m_isSendModuleLocation05 =    false;
-    m_isSendModuleConfigure20 =   false;
-    m_isSendForbiddenIRIList828 = false;
-    
-    m_iStampResult = 0;
-    m_iN = 1;
-    m_isDebugOut = 0;
-
-    m_moduleRegister0x1.idManuf = 0x1;
-    m_moduleRegister0x1.serialNum = 0x0;
-    m_moduleRegister0x1.versHardMaj = m_genericHeader.vMajor;
-    m_moduleRegister0x1.versHardMin = m_genericHeader.vMinor;
-    m_moduleRegister0x1.versProgMaj = 0x0;
-    m_moduleRegister0x1.isInfo = 0x1;
-    m_moduleRegister0x1.versProgMin = 0x0;
-    m_moduleRegister0x1.isAsku = m_genericHeader.isAsku;
-
-    m_ModuleGeoLocation0x5.typeData = 1;
-    m_ModuleGeoLocation0x5.isValid = 1;
-    m_ModuleGeoLocation0x5.xLat = 10;
-    m_ModuleGeoLocation0x5.yLong = 20;
-    m_ModuleGeoLocation0x5.zHeight = 30;
-
-    m_oModuleStatus0x24.status = 1;
-    m_oModuleStatus0x24.work = 1;
-    m_oModuleStatus0x24.isRGDV = 1;  // 被控参数
-    m_oModuleStatus0x24.isRAF = 1;   // 被控参数
-    m_oModuleStatus0x24.isLocal = 0;
-    m_oModuleStatus0x24.isImit = 0;
-    m_oModuleStatus0x24.hasTP = 0;
-    m_oModuleStatus0x24.isTP = 0;
-    m_oModuleStatus0x24.isWP = 0;
-    m_oModuleStatus0x24.isTPValid = 0;
-    m_oModuleStatus0x24.isWpValid = 0;
-    m_oModuleStatus0x24.statusTwp = 0;
-    m_oModuleStatus0x24.mode = 0;
-
-    auto rtmCfg = new QSettings(RTM_CFG, QSettings::IniFormat);
-    m_commCfg.moduleAddress  = rtmCfg->value("common/clientIP").toString();
-    m_commCfg.modulePort     = rtmCfg->value("common/clientPort").toInt();
-    m_commCfg.moduleCfg20    = readJson(rtmCfg->value("common/devconfig20").toString());
-    m_isDebugOut             = rtmCfg->value("common/debugOut").toBool();
-
-    // 读取0x20配置信息
-    QJsonDocument jsonDocument = QJsonDocument::fromJson(m_commCfg.moduleCfg20.toUtf8());
-    QVariantList list = jsonDocument.toVariant().toList();
-    for(int i = 0; i < list.count(); i++) {
-        // 读取0x20中的元素配置
-        OElemStatus0x21 item;
-        QVariantMap map = list[i].toMap();
-        item.IDElem = map["IDElem"].toInt();
-        m_vecOElemStatus0x21.append(item);
-        // 解析0x22cp参数
-        QVariantList cpList = map["Params"].toList();
-        for(int j = 0; j < cpList.count(); j++) {
-            QVariantMap map2 = cpList[i].toMap();
-            OCPStatus0x22 item;
-            item.IDParam = map2["IDParam"].toInt();
-            item.n_val = 2;
-            item.status = 4;
-            m_vecOCPStatus0x22.append(item);
-        }
-        // 解析0x28np参数
-        QVariantList npList = map["ConfigParam"].toList();
-        for(int j = 0; j < npList.count(); j++) {
-            QVariantMap map2 = npList[i].toMap();
-            CustomisedNP0x28 item;
-            item.IDParam = map2["IDConfigParam"].toInt();
-            item.np_v = 1;
-            item.size = 4;
-            m_vecCustomisedNP0x28.append(item);
-        }
-    }
-}
-
-CommonModule::~CommonModule() {
-    if (pTcpSocket != nullptr)                delete pTcpSocket;
-    if (m_pReconnectTimer != nullptr)         delete m_pReconnectTimer;
-
-    if (m_pRequestTimer03 != nullptr)         delete m_pRequestTimer03;
-    if (m_pModuleStateTimer21 != nullptr)     delete m_pModuleStateTimer21;
-    if (m_pCPTimer22 != nullptr)              delete m_pCPTimer22;
-    if (m_pModuleStatueTimer24 != nullptr)    delete m_pModuleStatueTimer24;
-    if (m_pNPTimer28 != nullptr)              delete m_pNPTimer28;
-}
-
-// 初始化成员变量
-void CommonModule::startup() {
     connect(m_pRequestTimer03,      &QTimer::timeout, this, &CommonModule::sendRequestTime03);
     connect(m_pModuleStateTimer21,  &QTimer::timeout, this, &CommonModule::sendModuleStatus21);
     connect(m_pCPTimer22,           &QTimer::timeout, this, &CommonModule::sendModuleCPStatus22);
@@ -149,6 +57,89 @@ void CommonModule::startup() {
         qDebug() << "Disconnected from server!";
         connStatus = ConnStatus::unConnected;
     });
+
+    connStatus =     ConnStatus::unConnected;
+    registerStatus = RegisterStatus::unRegister;
+    timeStatus =     TimeStatus::unTime;
+    m_isSendRegister01 =          false;
+    m_isSendModuleLocation05 =    false;
+    m_isSendModuleConfigure20 =   false;
+    m_isSendForbiddenIRIList828 = false;
+    
+    m_iStampResult = 0;
+    m_iN = 1;
+
+    m_ModuleGeoLocation0x5.typeData = 1;
+    m_ModuleGeoLocation0x5.isValid = 1;
+    m_ModuleGeoLocation0x5.xLat = 10;
+    m_ModuleGeoLocation0x5.yLong = 20;
+    m_ModuleGeoLocation0x5.zHeight = 30;
+
+    m_oModuleStatus0x24.status = 1;
+    m_oModuleStatus0x24.work = 1;
+    m_oModuleStatus0x24.isRGDV = 1;  // 被控参数
+    m_oModuleStatus0x24.isRAF = 1;   // 被控参数
+    m_oModuleStatus0x24.isLocal = 0;
+    m_oModuleStatus0x24.isImit = 0;
+    m_oModuleStatus0x24.hasTP = 0;
+    m_oModuleStatus0x24.isTP = 0;
+    m_oModuleStatus0x24.isWP = 0;
+    m_oModuleStatus0x24.isTPValid = 0;
+    m_oModuleStatus0x24.isWpValid = 0;
+    m_oModuleStatus0x24.statusTwp = 0;
+    m_oModuleStatus0x24.mode = 0;
+
+    auto rtmCfg = new QSettings(COMM_CFG, QSettings::IniFormat);
+    m_commCfg.moduleAddress  = rtmCfg->value("Detector/clientAddress").toString();
+    m_commCfg.modulePort     = rtmCfg->value("Detector/clientPort").toInt();
+    m_commCfg.moduleCfg20    = readJson(rtmCfg->value("Detector/devconfig20").toString());
+    m_isDebugOut             = rtmCfg->value("common/debugOut").toBool();
+
+    // 读取0x20配置信息
+    QJsonDocument jsonDocument = QJsonDocument::fromJson(m_commCfg.moduleCfg20.toUtf8());
+    QVariantList list = jsonDocument.toVariant().toList();
+    for(int i = 0; i < list.count(); i++) {
+        // 读取0x20中的元素配置
+        OElemStatus0x21 item;
+        QVariantMap map = list[i].toMap();
+        item.IDElem = map["IDElem"].toInt();
+        m_vecOElemStatus0x21.append(item);
+        // 解析0x22cp参数
+        QVariantList cpList = map["Params"].toList();
+        for(int j = 0; j < cpList.count(); j++) {
+            QVariantMap map2 = cpList[j].toMap();
+            OCPStatus0x22 item;
+            item.IDParam = map2["IDParam"].toInt();
+            item.n_val = 2;
+            item.status = 4;
+            m_vecOCPStatus0x22.append(item);
+        }
+        // 解析0x28np参数
+        QVariantList npList = map["ConfigParam"].toList();
+        for(int j = 0; j < npList.count(); j++) {
+            QVariantMap map2 = npList[j].toMap();
+            CustomisedNP0x28 item;
+            item.IDParam = map2["IDConfigParam"].toInt();
+            item.np_v = 1;
+            item.size = 4;
+            m_vecCustomisedNP0x28.append(item);
+        }
+    }
+}
+
+CommonModule::~CommonModule() {
+    if (pTcpSocket != nullptr)                delete pTcpSocket;
+    if (m_pReconnectTimer != nullptr)         delete m_pReconnectTimer;
+
+    if (m_pRequestTimer03 != nullptr)         delete m_pRequestTimer03;
+    if (m_pModuleStateTimer21 != nullptr)     delete m_pModuleStateTimer21;
+    if (m_pCPTimer22 != nullptr)              delete m_pCPTimer22;
+    if (m_pModuleStatueTimer24 != nullptr)    delete m_pModuleStatueTimer24;
+    if (m_pNPTimer28 != nullptr)              delete m_pNPTimer28;
+}
+
+// 初始化成员变量
+void CommonModule::startup() {
 }
 
 // 接收数据
@@ -173,6 +164,15 @@ void CommonModule::sendRegister01() {
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(ModuleRegister0x1);
     m_isSendRegister01 = true;
+    ModuleRegister0x1 m_moduleRegister0x1;
+    m_moduleRegister0x1.idManuf = 0x1;
+    m_moduleRegister0x1.serialNum = 0x0;
+    m_moduleRegister0x1.versHardMaj = m_genericHeader.vMajor;
+    m_moduleRegister0x1.versHardMin = m_genericHeader.vMinor;
+    m_moduleRegister0x1.versProgMaj = 0x0;
+    m_moduleRegister0x1.isInfo = 0x1;
+    m_moduleRegister0x1.versProgMin = 0x0;
+    m_moduleRegister0x1.isAsku = m_genericHeader.isAsku;
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x1;
     m_genericHeader.dataSize = sizeof(ModuleRegister0x1);
@@ -535,7 +535,7 @@ void CommonModule::sendModuleCPStatus28() {
     qDebug() << "send 0x028:" << buf.toHex()
              << "pkgSize:"    << buf.length();
     for(auto& item : m_vecCustomisedNP0x28) {
-        qDebug() << QString("IDParam=%1, size=%2, np_v=%3").arg(item.IDParam).arg(item.size).arg(item.np_v);
+        qDebug() << QString("IDConfigParam=%1, size=%2, np_v=%3").arg(item.IDParam).arg(item.size).arg(item.np_v);
     }
 }
 

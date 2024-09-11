@@ -14,16 +14,7 @@ PRUEModule::PRUEModule() {
     connect(pTcpSocket,           &QTcpSocket::readyRead, this, &PRUEModule::onRecvData);
     connect(m_pStateMachineTimer,       &QTimer::timeout, this, &PRUEModule::stateMachine);
     connect(m_pCurrentSettingTimerD21,  &QTimer::timeout, this, &PRUEModule::sendPRUESettingsD21);
-    
-    m_pStateMachineTimer->start();
-}
 
-PRUEModule::~PRUEModule() {
-    if (m_pStateMachineTimer == nullptr)       delete m_pStateMachineTimer;
-    if (m_pCurrentSettingTimerD21 == nullptr)  delete m_pCurrentSettingTimerD21;
-}
-
-void PRUEModule::init() {
     // 配置信息
     m_oTrapSettings0xD21.curAzREB = 0;
     m_oTrapSettings0xD21.curEpsREB = 0;
@@ -31,6 +22,7 @@ void PRUEModule::init() {
     m_oTrapSettings0xD21.taskGeo = 0;
     m_oTrapSettings0xD21.taskREB = 0;
     m_vecOTrapSettings0xD21_1.append({100, 20, 1000});
+
     // 功能信息
     m_oTrapFunc0xD22.numDiap = 0;
     m_oTrapFunc0xD22.isGeo = 0;
@@ -48,8 +40,19 @@ void PRUEModule::init() {
 
     // 辐射禁止扇区
     m_oTrapBanSectorD01.num = 1;
-
+    
+    m_pStateMachineTimer->start();
 }
+
+PRUEModule::~PRUEModule() {
+    if (m_pStateMachineTimer == nullptr)       delete m_pStateMachineTimer;
+    if (m_pCurrentSettingTimerD21 == nullptr)  delete m_pCurrentSettingTimerD21;
+}
+
+void PRUEModule::startup() {
+    qDebug() << QString("PRUE %1 is running....").arg(m_genericHeader.sender);
+}
+
 
 // 状态机
 void PRUEModule::stateMachine() {

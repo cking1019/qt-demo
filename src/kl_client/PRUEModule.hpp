@@ -1,7 +1,7 @@
 #ifndef _PRUEMODULE_H_
 #define _PRUEMODULE_H_
 
-#include "../ModuleCommon.hpp"
+#include "ModuleCommon.hpp"
 
 namespace NEBULA {
 class PRUEModule : public CommonModule {
@@ -16,8 +16,7 @@ class PRUEModule : public CommonModule {
  public:
     PRUEModule();
     ~PRUEModule();
-    void onRecvData();
-    void init();
+    void startup() override;
 
     void sendInstalledBanSectorD01();
     void recvSettingBanSector201(const QByteArray& buf);
@@ -49,6 +48,7 @@ class PRUEModule : public CommonModule {
     
  public slots:
    void stateMachine();
+   void onRecvData();
 };
 }  // namespace NEBULA
 

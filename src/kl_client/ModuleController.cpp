@@ -1,6 +1,9 @@
 #include "ModuleController.hpp"
+#include "RTMModule.hpp"
+#include "NebulaCommon.hpp"
 
 namespace NEBULA {
+
 
 ModuleController::ModuleController() {
 }
@@ -10,33 +13,22 @@ ModuleController::~ModuleController() {
 
 void ModuleController::init() {
     auto commCfg = new QSettings(COMM_CFG, QSettings::IniFormat);
-    auto rtmCfg = new QSettings(RTM_CFG, QSettings::IniFormat);
-    auto prueCfg = new QSettings(PRUE_CFG, QSettings::IniFormat);
     commCfg->setIniCodec(QTextCodec::codecForName("utf-8"));
-    rtmCfg->setIniCodec(QTextCodec::codecForName("utf-8"));
-    prueCfg->setIniCodec(QTextCodec::codecForName("utf-8"));
 
     auto serverAddress = commCfg->value("common/serverIP").toString();
     auto serverPort = commCfg->value("common/serverPort").toInt();
-    qDebug() << "server address is " << serverAddress;
-    qDebug() << "server port is " << serverPort;
+    qDebug() << QString("server address is %1:%2").arg(serverAddress).arg(serverPort);
 
     // 侦测设备配置
-    auto iDetectNum = rtmCfg->value("DetectDevNum/num").toInt();
-    for (int i = 1; i <= iDetectNum; i++) {
-        auto p = new RTMModule();
-        p->m_commCfg.serverAddress  = serverAddress;
-        p->m_commCfg.serverPort     = serverPort;
-        rtmVec.append(p);
-    }
-
-    // 诱骗设备配置
-    auto iTrapNum = prueCfg->value("JamDevNum/num").toInt();
-    for (int i = 1; i <= iTrapNum; i++) {
-        auto p = new PRUEModule();
-        p->m_commCfg.serverAddress  = serverAddress;
-        p->m_commCfg.serverPort     = serverPort;
-        prueVec.append(p);
+    auto num = commCfg->value("Detector/num").toInt();
+    for (int i = 0; i < num; i++) {
+        auto rtm = new RTMModule();
+        rtm->m_commCfg.serverAddress  = serverAddress;
+        rtm->m_commCfg.serverPort     = serverPort;
+        // 连接地图服务器来读取数据
+        auto rtmNebula = new NebulaCommon();
+        connect(rtmNebula, &NebulaCommon::signalSendDetectTarget2Ctl, rtm, &RTMModule::sendTargetMarker822);
+        rtmVec.append(rtm);
     }
 
     // 启动所有设备

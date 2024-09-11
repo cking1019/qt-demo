@@ -1,7 +1,7 @@
 #include <QCoreApplication>
 #include "ModuleCommon.hpp"
 #include "ModuleController.hpp"
-#include "NebulaController.hpp"
+#include "NebulaCommon.hpp"
 // using namespace CUR_NAMESPACE;
 
 // 写日志功能
@@ -60,9 +60,6 @@ int main(int argc, char *argv[])
     NEBULA::ModuleController moduleController;
     moduleController.init();
 
-    // 启动地图控制器
-    // NEBULA::NebulaController nebulaController;
-    // nebulaController.init();
     
     return a.exec();
 }
