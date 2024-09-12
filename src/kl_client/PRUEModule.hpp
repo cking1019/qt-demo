@@ -1,10 +1,10 @@
 #ifndef _PRUEMODULE_H_
 #define _PRUEMODULE_H_
 
-#include "ModuleCommon.hpp"
+#include "ModuleBase.hpp"
 
 namespace NEBULA {
-class PRUEModule : public CommonModule {
+class PRUEModule : public ModuleBase {
  private:
    QTimer* m_pCurrentSettingTimerD21;
    QTimer* m_pStateMachineTimer;

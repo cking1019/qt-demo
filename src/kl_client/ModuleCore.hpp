@@ -6,15 +6,15 @@
 
 namespace NEBULA {
 
-class ModuleController : public QObject
+class ModuleCore : public QObject
 {
 Q_OBJECT
  private:
     QVector<RTMModule*> rtmVec;
     QVector<PRUEModule*> prueVec;
  public:
-    ModuleController(/* args */);
-    ~ModuleController();
+    ModuleCore(/* args */);
+    ~ModuleCore();
     void init();
 };
 

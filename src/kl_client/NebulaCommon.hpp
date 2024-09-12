@@ -10,22 +10,31 @@
 #include <QTextCodec>
 #include <QTcpSocket>
 #include <QTimer>
+#include "ModuleHeader.hpp"
 #define COMM_CFG "./conf/common.ini"
 
 namespace NEBULA {
 class NebulaCommon : public QObject 
 {
 Q_OBJECT
-private:
+public:
   QUdpSocket* m_pUdpSock2Nebula;
+  QSettings* commCfg;
+
+  QString nebulaAddress;
+  qint16 nebulaPort;
+  QString clientAddress;
+  qint16 clientPort;
 public:
     NebulaCommon(/* args */);
     ~NebulaCommon();
-    void sendUdpData2Nebula();
+    void sendUdpData();
+    void sendDetectTarget2Ctl(const QByteArray& buf);
 public slots:
     void onRecvUdpData();
+    
 signals:
-    void signalSendDetectTarget2Ctl();
+    void signalSendDetectTarget2Ctl(OTargetMark0x822 oTargetMark0x822);
 };
 }
 

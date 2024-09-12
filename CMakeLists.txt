@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(Qt-Demo)
+project(Nebula.North)
 
 message(STATUS "正在构建: ${PROJECT_NAME}")
 message(STATUS "CMake命令: ${CMAKE_COMMAND}")

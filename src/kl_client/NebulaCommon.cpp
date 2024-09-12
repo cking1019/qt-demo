@@ -1,33 +1,30 @@
 #include "NebulaCommon.hpp"
+#include "NebulaProtol.hpp"
 
 namespace NEBULA {
-
-NebulaCommon::NebulaCommon(/* args */)
+NebulaCommon::NebulaCommon()
 {
     m_pUdpSock2Nebula = new QUdpSocket(this);
-    if(!m_pUdpSock2Nebula->bind(5555)) {
-        qDebug() << QString("m_pUdpSock2Nebula bind port:%1 fali!!!").arg(5555);
+    if(!m_pUdpSock2Nebula->bind(clientPort)) {
+        qDebug() << QString("UDP bind port:%1 fali!!!").arg(clientPort);
     } else {
-        qDebug() << "udp connected successfully";
+        qDebug() << QString("UDP bind port:%1 successfully!!!").arg(clientPort);
         connect(m_pUdpSock2Nebula, &QUdpSocket::readyRead, this, &NebulaCommon::onRecvUdpData); 
     }
 
-    QTimer* mTimer = new QTimer();
-    connect(mTimer, &QTimer::timeout, this, &NebulaCommon::sendUdpData2Nebula);
-    mTimer->start(1000);//每隔一秒发送一次数据
+    // QTimer* mTimer = new QTimer();
+    // connect(mTimer, &QTimer::timeout, this, &NebulaCommon::sendUdpData);
+    // mTimer->start(1000);
 }
 
 NebulaCommon::~NebulaCommon()
 {
 }
 
-void NebulaCommon::sendUdpData2Nebula() {
-    QHostAddress receiverAddress("127.0.0.1");
-    quint16 receiverPort = 5554;
+void NebulaCommon::sendUdpData() {
     QString msg = "hello world";
-    QByteArray data = msg.toUtf8();
-    m_pUdpSock2Nebula->writeDatagram(data, receiverAddress, receiverPort);
-    emit signalSendDetectTarget2Ctl();
+    QByteArray buf = msg.toUtf8();
+    m_pUdpSock2Nebula->writeDatagram(buf, QHostAddress(nebulaAddress), nebulaPort);
 }
 
 void NebulaCommon::onRecvUdpData() {
@@ -36,11 +33,24 @@ void NebulaCommon::onRecvUdpData() {
         buf.resize(m_pUdpSock2Nebula->pendingDatagramSize());
         qint64 len = m_pUdpSock2Nebula->readDatagram(buf.data(), buf.size());
         if(len > 0) {
-            QString str = buf.toHex();
-            qDebug() << "buf data:"  << buf.toHex()
-                     << "data size:" << len;
+            sendDetectTarget2Ctl(buf);
         }
     }
+}
+
+void NebulaCommon::sendDetectTarget2Ctl(const QByteArray& buf) {
+    qint16 len1 = sizeof(DetectHead);
+    qint16 len2 = sizeof(DetectTargetData);
+    qint16 len3 = sizeof(DetectTail);
+    DetectHead detectHead;
+    DetectTargetData detectTargetData;
+    DetectTail detectTail;
+    memcpy(&detectHead, buf.data(), len1);
+    memcpy(&detectTargetData, buf.data() + len1, len2);
+    memcpy(&detectHead, buf.data() + len1 + len2, len3);
+
+    OTargetMark0x822 oTargetMark0x822;
+    emit signalSendDetectTarget2Ctl(oTargetMark0x822);
 }
 
 }

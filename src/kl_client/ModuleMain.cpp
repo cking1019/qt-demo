@@ -1,7 +1,9 @@
 #include <QCoreApplication>
-#include "ModuleCommon.hpp"
-#include "ModuleController.hpp"
+#include "ModuleBase.hpp"
 #include "NebulaCommon.hpp"
+#include "RTMModule.hpp"
+#include "PRUEModule.hpp"
+#include "ModuleCore.hpp"
 // using namespace CUR_NAMESPACE;
 
 // 写日志功能
@@ -55,11 +57,10 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     qInstallMessageHandler(MessWriteLog);//安装消息处理程序
-    
-    // 启动模块单元控制器
-    NEBULA::ModuleController moduleController;
-    moduleController.init();
 
+    // 启动模块单元控制器
+    NEBULA::ModuleCore moduleCore;
+    moduleCore.init();
     
     return a.exec();
 }

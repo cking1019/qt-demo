@@ -1,7 +1,7 @@
 #include "PRUEModule.hpp"
 
-namespace NEBULA
-{
+using namespace NEBULA;
+
 PRUEModule::PRUEModule() {
     pkgsPRUE = {0x601, 0x201, 0x202};
     m_genericHeader = {0x524542, 0xff, 0x2, 0x2, 0x0, 0x0, 0x1, 0x0, 0x0};
@@ -11,7 +11,7 @@ PRUEModule::PRUEModule() {
     m_isSendInstalledBanSectorD01 = false;
     m_isSendPRUEFunctionD22 = false;
 
-    connect(pTcpSocket,           &QTcpSocket::readyRead, this, &PRUEModule::onRecvData);
+    connect(m_pTcpSocket,           &QTcpSocket::readyRead, this, &PRUEModule::onRecvData);
     connect(m_pStateMachineTimer,       &QTimer::timeout, this, &PRUEModule::stateMachine);
     connect(m_pCurrentSettingTimerD21,  &QTimer::timeout, this, &PRUEModule::sendPRUESettingsD21);
 
@@ -57,12 +57,12 @@ void PRUEModule::startup() {
 // 状态机
 void PRUEModule::stateMachine() {
     // 连接状态
-    switch (connStatus)
+    switch (m_connStatus)
     {
     case ConnStatus::unConnected:
         if (!m_pReconnectTimer->isActive())                 m_pReconnectTimer->start(1000);
         if (m_isSendRegister01)                             m_isSendRegister01 = false;
-        if (registerStatus == RegisterStatus::registered)   registerStatus = RegisterStatus::unRegister;
+        if (m_registerStatus == RegisterStatus::registered)   m_registerStatus = RegisterStatus::unRegister;
         break;
     case ConnStatus::connecting:
         break;
@@ -78,7 +78,7 @@ void PRUEModule::stateMachine() {
         break;
     }
     // 注册状态
-    switch (registerStatus)
+    switch (m_registerStatus)
     {
     case RegisterStatus::unRegister:
         if (m_pRequestTimer03->isActive())            m_pRequestTimer03->stop();
@@ -86,7 +86,7 @@ void PRUEModule::stateMachine() {
         if (m_isSendModuleConfigure20)                m_isSendModuleConfigure20 = false;
         if (m_isSendInstalledBanSectorD01)            m_isSendInstalledBanSectorD01 = false;
         if (m_isSendPRUEFunctionD22)                  m_isSendPRUEFunctionD22 = false;
-        if (timeStatus == TimeStatus::timed)          timeStatus = TimeStatus::unTime;
+        if (m_timeStatus == TimeStatus::timed)          m_timeStatus = TimeStatus::unTime;
         break;
     case RegisterStatus::registering:
         break;
@@ -105,7 +105,7 @@ void PRUEModule::stateMachine() {
         break;
     }
     // 对时状态
-    switch (timeStatus)
+    switch (m_timeStatus)
     {
     case TimeStatus::unTime: {
         if (m_pModuleStateTimer21->isActive())        m_pModuleStateTimer21->stop();
@@ -135,7 +135,7 @@ void PRUEModule::stateMachine() {
 }
 
 void PRUEModule::onRecvData() {
-    QByteArray buf = pTcpSocket->readAll();
+    QByteArray buf = m_pTcpSocket->readAll();
     quint16 pkgID = 0;
     memcpy(&pkgID, buf.data() + 12, 2);
     if (pkgsComm.contains(pkgID)) {
@@ -165,8 +165,8 @@ void PRUEModule::sendPRUESettingsD21() {
     buf.resize(len1 + len2);
     memcpy(buf.data(), &m_genericHeader, len1);
     memcpy(buf.data() + len1, &m_oTrapSettings0xD21, len2);
-    pTcpSocket->write(buf);
-    pTcpSocket->flush();
+    m_pTcpSocket->write(buf);
+    m_pTcpSocket->flush();
     qDebug() << "send 0xD21:" << buf.toHex()
              << "pkgSize:"    << buf.length();
 }
@@ -221,8 +221,8 @@ void PRUEModule::sendInstalledBanSectorD01() {
         memcpy(buf.data() + offset, &item, sizeof(OTrapBanSectorD01_1));
         offset += sizeof(OTrapBanSectorD01_1);
     }
-    pTcpSocket->write(buf);
-    pTcpSocket->flush();
+    m_pTcpSocket->write(buf);
+    m_pTcpSocket->flush();
     qDebug() << "send 0xD01:" << buf.toHex()
              << "pkgSize:"    << buf.length();
 }
@@ -279,8 +279,8 @@ void PRUEModule::sendPRUEFunctionD22() {
         memcpy(buf.data() + offset, &item, sizeof(OTrapFunc0xD22_2));
         offset += sizeof(OTrapFunc0xD22_2);
     }
-    pTcpSocket->write(buf);
-    pTcpSocket->flush();
+    m_pTcpSocket->write(buf);
+    m_pTcpSocket->flush();
     /* ------------------------------------------------------------------------ */
     qDebug() << "send 0xD22:" << buf.toHex()
              << "pkgSize:"    << buf.length();
@@ -299,5 +299,3 @@ void PRUEModule::recvBanRadiation202(const QByteArray& buf) {
              << "isOn:"       << m_oTrapRadiationBan0x202.isOn;
     sendControlledOrder23(0, pkgIdx);
 }
-
-}  // namespace NEBULA

@@ -1,5 +1,5 @@
-#ifndef _COMMONMODULE_H_
-#define _COMMONMODULE_H_
+#ifndef _ModuleBase_H_
+#define _ModuleBase_H_
 
 #include <QObject>
 #include <QTcpSocket>
@@ -20,6 +20,8 @@
 // #include "Logger.hpp"
 #define COMM_CFG "./conf/common.ini"
 
+quint16 calcChcekSum(const char* sMess, int nCnt);
+QString readJson(QString DevConfig20);
 
 namespace NEBULA {
 
@@ -39,16 +41,16 @@ enum class TimeStatus{unTime, timing, timed};
 // 包头长度
 const qint8 HEADER_LEN = sizeof(GenericHeader);
 
-quint16 calcChcekSum(const char* sMess, int nCnt);
-QString readJson(QString DevConfig20);
-
-class CommonModule : public QObject {
+class ModuleBase : public QObject {
 	 Q_OBJECT
  public:
-	explicit CommonModule(QObject *parent = nullptr);
-	~CommonModule();
-	virtual void startup();
+	ModuleBase();
+	~ModuleBase();
+	virtual void startup() = 0;
 	void reqAndResTime(quint64 time1, quint64 time2);
+	void moduleTCPConning();
+	void moduleTCPConned();
+	void moduleTCPDisconn();
 
 	void sendRegister01();
 	void sendRequestTime03();
@@ -79,43 +81,45 @@ class CommonModule : public QObject {
 	// 公共配置,包括0x20配置信息
 	CommonCfg m_commCfg;
 	bool m_isDebugOut;
-   
 protected:
-
+	qint16 m_id;
     // 公共包头
 	GenericHeader m_genericHeader;
 	// Socket网络传输
-	QTcpSocket* pTcpSocket;
+	QTcpSocket* m_pTcpSocket;
 	// 公共包类型
 	QSet<qint16> pkgsComm;
 
 	// 连接状态
-	ConnStatus connStatus;
+	ConnStatus m_connStatus;
 	// 注册状态
-	RegisterStatus registerStatus;
+	RegisterStatus m_registerStatus;
 	// 对时状态
-	TimeStatus timeStatus;
+	TimeStatus m_timeStatus;
 
 	// 连接状态,此类协议不是定期发送，因此用bool类型判断是否已发送
 	bool m_isSendRegister01;
 	bool m_isSendModuleLocation05;
 	bool m_isSendModuleConfigure20;
-	bool m_isSendForbiddenIRIList828;
+	
 
 	// 再次连接定时器器
 	QTimer* m_pReconnectTimer;
 	QTimer* m_pRequestTimer03;
-	QTimer* m_pCPTimer22;
-	QTimer* m_pModuleStateTimer21;
+	
 	QTimer* m_pModuleStatueTimer24;
+	QTimer* m_pModuleStateTimer21;
+	QTimer* m_pCPTimer22;
 	QTimer* m_pNPTimer28;
-  
-	ModuleTimeControl0x3 m_moduleTimeControl0x3;
+
+	// 会被0x4A修改
 	ModuleGeoLocation0x5 m_ModuleGeoLocation0x5;
     OModuleStatus0x24 m_oModuleStatus0x24;
-    OReqCtl0x23 m_oReqCtl0x23;
-    LogMsg0x25 m_logMsg0x25;
 
+	/*
+		 0x20的配置容器，分为三个部分，分别是0x21、0x22、0x28
+		 0x21是总模块配置，0x21是模块配置的CP参数，0x28是模块配置的NP参数
+	*/
     QVector<OElemStatus0x21> m_vecOElemStatus0x21;
     QVector<OCPStatus0x22> m_vecOCPStatus0x22;
     QVector<CustomisedNP0x28> m_vecCustomisedNP0x28;
@@ -135,4 +139,4 @@ protected:
 
 
 };  // namespace NEBULA
-#endif // _COMMONMODULE_H_
+#endif // _ModuleBase_H_
