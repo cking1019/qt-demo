@@ -45,8 +45,11 @@ class ModuleBase : public QObject {
 	 Q_OBJECT
  public:
 	ModuleBase();
-	~ModuleBase();
+    // 基类的析构加上virtual，便于当基类指针指向派生类时，delete基类指针也会调用派生类的析构函数
+	virtual ~ModuleBase();
 	virtual void startup() = 0;
+    virtual void onRecvData() = 0;
+    virtual void stateMachine();
 	void reqAndResTime(quint64 time1, quint64 time2);
 	void moduleTCPConning();
 	void moduleTCPConned();

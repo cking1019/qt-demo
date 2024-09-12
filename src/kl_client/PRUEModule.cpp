@@ -11,7 +11,7 @@ PRUEModule::PRUEModule() {
     m_isSendInstalledBanSectorD01 = false;
     m_isSendPRUEFunctionD22 = false;
 
-    connect(m_pTcpSocket,           &QTcpSocket::readyRead, this, &PRUEModule::onRecvData);
+    connect(m_pTcpSocket,         &QTcpSocket::readyRead, this, &PRUEModule::onRecvData);
     connect(m_pStateMachineTimer,       &QTimer::timeout, this, &PRUEModule::stateMachine);
     connect(m_pCurrentSettingTimerD21,  &QTimer::timeout, this, &PRUEModule::sendPRUESettingsD21);
 
@@ -56,80 +56,49 @@ void PRUEModule::startup() {
 
 // 状态机
 void PRUEModule::stateMachine() {
+    ModuleBase::stateMachine();
     // 连接状态
     switch (m_connStatus)
     {
     case ConnStatus::unConnected:
-        if (!m_pReconnectTimer->isActive())                 m_pReconnectTimer->start(1000);
-        if (m_isSendRegister01)                             m_isSendRegister01 = false;
-        if (m_registerStatus == RegisterStatus::registered)   m_registerStatus = RegisterStatus::unRegister;
         break;
     case ConnStatus::connecting:
         break;
     case ConnStatus::connected:
-        if (m_pReconnectTimer->isActive())    m_pReconnectTimer->stop();
-        if (!m_isSendRegister01)              sendRegister01();
         break;
     default:
-        if(m_isDebugOut) {
-            sendLogMsg25("the connection state is unknown");
-            sendNote2Operator26("the connection state is unknown");
-        }
         break;
     }
     // 注册状态
     switch (m_registerStatus)
     {
     case RegisterStatus::unRegister:
-        if (m_pRequestTimer03->isActive())            m_pRequestTimer03->stop();
-        if (m_isSendModuleLocation05)                 m_isSendModuleLocation05  = false;
-        if (m_isSendModuleConfigure20)                m_isSendModuleConfigure20 = false;
         if (m_isSendInstalledBanSectorD01)            m_isSendInstalledBanSectorD01 = false;
         if (m_isSendPRUEFunctionD22)                  m_isSendPRUEFunctionD22 = false;
-        if (m_timeStatus == TimeStatus::timed)          m_timeStatus = TimeStatus::unTime;
         break;
     case RegisterStatus::registering:
         break;
     case RegisterStatus::registered:
-        if (!m_pRequestTimer03->isActive())          m_pRequestTimer03->start(1000);
-        if (!m_isSendModuleLocation05)               sendModuleLocation05();
-        if (!m_isSendModuleConfigure20)              sendModuleFigure20();
         if (!m_isSendInstalledBanSectorD01)          sendInstalledBanSectorD01();
         if (!m_isSendPRUEFunctionD22)                sendPRUEFunctionD22();
         break;
     default:
-        if(m_isDebugOut) {
-            sendLogMsg25("the regsiter state is unknown");
-            sendNote2Operator26("the regsiter state is unknown");
-        }
         break;
     }
     // 对时状态
     switch (m_timeStatus)
     {
     case TimeStatus::unTime: {
-        if (m_pModuleStateTimer21->isActive())        m_pModuleStateTimer21->stop();
-        if (m_pCPTimer22->isActive())                 m_pCPTimer22->stop();
-        if (m_pModuleStatueTimer24->isActive())       m_pModuleStatueTimer24->stop();
-        if (m_pNPTimer28->isActive())                 m_pNPTimer28->stop();
         if (m_pCurrentSettingTimerD21->isActive())    m_pCurrentSettingTimerD21->stop();
         break;
     }
     case TimeStatus::timing: break;
     case TimeStatus::timed:
     {
-        if (!m_pModuleStateTimer21->isActive())        m_pModuleStateTimer21->start(60000);
-        if (!m_pCPTimer22->isActive())                 m_pCPTimer22->start(60000);
-        if (!m_pModuleStatueTimer24->isActive())       m_pModuleStatueTimer24->start(60000);
-        if (!m_pNPTimer28->isActive())                 m_pNPTimer28->start(60000);
         if (!m_pCurrentSettingTimerD21->isActive())    m_pCurrentSettingTimerD21->start(60000);
         break;
     }
     default:
-        if(m_isDebugOut) {
-            sendLogMsg25("the regsiter state is unknown");
-            sendNote2Operator26("the regsiter state is unknown");
-        }
         break;
     }
 }

@@ -27,7 +27,7 @@ ModuleBase::ModuleBase() {
     m_iStampResult = 0;
     m_iN = 1;
 
-    m_pTcpSocket =             new QTcpSocket(this);
+    m_pTcpSocket =           new QTcpSocket(this);
     m_pReconnectTimer =      new QTimer();
     m_pRequestTimer03 =      new QTimer();
     m_pModuleStateTimer21 =  new QTimer();
@@ -41,8 +41,8 @@ ModuleBase::ModuleBase() {
     connect(m_pModuleStatueTimer24, &QTimer::timeout, this, &ModuleBase::sendModuleStatus24);
     connect(m_pNPTimer28,           &QTimer::timeout, this, &ModuleBase::sendModuleCPStatus28);
     connect(m_pReconnectTimer,      &QTimer::timeout, this, &ModuleBase::moduleTCPConning);
-    connect(m_pTcpSocket,       &QTcpSocket::connected, this, &ModuleBase::moduleTCPConned);
-    connect(m_pTcpSocket,    &QTcpSocket::disconnected, this, &ModuleBase::moduleTCPDisconn);
+    connect(m_pTcpSocket,     &QTcpSocket::connected, this, &ModuleBase::moduleTCPConned);
+    connect(m_pTcpSocket,  &QTcpSocket::disconnected, this, &ModuleBase::moduleTCPDisconn);
 
     m_connStatus =     ConnStatus::unConnected;
     m_registerStatus = RegisterStatus::unRegister;
@@ -113,7 +113,7 @@ ModuleBase::ModuleBase() {
 }
 
 ModuleBase::~ModuleBase() {
-    if (m_pTcpSocket != nullptr)                delete m_pTcpSocket;
+    if (m_pTcpSocket != nullptr)              delete m_pTcpSocket;
     if (m_pReconnectTimer != nullptr)         delete m_pReconnectTimer;
 
     if (m_pRequestTimer03 != nullptr)         delete m_pRequestTimer03;
@@ -126,7 +126,7 @@ ModuleBase::~ModuleBase() {
 void ModuleBase::moduleTCPConning() {
     while (!m_pTcpSocket->waitForConnected(1000))
     {
-        // qDebug() << "Attempting to connect...";
+        qDebug() << "Attempting to connect...";
         m_connStatus = ConnStatus::connecting;
         m_pTcpSocket->connectToHost(m_commCfg.serverAddress, m_commCfg.serverPort);
     }
@@ -155,10 +155,69 @@ void ModuleBase::onReadCommData(qint16 pkgID, const QByteArray& buf) {
         case 0x49: recvSettingTime49(buf); break;
         case 0x4A: recvModuleLocation4A(buf); break;
         case 0x4B: recvCustomizedParam4B(buf); break;
-        default: {
-            qDebug() << "this is unknown pkg 0x" << m_genericHeader.packType;
-            break;
-        }
+        default: break;
+    }
+}
+
+void ModuleBase::stateMachine() {
+    // 连接状态,
+    
+    switch (m_connStatus)
+    {
+    case ConnStatus::unConnected:
+        if (!m_pReconnectTimer->isActive())                   m_pReconnectTimer->start(1000);
+        if (m_isSendRegister01)                               m_isSendRegister01 = false;
+        if (m_registerStatus == RegisterStatus::registered)   m_registerStatus = RegisterStatus::unRegister;
+        break;
+    case ConnStatus::connecting:
+        break;
+    case ConnStatus::connected:
+        if (m_pReconnectTimer->isActive())    m_pReconnectTimer->stop();
+        if (!m_isSendRegister01)              sendRegister01();
+        break;
+    default: 
+        break;
+    }
+    // 注册状态
+    switch (m_registerStatus)
+    {
+    case RegisterStatus::unRegister:
+        if (m_pRequestTimer03->isActive())        m_pRequestTimer03->stop();
+        if (m_isSendModuleLocation05)             m_isSendModuleLocation05  = false;
+        if (m_isSendModuleConfigure20)            m_isSendModuleConfigure20 = false;
+        if (m_timeStatus == TimeStatus::timed)    m_timeStatus = TimeStatus::unTime;
+        break;
+    case RegisterStatus::registering:
+        break;
+    case RegisterStatus::registered:
+        if (!m_pRequestTimer03->isActive())       m_pRequestTimer03->start(1000);
+        if (!m_isSendModuleLocation05)            sendModuleLocation05();
+        if (!m_isSendModuleConfigure20)           sendModuleFigure20();
+        break;
+    default:
+        break;
+    }
+    // 对时状态
+    switch (m_timeStatus)
+    {
+    case TimeStatus::unTime: {
+        if (m_pModuleStateTimer21->isActive())        m_pModuleStateTimer21->stop();
+        if (m_pCPTimer22->isActive())                 m_pCPTimer22->stop();
+        if (m_pModuleStatueTimer24->isActive())       m_pModuleStatueTimer24->stop();
+        if (m_pNPTimer28->isActive())                 m_pNPTimer28->stop();
+        break;
+    }
+    case TimeStatus::timing: break;
+    case TimeStatus::timed:
+    {
+        if (!m_pModuleStateTimer21->isActive())        m_pModuleStateTimer21->start(5000);
+        if (!m_pCPTimer22->isActive())                 m_pCPTimer22->start(5000);
+        if (!m_pModuleStatueTimer24->isActive())       m_pModuleStatueTimer24->start(10000);
+        if (!m_pNPTimer28->isActive())                 m_pNPTimer28->start(5000);
+        break;
+    }
+    default:
+        break;
     }
 }
 

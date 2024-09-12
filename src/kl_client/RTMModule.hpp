@@ -36,8 +36,8 @@ class RTMModule : public ModuleBase {
     QVector<FreqAndDFreq> m_freqs828;
  public slots:
     // 状态机线程执行函数
-    void stateMachine();
-    void onRecvData();
+    void stateMachine() override;
+    void onRecvData() override;
     void processTask();
      // 发送目标,接受地图nebula发来的数据
     void sendTargetMarker822(OTargetMark0x822 oTargetMark0x822);

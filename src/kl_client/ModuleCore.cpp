@@ -17,12 +17,7 @@ ModuleCore::ModuleCore() {
     auto detectorNum = commCfg->value("common/DetectorNum").toInt();
     for (qint16 i = 1; i <= detectorNum; i++) {
         auto rtm = new RTMModule(i);
-        // 连接地图服务器来读取数据
-        auto rtmNebula = new NebulaCommon();
-        rtmNebula->nebulaAddress = commCfg->value("Nebula/nebulaAddress").toString();
-        rtmNebula->nebulaPort = commCfg->value("Nebula/nebulaPort").toInt();
-        rtmNebula->clientAddress = commCfg->value(QString("Detector%1/clientAddress").arg(i)).toString();
-        rtmNebula->clientPort = commCfg->value(QString("Detector%1/clientAddress").arg(i)).toInt();
+        auto rtmNebula = new NebulaCommon(i);
         connect(rtmNebula, &NebulaCommon::signalSendDetectTarget2Ctl, rtm, &RTMModule::sendTargetMarker822);
         rtmVec.append(rtm);
     }

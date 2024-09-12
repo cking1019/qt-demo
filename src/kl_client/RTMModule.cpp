@@ -14,7 +14,7 @@ RTMModule::RTMModule(qint16 id) {
     connect(m_pTcpSocket,       &QTcpSocket::readyRead, this, &RTMModule::onRecvData);
     connect(m_pStateMachineTimer,     &QTimer::timeout, this, &RTMModule::stateMachine);
     connect(m_pSettingTimer823,       &QTimer::timeout, this, &RTMModule::sendRTMSettings823);
-    connect(m_pSTateMachinethread,     &QThread::start, this, &RTMModule::processTask);
+    connect(m_pSTateMachinethread,   &QThread::started, this, &RTMModule::processTask);
     
     // 初始化成员变
     m_genericHeader.sender   = 0x50454C;
@@ -39,8 +39,8 @@ RTMModule::~RTMModule() {
 void RTMModule::startup() {
     // 启动状态机定时器
     m_pStateMachineTimer->start();
-    // m_pSTateMachinethread->start();
     // moveToThread(m_pSTateMachinethread);
+    // m_pSTateMachinethread->start();
     qDebug() << QString("The RTM Number %1 is running").arg(m_id);
 }
 
@@ -64,26 +64,23 @@ void RTMModule::onRecvData() {
 
 void RTMModule::processTask() {
     while(true) {
-        QThread::msleep(10);
+        QThread::msleep(1000);
         qDebug() << "m_pSTateMachinethread";
     }
 }
 
 // 状态机,连接->注册->对时
 void RTMModule::stateMachine() {
+    // 调用子类的状态机
+    ModuleBase::stateMachine();
     // 连接状态,
     switch (m_connStatus)
     {
     case ConnStatus::unConnected:
-        if (!m_pReconnectTimer->isActive())                 m_pReconnectTimer->start(1000);
-        if (m_isSendRegister01)                             m_isSendRegister01 = false;
-        if (m_registerStatus == RegisterStatus::registered)   m_registerStatus = RegisterStatus::unRegister;
         break;
     case ConnStatus::connecting:
         break;
     case ConnStatus::connected:
-        if (m_pReconnectTimer->isActive())    m_pReconnectTimer->stop();
-        if (!m_isSendRegister01)              sendRegister01();
         break;
     default: 
         break;
@@ -92,9 +89,6 @@ void RTMModule::stateMachine() {
     switch (m_registerStatus)
     {
     case RegisterStatus::unRegister:
-        if (m_pRequestTimer03->isActive())        m_pRequestTimer03->stop();
-        if (m_isSendModuleLocation05)             m_isSendModuleLocation05  = false;
-        if (m_isSendModuleConfigure20)            m_isSendModuleConfigure20 = false;
         if (m_isSendRTMFunction825)               m_isSendRTMFunction825 = false;
         if (m_isSendForbiddenIRIList828)          m_isSendForbiddenIRIList828 = false;
         if (m_timeStatus == TimeStatus::timed)    m_timeStatus = TimeStatus::unTime;
@@ -102,9 +96,6 @@ void RTMModule::stateMachine() {
     case RegisterStatus::registering:
         break;
     case RegisterStatus::registered:
-        if (!m_pRequestTimer03->isActive())       m_pRequestTimer03->start(1000);
-        if (!m_isSendModuleLocation05)            sendModuleLocation05();
-        if (!m_isSendModuleConfigure20)           sendModuleFigure20();
         if (!m_isSendRTMFunction825)              sendRTMFunction825();
         if (!m_isSendForbiddenIRIList828)         sendIRI828();
         break;
@@ -115,10 +106,6 @@ void RTMModule::stateMachine() {
     switch (m_timeStatus)
     {
     case TimeStatus::unTime: {
-        if (m_pModuleStateTimer21->isActive())        m_pModuleStateTimer21->stop();
-        if (m_pCPTimer22->isActive())                 m_pCPTimer22->stop();
-        if (m_pModuleStatueTimer24->isActive())       m_pModuleStatueTimer24->stop();
-        if (m_pNPTimer28->isActive())                 m_pNPTimer28->stop();
         if (m_pSettingTimer823->isActive())           m_pSettingTimer823->stop();
         break;
     }

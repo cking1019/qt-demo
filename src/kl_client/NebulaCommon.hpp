@@ -26,7 +26,7 @@ public:
   QString clientAddress;
   qint16 clientPort;
 public:
-    NebulaCommon(/* args */);
+    NebulaCommon(qint16 id);
     ~NebulaCommon();
     void sendUdpData();
     void sendDetectTarget2Ctl(const QByteArray& buf);
