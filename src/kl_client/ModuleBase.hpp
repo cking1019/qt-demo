@@ -92,11 +92,9 @@ protected:
 	// 公共包类型
 	QSet<qint16> pkgsComm;
 
-	// 连接状态
+	// 连接、注册、对时
 	ConnStatus m_connStatus;
-	// 注册状态
 	RegisterStatus m_registerStatus;
-	// 对时状态
 	TimeStatus m_timeStatus;
 
 	// 连接状态,此类协议不是定期发送，因此用bool类型判断是否已发送
@@ -119,8 +117,8 @@ protected:
     OModuleStatus0x24 m_oModuleStatus0x24;
 
 	/*
-		 0x20的配置容器，分为三个部分，分别是0x21、0x22、0x28
-		 0x21是总模块配置，0x21是模块配置的CP参数，0x28是模块配置的NP参数
+	0x20的配置容器，分为三个部分，分别是0x21、0x22、0x28
+	0x21是总模块配置，0x21是模块配置的CP参数，0x28是模块配置的NP参数
 	*/
     QVector<OElemStatus0x21> m_vecOElemStatus0x21;
     QVector<OCPStatus0x22> m_vecOCPStatus0x22;

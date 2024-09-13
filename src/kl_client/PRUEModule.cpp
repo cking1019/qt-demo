@@ -11,7 +11,6 @@ PRUEModule::PRUEModule() {
     m_isSendInstalledBanSectorD01 = false;
     m_isSendPRUEFunctionD22 = false;
 
-    connect(m_pTcpSocket,         &QTcpSocket::readyRead, this, &PRUEModule::onRecvData);
     connect(m_pStateMachineTimer,       &QTimer::timeout, this, &PRUEModule::stateMachine);
     connect(m_pCurrentSettingTimerD21,  &QTimer::timeout, this, &PRUEModule::sendPRUESettingsD21);
 
@@ -123,9 +122,9 @@ void PRUEModule::stateMachine() {
 
 void PRUEModule::onRecvData() {
     QByteArray buf;
-    if(m_pTcpSocket->waitForReadyRead(100)) {
+    // if(m_pTcpSocket->waitForReadyRead(100)) {
         buf = m_pTcpSocket->readAll();
-    }
+    // }
     quint16 pkgID = 0;
     memcpy(&pkgID, buf.data() + 12, 2);
     if (pkgsComm.contains(pkgID)) {

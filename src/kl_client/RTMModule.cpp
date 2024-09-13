@@ -5,16 +5,15 @@ using namespace NEBULA;
 RTMModule::RTMModule(qint16 id) {
     pkgsRTM = {0x561, 0x563, 0x564};
     m_id = id;
-    m_pSTateMachinethread =      new QThread();
-    m_pStateMachineTimer =       new QTimer();
-    m_pSettingTimer823 =         new QTimer();
-    m_isSendRTMFunction825 = false;
+    m_pthread =             new QThread();
+    m_pStateMachineTimer =  new QTimer();
+    m_pSettingTimer823 =    new QTimer();
+    m_isSendRTMFunction825 =      false;
     m_isSendForbiddenIRIList828 = false;
 
-    connect(m_pTcpSocket,       &QTcpSocket::readyRead, this, &RTMModule::onRecvData);
     connect(m_pStateMachineTimer,     &QTimer::timeout, this, &RTMModule::stateMachine);
     connect(m_pSettingTimer823,       &QTimer::timeout, this, &RTMModule::sendRTMSettings823);
-    connect(m_pSTateMachinethread,   &QThread::started, this, &RTMModule::processTask);
+    connect(m_pthread,               &QThread::started, this, &RTMModule::processTask);
     
     // 包头
     m_genericHeader.sender   = 0x50454C;
@@ -34,13 +33,13 @@ RTMModule::RTMModule(qint16 id) {
     m_oFunc0x825.dElev      = -1;
     rtmFuncFreq825 = {{300, 1000}, {1000,1200}, {1400,1600}, {2400,2600}, {4000,6000}, {5000,6000}};
     // 禁止扫描频率
-    m_oSetBanIRIlist0x828.NIRI = 1;
+    m_oSetBanIRIlist0x828.NIRI = 0;
     m_freqs828 = {};
 }
 
 RTMModule::~RTMModule() {
     if (m_pStateMachineTimer == nullptr)       delete m_pStateMachineTimer;
-    if (m_pSTateMachinethread == nullptr)      delete m_pSTateMachinethread;
+    if (m_pthread == nullptr)                  delete m_pthread;
     if (m_pSettingTimer823 == nullptr)         delete m_pSettingTimer823;
 }
 
@@ -48,15 +47,15 @@ RTMModule::~RTMModule() {
 void RTMModule::startup() {
     // 启动状态机定时器
     m_pStateMachineTimer->start();
-    // moveToThread(m_pSTateMachinethread);
-    // m_pSTateMachinethread->start();
+    // moveToThread(m_pthread);
+    // m_pthread->start();
     qDebug() << QString("The RTM Number %1 is running").arg(m_id);
 }
 
 // 接收数据
 void RTMModule::onRecvData() {
     QByteArray buf;
-    // if(m_pTcpSocket->waitForReadyRead(100)) {
+    // if(m_pTcpSocket->waitForReadyRead()) {
         buf = m_pTcpSocket->readAll();
     // }
     quint16 pkgID = 0;
@@ -77,7 +76,7 @@ void RTMModule::onRecvData() {
 void RTMModule::processTask() {
     while(true) {
         QThread::msleep(1000);
-        qDebug() << "m_pSTateMachinethread";
+        qDebug() << "m_pthread";
     }
 }
 
@@ -166,13 +165,13 @@ void RTMModule::recvRTMSettings561(const QByteArray& buf) {
         m_freqs823Temp.append(item);
         offset += len3;
     }
-    // 根据收到的频率进行设置
+    // 判断收到的频率是否满足要求
     for(auto& item : m_freqs823Temp) {
-        bool flag = true;
+        bool flag = false;
         for(auto& itemFunc : rtmFuncFreq825) {
-            if(item.freq - item.dfreq * 0.5 < itemFunc.minFreqRTR 
-                && item.freq + item.dfreq * 0.5 > itemFunc.maxFreqRTR) {
-                flag = false;
+            if(item.freq - item.dfreq * 0.5 >= itemFunc.minFreqRTR && 
+               item.freq + item.dfreq * 0.5 <= itemFunc.maxFreqRTR) {
+                flag = true;
                 break;
             }
         }
@@ -186,9 +185,6 @@ void RTMModule::recvRTMSettings561(const QByteArray& buf) {
              << "pkgSize:"    << buf.length()
              << "N:"          << m_oSetting0x823.N
              << "pkgIdx:"     << pkgIdx;
-    for(auto &item : m_freqs823) {
-        qDebug() << QString("freq=%1, DFreq=%2").arg(item.freq).arg(item.dfreq);
-    }
     sendControlledOrder23(0, pkgIdx);
     sendRTMSettings823();
 }
@@ -230,16 +226,30 @@ void RTMModule::sendRTMSettings823() {
 void RTMModule::recvSettingIRI564(const QByteArray& buf) {
     quint32 len1 = HEADER_LEN;
     quint32 len2 = sizeof(OSetBanIRIlist0x828);
+    quint32 len3 = sizeof(FreqAndDFreq);
     memcpy(&m_oSetBanIRIlist0x828, buf.data() + len1, len2);
     // 清空原来的中心频率设置
     m_freqs828.clear();
+    QVector<FreqAndDFreq> m_freqs823Temp;
     qint16 offset = len1 + len2;
     for(uint32_t i = 0; i < m_oSetBanIRIlist0x828.NIRI; i++) {
-        FreqAndDFreq freqAndDFreq;
-        quint32 len3 = sizeof(FreqAndDFreq);
-        memcpy(&freqAndDFreq, buf.data() + offset, len3);
-        m_freqs828.append(freqAndDFreq);
+        FreqAndDFreq item;
+        memcpy(&item, buf.data() + offset, len3);
+        m_freqs828.append(item);
         offset += len3;
+    }
+    // 判断收到的频率是否满足要求
+    for(auto& item : m_freqs823Temp) {
+        bool flag = false;
+        for(auto& itemFunc : rtmFuncFreq825) {
+            if(item.freq - item.dfreq * 0.5 >= itemFunc.minFreqRTR && 
+               item.freq + item.dfreq * 0.5 <= itemFunc.maxFreqRTR) {
+                flag = true;
+                break;
+            }
+        }
+        // 接收满足功能要求的频率
+        if(flag) m_freqs828.append(item);
     }
     /* ------------------------------------------------------------------------ */
     quint16 pkgIdx = 0;
@@ -252,14 +262,13 @@ void RTMModule::recvSettingIRI564(const QByteArray& buf) {
         qDebug() << QString("freq=%1, DFreq=%2").arg(item.freq).arg(item.dfreq);
     }
     sendControlledOrder23(0, pkgIdx);
-    sendRTMSettings823();
 }
 
 // 修改频率、频段 828-564
 void RTMModule::sendIRI828() {
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OSetBanIRIlist0x828);
-    qint32 len3 = sizeof(FreqAndDFreq);
+    qint32 len3 = m_freqs828.size() * sizeof(FreqAndDFreq);
     m_isSendForbiddenIRIList828 = true;
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x828;
@@ -280,6 +289,9 @@ void RTMModule::sendIRI828() {
     m_pTcpSocket->flush();
     qDebug() << "send 0x828:" << buf.toHex()
              << "NIRI:"       << m_oSetBanIRIlist0x828.NIRI;
+    for(auto &item : m_freqs828) {
+        qDebug() << QString("freq=%1, DFreq=%2").arg(item.freq).arg(item.dfreq);
+    }
 }
 
 // 563->828
@@ -293,7 +305,7 @@ void RTMModule::recvRequestIRI563(const QByteArray& buf) {
     sendIRI828();
 }
 
-void RTMModule::sendTargetMarker822(OTargetMark0x822 m_oTargetMark0x822) {
+void RTMModule::sendTargetMarker822(OTargetMark0x822& m_oTargetMark0x822) {
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OTargetMark0x822);
     qint64 reqTimestamp = QDateTime::currentMSecsSinceEpoch();

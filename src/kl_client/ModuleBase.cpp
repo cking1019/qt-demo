@@ -45,6 +45,7 @@ ModuleBase::ModuleBase() {
     connect(m_pReconnectTimer,      &QTimer::timeout, this, &ModuleBase::moduleTCPConning);
     connect(m_pTcpSocket,     &QTcpSocket::connected, this, &ModuleBase::moduleTCPConned);
     connect(m_pTcpSocket,  &QTcpSocket::disconnected, this, &ModuleBase::moduleTCPDisconn);
+    connect(m_pTcpSocket,     &QTcpSocket::readyRead, this, &ModuleBase::onRecvData);
 
     m_connStatus =     ConnStatus::unConnected;
     m_registerStatus = RegisterStatus::unRegister;
