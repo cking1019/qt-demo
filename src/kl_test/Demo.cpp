@@ -1,6 +1,6 @@
 #include "Demo.hpp"
 
-Demo::Demo(QObject *parent):QObject(parent) {
+Demo::Demo(int a, int b):a(a),b(b) {
     this->pSocket = new QTcpSocket();
     this->pTimer = new QTimer();
     this->pReconnTimer = new QTimer();

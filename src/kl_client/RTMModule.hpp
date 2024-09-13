@@ -21,22 +21,22 @@ class RTMModule : public ModuleBase {
     // 设置
     void recvRTMSettings561(const QByteArray& buf);
     void sendRTMSettings823();
-    // IRI设置
-    void recvSettingIRI564(const QByteArray& buf);
-    void sendIRI828();
-    // 功能
-    void sendRTMFunction825();
-    // 调用828
-    void recvRequestIRI563(const QByteArray& buf);
-    // 设置
     OSetting0x823 m_oSetting0x823;
     QVector<FreqAndDFreq> m_freqs823;
-    // IRI
+    // 禁止扫描频率设置
+    void recvSettingIRI564(const QByteArray& buf);
+    void sendIRI828();
     OSetBanIRIlist0x828 m_oSetBanIRIlist0x828;
     QVector<FreqAndDFreq> m_freqs828;
+    // 功能
+    void sendRTMFunction825();
+    OFunc0x825 m_oFunc0x825;
+    QVector<RTMFuncFreq> rtmFuncFreq825;
+    // 调用828
+    void recvRequestIRI563(const QByteArray& buf);
  public slots:
     // 状态机线程执行函数
-    void stateMachine() override;
+    void stateMachine();
     void onRecvData() override;
     void processTask();
      // 发送目标,接受地图nebula发来的数据

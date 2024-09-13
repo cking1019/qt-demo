@@ -10,13 +10,11 @@ NebulaCommon::NebulaCommon(qint16 id)
     nebulaPort = commCfg->value("Nebula/nebulaPort").toInt();
     clientAddress = commCfg->value(QString("Detector%1/clientAddress").arg(id)).toString();
     clientPort = commCfg->value(QString("Detector%1/clientPort").arg(id)).toInt();
+    qDebug() << QString("Module address is %1:%2").arg(clientAddress).arg(clientPort);
     m_pUdpSock2Nebula = new QUdpSocket(this);
-    if(!m_pUdpSock2Nebula->bind(clientPort)) {
-        qDebug() << QString("UDP bind port:%1 fali!!!").arg(clientPort);
-    } else {
-        qDebug() << QString("UDP bind port:%1 successfully!!!").arg(clientPort);
-        connect(m_pUdpSock2Nebula, &QUdpSocket::readyRead, this, &NebulaCommon::onRecvUdpData); 
-    }
+    connect(m_pUdpSock2Nebula, &QUdpSocket::readyRead, this, &NebulaCommon::onRecvUdpData);
+
+    if(!m_pUdpSock2Nebula->bind(clientPort)) qDebug() << QString("UDP bind port %1 fali!!!").arg(clientPort);
 
     // QTimer* mTimer = new QTimer();
     // connect(mTimer, &QTimer::timeout, this, &NebulaCommon::sendUdpData);
@@ -36,16 +34,12 @@ void NebulaCommon::sendUdpData() {
 }
 
 void NebulaCommon::onRecvUdpData() {
-    while (m_pUdpSock2Nebula->hasPendingDatagrams()) {
+    if (m_pUdpSock2Nebula->hasPendingDatagrams()) {
         QByteArray buf;
         buf.resize(m_pUdpSock2Nebula->pendingDatagramSize());
         qint64 len = m_pUdpSock2Nebula->readDatagram(buf.data(), buf.size());
-        if(len > 0) {
-            sendDetectTarget2Ctl(buf);
-        }
-        if(len == -1) {
-            qDebug() << "send udp datagram fail!";
-        }
+        qDebug() << buf.toHex();
+        sendDetectTarget2Ctl(buf);
     }
 }
 
@@ -61,6 +55,11 @@ void NebulaCommon::sendDetectTarget2Ctl(const QByteArray& buf) {
     memcpy(&detectHead, buf.data() + len1 + len2, len3);
 
     OTargetMark0x822 oTargetMark0x822;
+    oTargetMark0x822.azim = detectTargetData.tDataAfter.tAzimuth;
+    oTargetMark0x822.freqMhz = detectTargetData.tDataAfter.tFrequency;
+    qint64 reqTimestamp = QDateTime::currentMSecsSinceEpoch();
+    oTargetMark0x822.timePel1 = reqTimestamp & 0xFFFFFFFF;
+    oTargetMark0x822.timePel2 = (reqTimestamp >> 32) & 0xFFFFFFFF;
     emit signalSendDetectTarget2Ctl(oTargetMark0x822);
 }
 

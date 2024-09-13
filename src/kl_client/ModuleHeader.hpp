@@ -301,6 +301,9 @@ struct OFunc0x825 {
 
     float dAz;
     float dElev;
+};
+// RTM功能的所有最小最大频率
+struct RTMFuncFreq {
     float minFreqRTR;
     float maxFreqRTR;
 };

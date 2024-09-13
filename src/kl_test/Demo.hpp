@@ -13,10 +13,11 @@ class Demo : public QObject{
     QTimer* pTimer;
     QTimer* pReconnTimer;
     
-    explicit Demo(QObject *parent = nullptr);
+    explicit Demo(int a, int b);
     void checkSockState();
     void reconnect();
-    void removeSock();
+private:
+    int a, b;
 };
 
 #endif // _DEMO_H_

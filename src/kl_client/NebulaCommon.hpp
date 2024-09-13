@@ -25,6 +25,8 @@ public:
   qint16 nebulaPort;
   QString clientAddress;
   qint16 clientPort;
+
+  QThread* m_recvUdpData;
 public:
     NebulaCommon(qint16 id);
     ~NebulaCommon();

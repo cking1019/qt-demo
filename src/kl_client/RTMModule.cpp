@@ -16,17 +16,26 @@ RTMModule::RTMModule(qint16 id) {
     connect(m_pSettingTimer823,       &QTimer::timeout, this, &RTMModule::sendRTMSettings823);
     connect(m_pSTateMachinethread,   &QThread::started, this, &RTMModule::processTask);
     
-    // 初始化成员变
+    // 包头
     m_genericHeader.sender   = 0x50454C;
     m_genericHeader.moduleId = 0xff;
     m_genericHeader.vMajor   = 2;
     m_genericHeader.vMinor   = 2;
     m_genericHeader.isAsku   = 1;
-
+    // 设置
+    m_oSetting0x823.N = 0;
+    m_oSetting0x823.curAz = -1;
+    m_freqs823 = {};
+    // 功能
+    m_oFunc0x825.isRotate   = 0;
+    m_oFunc0x825.maxTasks   = 6;
+    m_oFunc0x825.numDiap    = 1;
+    m_oFunc0x825.dAz        = -1;
+    m_oFunc0x825.dElev      = -1;
+    rtmFuncFreq825 = {{300, 1000}, {1000,1200}, {1400,1600}, {2400,2600}, {4000,6000}, {5000,6000}};
+    // 禁止扫描频率
     m_oSetBanIRIlist0x828.NIRI = 1;
-    m_freqs828 = {{5000.5, 120.5}};
-
-    
+    m_freqs828 = {};
 }
 
 RTMModule::~RTMModule() {
@@ -46,7 +55,10 @@ void RTMModule::startup() {
 
 // 接收数据
 void RTMModule::onRecvData() {
-    QByteArray buf = m_pTcpSocket->readAll();
+    QByteArray buf;
+    // if(m_pTcpSocket->waitForReadyRead(100)) {
+        buf = m_pTcpSocket->readAll();
+    // }
     quint16 pkgID = 0;
     memcpy(&pkgID, buf.data() + 12, 2);
     if (pkgsComm.contains(pkgID)) {
@@ -72,15 +84,19 @@ void RTMModule::processTask() {
 // 状态机,连接->注册->对时
 void RTMModule::stateMachine() {
     // 调用子类的状态机
-    ModuleBase::stateMachine();
-    // 连接状态,
+    // 连接状态
     switch (m_connStatus)
     {
     case ConnStatus::unConnected:
+        if (!m_pReconnectTimer->isActive())                   m_pReconnectTimer->start(1000);
+        if (m_isSendRegister01)                               m_isSendRegister01 = false;
+        if (m_registerStatus == RegisterStatus::registered)   m_registerStatus = RegisterStatus::unRegister;
         break;
     case ConnStatus::connecting:
         break;
     case ConnStatus::connected:
+        if (m_pReconnectTimer->isActive())    m_pReconnectTimer->stop();
+        if (!m_isSendRegister01)              sendRegister01();
         break;
     default: 
         break;
@@ -89,6 +105,9 @@ void RTMModule::stateMachine() {
     switch (m_registerStatus)
     {
     case RegisterStatus::unRegister:
+        if (m_pRequestTimer03->isActive())        m_pRequestTimer03->stop();
+        if (m_isSendModuleLocation05)             m_isSendModuleLocation05  = false;
+        if (m_isSendModuleConfigure20)            m_isSendModuleConfigure20 = false;
         if (m_isSendRTMFunction825)               m_isSendRTMFunction825 = false;
         if (m_isSendForbiddenIRIList828)          m_isSendForbiddenIRIList828 = false;
         if (m_timeStatus == TimeStatus::timed)    m_timeStatus = TimeStatus::unTime;
@@ -96,6 +115,9 @@ void RTMModule::stateMachine() {
     case RegisterStatus::registering:
         break;
     case RegisterStatus::registered:
+        if (!m_pRequestTimer03->isActive())       m_pRequestTimer03->start(1000);
+        if (!m_isSendModuleLocation05)            sendModuleLocation05();
+        if (!m_isSendModuleConfigure20)           sendModuleFigure20();
         if (!m_isSendRTMFunction825)              sendRTMFunction825();
         if (!m_isSendForbiddenIRIList828)         sendIRI828();
         break;
@@ -106,6 +128,10 @@ void RTMModule::stateMachine() {
     switch (m_timeStatus)
     {
     case TimeStatus::unTime: {
+        if (m_pModuleStateTimer21->isActive())        m_pModuleStateTimer21->stop();
+        if (m_pCPTimer22->isActive())                 m_pCPTimer22->stop();
+        if (m_pModuleStatueTimer24->isActive())       m_pModuleStatueTimer24->stop();
+        if (m_pNPTimer28->isActive())                 m_pNPTimer28->stop();
         if (m_pSettingTimer823->isActive())           m_pSettingTimer823->stop();
         break;
     }
@@ -132,12 +158,26 @@ void RTMModule::recvRTMSettings561(const QByteArray& buf) {
     memcpy(&m_oSetting0x823, buf.data() + len1, len2);
     // 4 + 8 * n
     m_freqs823.clear();
+    QVector<FreqAndDFreq> m_freqs823Temp;
     quint16 offset = len1 + len2;
     for(uint32_t i = 0; i < m_oSetting0x823.N; i++) {
         FreqAndDFreq item;
         memcpy(&item, buf.data() + offset, len3);
-        m_freqs823.append(item);
+        m_freqs823Temp.append(item);
         offset += len3;
+    }
+    // 根据收到的频率进行设置
+    for(auto& item : m_freqs823Temp) {
+        bool flag = true;
+        for(auto& itemFunc : rtmFuncFreq825) {
+            if(item.freq - item.dfreq * 0.5 < itemFunc.minFreqRTR 
+                && item.freq + item.dfreq * 0.5 > itemFunc.maxFreqRTR) {
+                flag = false;
+                break;
+            }
+        }
+        // 接收满足功能要求的频率
+        if(flag) m_freqs823.append(item);
     }
     /* ------------------------------------------------------------------------ */
     quint16 pkgIdx = 0;
@@ -158,10 +198,9 @@ void RTMModule::sendRTMSettings823() {
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OSetting0x823);
     qint32 len3 = m_freqs823.size() * sizeof(FreqAndDFreq);
-    // 设置
-    m_oSetting0x823.N = 1;
+    // 设置,默认初始化
+    m_oSetting0x823.N = 0;
     m_oSetting0x823.curAz = -1;
-    m_freqs823 = {{5850.5, 120.5}};
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x823;
     m_genericHeader.dataSize = len2 + len3;
@@ -182,7 +221,10 @@ void RTMModule::sendRTMSettings823() {
     qDebug() << "send 0x823:" << buf.toHex()
              << "pkgSize:"    << buf.length()
              << "N:"          << m_oSetting0x823.N;
+    for(auto &item : m_freqs823) {
+        qDebug() << QString("freq=%1, DFreq=%2").arg(item.freq).arg(item.dfreq);
     }
+}
 
 // 564修改IRI的中心评率 564-828
 void RTMModule::recvSettingIRI564(const QByteArray& buf) {
@@ -300,16 +342,8 @@ void RTMModule::sendTargetMarker822(OTargetMark0x822 m_oTargetMark0x822) {
 void RTMModule::sendRTMFunction825() {
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OFunc0x825);
+    quint32 len3 = rtmFuncFreq825.size() * sizeof(RTMFuncFreq);
     m_isSendRTMFunction825 = true;
-    // 功能
-    OFunc0x825 m_oFunc0x825;
-    m_oFunc0x825.isRotate   = 0;
-    m_oFunc0x825.maxTasks   = 5;
-    m_oFunc0x825.numDiap    = 1;
-    m_oFunc0x825.dAz        = -1;
-    m_oFunc0x825.dElev      = -1;
-    m_oFunc0x825.minFreqRTR = 300;
-    m_oFunc0x825.maxFreqRTR = 6000;
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x825;
     m_genericHeader.dataSize = len2;
@@ -317,14 +351,21 @@ void RTMModule::sendRTMFunction825() {
     m_genericHeader.checkSum = calcChcekSum(reinterpret_cast<char*>(&m_genericHeader), HEADER_LEN - 2);
     /* ------------------------------------------------------------------------ */
     QByteArray buf;
-    buf.resize(len1 + len2);
+    buf.resize(len1 + len2 + len3);
     memcpy(buf.data(), &m_genericHeader, len1);
     memcpy(buf.data() + len1, &m_oFunc0x825, len2);
+    quint16 offset = len1 + len2;
+    for(auto& item : rtmFuncFreq825) {
+        memcpy(buf.data() + offset, &item, sizeof(RTMFuncFreq));
+        offset += sizeof(RTMFuncFreq);
+    }
+
     m_pTcpSocket->write(buf);
     m_pTcpSocket->flush();
     qDebug() << "send 0x825:"   << buf.toHex()
              << "pkgSize:"      << buf.length()
-             << "numDiap:"      << m_oFunc0x825.numDiap
-             << "minFreqRTR:"   << m_oFunc0x825.minFreqRTR
-             << "maxFreqRTR:"   << m_oFunc0x825.maxFreqRTR;
+             << "numDiap:"      << m_oFunc0x825.numDiap;
+    for(auto &item : rtmFuncFreq825) {
+        qDebug() << QString("minFreq=%1, maxFreq=%2").arg(item.minFreqRTR).arg(item.maxFreqRTR);
+    }
 }

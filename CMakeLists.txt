@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
-set (CMAKE_C_COMPILER "D:\\dev\\lang\\mingw64\\bin2\\gcc.exe")
-set (CMAKE_CXX_COMPILER "D:\\dev\\lang\\mingw64\\bin2\\g++.exe")
+set (CMAKE_C_COMPILER "D:/dev/lang/mingw64/bin/gcc.exe")
+set (CMAKE_CXX_COMPILER "D:/dev/lang/mingw64/bin/g++.exe")
 
 project(Nebula.North)
 
