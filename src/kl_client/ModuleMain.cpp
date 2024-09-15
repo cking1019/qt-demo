@@ -52,20 +52,20 @@ void MessWriteLog(QtMsgType type, const QMessageLogContext &context, const QStri
     mutex.unlock();
 }
 
-class MyApplication : public QCoreApplication {
-public:
-    using QCoreApplication::QCoreApplication;
+// class MyApplication : public QCoreApplication {
+// public:
+//     using QCoreApplication::QCoreApplication;
 
-protected:
-    bool event(QEvent *event) override {
-        if (event->type() == QEvent::ApplicationActivate) {
-            qDebug() << "应用程序被激活";
-        } else if (event->type() == QEvent::ApplicationDeactivate) {
-            qDebug() << "应用程序失去焦点";
-        }
-        return QCoreApplication::event(event);
-    }
-};
+// protected:
+//     bool event(QEvent *event) override {
+//         if (event->type() == QEvent::ApplicationActivate) {
+//             qDebug() << "应用程序被激活";
+//         } else if (event->type() == QEvent::ApplicationDeactivate) {
+//             qDebug() << "应用程序失去焦点";
+//         }
+//         return QCoreApplication::event(event);
+//     }
+// };
 
 
 int main(int argc, char *argv[])

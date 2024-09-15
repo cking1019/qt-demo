@@ -2,6 +2,7 @@
 #define _RTMMODULE_H_
 
 #include "ModuleBase.hpp"
+#include "Worker.hpp"
 
 namespace NEBULA {
 class RTMModule : public ModuleBase {
@@ -18,7 +19,7 @@ class RTMModule : public ModuleBase {
     ~RTMModule();
     void startup() override;
     // 设置
-    void recvRTMSettings561(const QByteArray& buf);
+    void recvRTMSetting561(const QByteArray& buf);
     void sendRTMSettings823();
     // 禁止扫描频率设置
     void recvSettingIRI564(const QByteArray& buf);

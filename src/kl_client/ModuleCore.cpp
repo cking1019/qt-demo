@@ -20,14 +20,22 @@ ModuleCore::ModuleCore() {
         // connect(rtmNebula, &NebulaCommon::signalSendDetectTarget2Ctl, rtm, &RTMModule::sendTargetMarker822);
         rtmVec.append(rtm);
     }
+
+    // 干扰设备配置
+    auto jammerNum = commCfg->value("common/JammerNum").toInt();
+    for (qint16 id = 1; id <= detectorNum; id++) {
+        auto prue = new PRUEModule(id);
+        // auto rtmNebula = new NebulaCommon(id);
+        // connect(rtmNebula, &NebulaCommon::signalSendDetectTarget2Ctl, rtm, &RTMModule::sendTargetMarker822);
+        prueVec.append(prue);
+    }
 }
 
 ModuleCore::~ModuleCore() {
 }
 
+// 启动所有设备
 void ModuleCore::init() {
-    // for (auto& item : prueVec) item->startup();
-    // 启动所有设备
-    for (auto& item : rtmVec) item->startup();
-
+    for (auto& item : prueVec) item->startup();
+    // for (auto& item : rtmVec) item->startup();
 }

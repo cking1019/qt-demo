@@ -16,23 +16,17 @@
 #include <QThread>
 #include <QDir>
 #include <QMutex>
+#include <QJsonArray>
+#include <QJsonDocument>
 #include "ModuleHeader.hpp"
 // #include "Logger.hpp"
 #define COMM_CFG "./conf/common.ini"
 
 quint16 calcChcekSum(const char* sMess, int nCnt);
 QString readJson(QString DevConfig20);
+void readjsonArray(QString freq);
 
 namespace NEBULA {
-
-struct CommonCfg {
-    QString serverAddress;
-    qint16 serverPort;
-
-    QString moduleAddress;
-    qint16 modulePort;
-    QString moduleCfg20;
-};
 
 enum class ConnStatus{unConnected, connecting, connected};
 enum class RegisterStatus{unRegister, registering, registered};
@@ -81,7 +75,7 @@ class ModuleBase : public QObject {
 	void recvCustomizedParam4B(const QByteArray& buf);
 
 	// 公共配置,包括0x20配置信息
-	CommonCfg m_commCfg;
+	QSettings* commCfgini;
 	bool m_isDebugOut;
 protected:
 	qint16 m_id;
@@ -91,6 +85,12 @@ protected:
 	QTcpSocket* m_pTcpSocket;
 	// 公共包类型
 	QSet<qint16> pkgsComm;
+
+	QString serverAddress;
+    qint16 serverPort;
+	QString moduleAddress;
+    qint16 modulePort;
+	QString moduleCfg20;
 
 	// 连接、注册、对时
 	ConnStatus m_connStatus;

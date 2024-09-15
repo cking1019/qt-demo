@@ -2,9 +2,10 @@
 
 using namespace NEBULA;
 
-PRUEModule::PRUEModule() {
+PRUEModule::PRUEModule(qint16 id) {
     pkgsPRUE = {0x601, 0x201, 0x202};
     m_genericHeader = {0x524542, 0xff, 0x2, 0x2, 0x0, 0x0, 0x1, 0x0, 0x0};
+    m_id = id;
     
     m_pStateMachineTimer =       new QTimer();
     m_pCurrentSettingTimerD21 =  new QTimer();
@@ -25,7 +26,6 @@ PRUEModule::PRUEModule() {
     // 功能信息
     m_oTrapFunc0xD22.numDiap = 0;
     m_oTrapFunc0xD22.isGeo = 0;
-    m_oTrapFunc0xD22.numDiap2 = 1;
     m_oTrapFunc0xD22.maxPowREB = 0;
     m_oTrapFunc0xD22.dAzREB = 0;
     m_oTrapFunc0xD22.dElevREB = 0;
@@ -35,12 +35,24 @@ PRUEModule::PRUEModule() {
     m_oTrapFunc0xD22.dElevGeo = 0;
     m_oTrapFunc0xD22.azMinGeo = 0;
     m_oTrapFunc0xD22.azMaxGeo = 0;
-    m_vecOTrapFunc0xD22_2.append({100, 200, 1000});
+    m_vecOTrapFunc0xD22_2 = {};
+    QString freqStr = commCfgini->value(QString("Jammer%1/freqs").arg(m_id)).toString();
+    QRegularExpression re("\\[(\\d+),\\s*(\\d+),\\s*(\\d+)\\]");
+    QRegularExpressionMatchIterator matchIterator = re.globalMatch(freqStr);
+    while (matchIterator.hasNext()) {
+        QRegularExpressionMatch match = matchIterator.next();
+        if (match.hasMatch()) {
+            OTrapFunc0xD22_2 freq;
+            freq.minFreqREB = match.captured(1).toFloat();
+            freq.maxFreqREB = match.captured(2).toFloat();
+            freq.maxDFreq = match.captured(3).toFloat();
+            m_vecOTrapFunc0xD22_2.append(freq);
+        }
+    } 
+    m_oTrapFunc0xD22.numDiap2 = m_vecOTrapFunc0xD22_2.size();
 
     // 辐射禁止扇区
-    m_oTrapBanSectorD01.num = 1;
-    
-    m_pStateMachineTimer->start();
+    m_oTrapBanSectorD01.num = 0;
 }
 
 PRUEModule::~PRUEModule() {
@@ -49,7 +61,8 @@ PRUEModule::~PRUEModule() {
 }
 
 void PRUEModule::startup() {
-    qDebug() << QString("PRUE %1 is running....").arg(m_genericHeader.sender);
+    m_pStateMachineTimer->start();
+    qDebug() << QString("PRUE %1 is running....").arg(m_id);
 }
 
 
@@ -78,8 +91,8 @@ void PRUEModule::stateMachine() {
         if (m_pRequestTimer03->isActive())        m_pRequestTimer03->stop();
         if (m_isSendModuleLocation05)             m_isSendModuleLocation05  = false;
         if (m_isSendModuleConfigure20)            m_isSendModuleConfigure20 = false;
-        if (m_isSendInstalledBanSectorD01)            m_isSendInstalledBanSectorD01 = false;
-        if (m_isSendPRUEFunctionD22)                  m_isSendPRUEFunctionD22 = false;
+        if (m_isSendInstalledBanSectorD01)        m_isSendInstalledBanSectorD01 = false;
+        if (m_isSendPRUEFunctionD22)              m_isSendPRUEFunctionD22 = false;
         if (m_timeStatus == TimeStatus::timed)    m_timeStatus = TimeStatus::unTime;
         break;
     case RegisterStatus::registering:
@@ -88,8 +101,8 @@ void PRUEModule::stateMachine() {
         if (!m_pRequestTimer03->isActive())       m_pRequestTimer03->start(1000);
         if (!m_isSendModuleLocation05)            sendModuleLocation05();
         if (!m_isSendModuleConfigure20)           sendModuleFigure20();
-        if (!m_isSendInstalledBanSectorD01)          sendInstalledBanSectorD01();
-        if (!m_isSendPRUEFunctionD22)                sendPRUEFunctionD22();
+        if (!m_isSendInstalledBanSectorD01)       sendInstalledBanSectorD01();
+        if (!m_isSendPRUEFunctionD22)             sendPRUEFunctionD22();
         break;
     default:
         break;
@@ -140,7 +153,7 @@ void PRUEModule::onRecvData() {
     }
 }
 
-// 0xD21,每秒发送设置信息
+// 0xD21,设置
 void PRUEModule::sendPRUESettingsD21() {
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OTrapSettings0xD21);
@@ -164,15 +177,16 @@ void PRUEModule::sendPRUESettingsD21() {
 void PRUEModule::recvSettingBanSector201(const QByteArray& buf) {
     qint8 len1 = HEADER_LEN;
     qint8 len2 = sizeof(OTrapBanSectorD01);
-    quint8 num = buf.at(len1 + 8);
+    // 494f5601 02021800 28000000 01023601 c28675ef 91010000 01010000 0f0000000000f0410000a042000000000000b4430000fa440000f042
+    memcpy(&m_oTrapBanSectorD01, buf.data() + len1, len2);
     qint16 offset = len1 + len2;
     m_vecOTrapBanSectorD01_1.clear();
-    for(int i = 0; i < num; i++) {
+    for(quint32 i = 0; i < m_oTrapBanSectorD01.num; i++) {
         OTrapBanSectorD01_1 oTrapBanSector201;
         memcpy(&oTrapBanSector201, buf.data() + offset, sizeof(OTrapBanSectorD01_1));
         m_vecOTrapBanSectorD01_1.append(oTrapBanSector201);
         offset += sizeof(OTrapBanSectorD01_1);
-    }
+    } 
     /* ------------------------------------------------------------------------ */
     quint16 pkgIdx = 0;
     memcpy(&pkgIdx, buf.data() + 6, 2);
@@ -193,7 +207,7 @@ void PRUEModule::recvSettingBanSector201(const QByteArray& buf) {
 void PRUEModule::sendInstalledBanSectorD01() {
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OTrapBanSectorD01);
-    qint32 len3 = m_vecOTrapBanSectorD01_1.size() * sizeof(m_vecOTrapBanSectorD01_1);
+    qint32 len3 = m_vecOTrapBanSectorD01_1.size() * sizeof(OTrapBanSectorD01_1);
     m_isSendInstalledBanSectorD01 = true;
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0xD01;
@@ -273,6 +287,9 @@ void PRUEModule::sendPRUEFunctionD22() {
     /* ------------------------------------------------------------------------ */
     qDebug() << "send 0xD22:" << buf.toHex()
              << "pkgSize:"    << buf.length();
+    for(auto& item : m_vecOTrapFunc0xD22_2) {
+        qDebug() << QString("minFreqREB=%1, maxDFreq=%2, maxDFreq=%3").arg(item.minFreqREB).arg(item.maxFreqREB).arg(item.maxDFreq);
+    }
 }
 
 // 0x202,接收设置辐射禁止

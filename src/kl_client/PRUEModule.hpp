@@ -14,7 +14,7 @@ class PRUEModule : public ModuleBase {
    bool m_isSendPRUEFunctionD22;
 
  public:
-    PRUEModule();
+    PRUEModule(qint16 id);
     ~PRUEModule();
     void startup() override;
 

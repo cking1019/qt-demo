@@ -28,10 +28,23 @@ RTMModule::RTMModule(qint16 id) {
     // 功能
     m_oFunc0x825.isRotate   = 0;
     m_oFunc0x825.maxTasks   = 6;
-    m_oFunc0x825.numDiap    = 1;
+    
     m_oFunc0x825.dAz        = -1;
     m_oFunc0x825.dElev      = -1;
-    rtmFuncFreq825 = {{300, 1000}, {1000,1200}, {1400,1600}, {2400,2600}, {4000,6000}, {5000,6000}};
+    rtmFuncFreq825 = {};
+    QString freqStr = commCfgini->value(QString("Detector%1/freqs").arg(m_id)).toString();
+    QRegularExpression re("\\[(\\d+),\\s*(\\d+)\\]");
+    QRegularExpressionMatchIterator matchIterator = re.globalMatch(freqStr);
+    while (matchIterator.hasNext()) {
+        QRegularExpressionMatch match = matchIterator.next();
+        if (match.hasMatch()) {
+            RTMFuncFreq freq;
+            freq.minFreqRTR = match.captured(1).toFloat();
+            freq.maxFreqRTR = match.captured(2).toFloat();
+            rtmFuncFreq825.append(freq);
+        }
+    } 
+    m_oFunc0x825.numDiap    = rtmFuncFreq825.size();
     // 禁止扫描频率
     m_oSetBanIRIlist0x828.NIRI = 0;
     m_freqs828 = {};
@@ -45,10 +58,13 @@ RTMModule::~RTMModule() {
 
 // 设备启动，开始与服务器建立连接
 void RTMModule::startup() {
-    // 启动状态机定时器
+    // 启动状态机定时器 
     m_pStateMachineTimer->start();
     // moveToThread(m_pthread);
     // m_pthread->start();
+    // auto p = new Worker();
+    // moveToThread(p);
+    // p->run();
     qDebug() << QString("The RTM Number %1 is running").arg(m_id);
 }
 
@@ -65,7 +81,7 @@ void RTMModule::onRecvData() {
     }
     if (pkgsRTM.contains(pkgID)) {
         switch (pkgID) {
-        case 0x561: recvRTMSettings561(buf); break;
+        case 0x561: recvRTMSetting561(buf); break;
         case 0x563: recvRequestIRI563(buf);  break;
         case 0x564: recvSettingIRI564(buf);  break;
         default: break;
@@ -150,7 +166,7 @@ void RTMModule::stateMachine() {
 }
 
 // 0x561,修改频率、频段 561-823
-void RTMModule::recvRTMSettings561(const QByteArray& buf) {
+void RTMModule::recvRTMSetting561(const QByteArray& buf) {
     quint32 len1 = HEADER_LEN;
     quint32 len2 = 4;
     quint32 len3 = sizeof(FreqAndDFreq);

@@ -5,13 +5,15 @@ namespace NEBULA {
 NebulaCommon::NebulaCommon(qint16 id)
 {
     commCfg = new QSettings(COMM_CFG, QSettings::IniFormat);
+    m_pUdpSock2Nebula = new QUdpSocket(this);
+
     commCfg->setIniCodec(QTextCodec::codecForName("utf-8"));
     nebulaAddress = commCfg->value("Nebula/nebulaAddress").toString();
     nebulaPort = commCfg->value("Nebula/nebulaPort").toInt();
     clientAddress = commCfg->value(QString("Detector%1/clientAddress").arg(id)).toString();
     clientPort = commCfg->value(QString("Detector%1/clientPort").arg(id)).toInt();
     qDebug() << QString("Module address is %1:%2").arg(clientAddress).arg(clientPort);
-    m_pUdpSock2Nebula = new QUdpSocket(this);
+    
     connect(m_pUdpSock2Nebula, &QUdpSocket::readyRead, this, &NebulaCommon::onRecvUdpData);
 
     if(!m_pUdpSock2Nebula->bind(clientPort)) qDebug() << QString("UDP bind port %1 fali!!!").arg(clientPort);
@@ -23,7 +25,9 @@ NebulaCommon::NebulaCommon(qint16 id)
 
 NebulaCommon::~NebulaCommon()
 {
-    delete m_pUdpSock2Nebula;
+    if(m_pUdpSock2Nebula != nullptr) delete m_pUdpSock2Nebula;
+    if(commCfg != nullptr)           delete commCfg;
+    
 }
 
 void NebulaCommon::sendUdpData() {
@@ -34,7 +38,7 @@ void NebulaCommon::sendUdpData() {
 }
 
 void NebulaCommon::onRecvUdpData() {
-    if (m_pUdpSock2Nebula->hasPendingDatagrams()) {
+    while (m_pUdpSock2Nebula->hasPendingDatagrams()) {
         QByteArray buf;
         buf.resize(m_pUdpSock2Nebula->pendingDatagramSize());
         qint64 len = m_pUdpSock2Nebula->readDatagram(buf.data(), buf.size());

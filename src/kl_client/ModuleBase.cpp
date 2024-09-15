@@ -21,6 +21,25 @@ QString readJson(QString DevConfig20) {
     }
     return jsonContent;
 }
+    
+// 读取json字符串中的列表
+void readjsonArray(QString freq) {
+    QString data = "[[1, 2], [2, 3]]";
+    QJsonDocument doc = QJsonDocument::fromJson(data.toUtf8());
+    QJsonArray jsonArray = doc.array();
+    
+    for (const QJsonValue &value : jsonArray) {
+        QJsonArray innerArray = value.toArray();
+        QVariantList innerList;
+        
+        for (const QJsonValue &innerValue : innerArray) {
+            innerList.append(innerValue.toInt());
+            qDebug() << innerValue.toInt();
+        }
+        
+        qDebug() << innerList;
+    }
+}
 
 ModuleBase::ModuleBase() {
     pkgsComm = {0x2, 0x4, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B};
@@ -75,16 +94,14 @@ ModuleBase::ModuleBase() {
     m_oModuleStatus0x24.statusTwp = 0;
     m_oModuleStatus0x24.mode = 0;
 
-    auto rtmCfg = new QSettings(COMM_CFG, QSettings::IniFormat);
-    m_commCfg.serverAddress  = rtmCfg->value("VOI/serverAddress").toString();
-    m_commCfg.serverPort     = rtmCfg->value("VOI/serverPort").toInt();
-    m_commCfg.moduleAddress  = rtmCfg->value("Detector/clientAddress").toString();
-    m_commCfg.modulePort     = rtmCfg->value("Detector/clientPort").toInt();
-    m_commCfg.moduleCfg20    = readJson(rtmCfg->value("Detector/devconfig20").toString());
-    m_isDebugOut             = rtmCfg->value("Detector/debugOut").toBool();
+    commCfgini = new QSettings(COMM_CFG, QSettings::IniFormat);
+    serverAddress  = commCfgini->value("VOI/serverAddress").toString();
+    serverPort     = commCfgini->value("VOI/serverPort").toInt();
+    moduleCfg20    = readJson(commCfgini->value("Detector/devconfig20").toString());
+    m_isDebugOut   = commCfgini->value("Detector/debugOut").toBool();
 
     // 读取0x20配置信息
-    QJsonDocument jsonDocument = QJsonDocument::fromJson(m_commCfg.moduleCfg20.toUtf8());
+    QJsonDocument jsonDocument = QJsonDocument::fromJson(moduleCfg20.toUtf8());
     QVariantList list = jsonDocument.toVariant().toList();
     for(int i = 0; i < list.count(); i++) {
         // 读取0x20中的元素配置
@@ -131,7 +148,7 @@ void ModuleBase::moduleTCPConning() {
     {
         // qDebug() << "Attempting to connect...";
         m_connStatus = ConnStatus::connecting;
-        m_pTcpSocket->connectToHost(m_commCfg.serverAddress, m_commCfg.serverPort);
+        m_pTcpSocket->connectToHost(serverAddress, serverPort);
     }
 }
 
@@ -314,7 +331,7 @@ void ModuleBase::recvRequestModuleFigure46(const QByteArray& buf) {
 
 void ModuleBase::sendModuleFigure20() {
     quint8  len1 = HEADER_LEN;
-    quint16 len2 = m_commCfg.moduleCfg20.length();
+    quint16 len2 = moduleCfg20.length();
     m_isSendModuleConfigure20 = true;
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x20;
@@ -325,13 +342,13 @@ void ModuleBase::sendModuleFigure20() {
     QByteArray buf;
     buf.resize(len1 + len2);
     memcpy(buf.data(), &m_genericHeader, len1);
-    memcpy(buf.data() + len1, m_commCfg.moduleCfg20.toStdString().data(), len2);
+    memcpy(buf.data() + len1, moduleCfg20.toStdString().data(), len2);
     m_pTcpSocket->write(buf);
     m_pTcpSocket->flush();
     /* ------------------------------------------------------------------------ */
     qDebug() << "send 0x020:" << buf.toHex()
              << "pkgSize:"   << buf.length()
-             << "json msg:"  << m_commCfg.moduleCfg20;
+             << "json msg:"  << moduleCfg20;
 }
 
 void ModuleBase::sendModuleStatus21() {
