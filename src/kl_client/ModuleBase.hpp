@@ -44,9 +44,6 @@ class ModuleBase : public QObject {
 	virtual void startup() = 0;
     virtual void onRecvData() = 0;
 	void reqAndResTime(quint64 time1, quint64 time2);
-	void moduleTCPConning();
-	void moduleTCPConned();
-	void moduleTCPDisconn();
 
 	void sendRegister01();
 	void sendRequestTime03();

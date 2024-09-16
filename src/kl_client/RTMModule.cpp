@@ -60,8 +60,6 @@ RTMModule::~RTMModule() {
 void RTMModule::startup() {
     // 启动状态机定时器 
     m_pStateMachineTimer->start();
-    // moveToThread(m_pthread);
-    // m_pthread->start();
     // auto p = new Worker();
     // moveToThread(p);
     // p->run();

@@ -61,10 +61,24 @@ ModuleBase::ModuleBase() {
     connect(m_pModuleStatueTimer24, &QTimer::timeout, this, &ModuleBase::sendModuleStatus24);
     connect(m_pNPTimer28,           &QTimer::timeout, this, &ModuleBase::sendModuleCPStatus28);
 
-    connect(m_pReconnectTimer,      &QTimer::timeout, this, &ModuleBase::moduleTCPConning);
-    connect(m_pTcpSocket,     &QTcpSocket::connected, this, &ModuleBase::moduleTCPConned);
-    connect(m_pTcpSocket,  &QTcpSocket::disconnected, this, &ModuleBase::moduleTCPDisconn);
-    connect(m_pTcpSocket,     &QTcpSocket::readyRead, this, &ModuleBase::onRecvData);
+    connect(m_pReconnectTimer, &QTimer::timeout, [&](){
+        while (!m_pTcpSocket->waitForConnected(1000))
+        {
+            // qDebug() << "Attempting to connect...";
+            m_connStatus = ConnStatus::connecting;
+            m_pTcpSocket->connectToHost(serverAddress, serverPort);
+        }
+    });
+    connect(m_pTcpSocket, &QTcpSocket::connected, [&](){
+        qDebug() << "Connected to host!";
+        m_connStatus = ConnStatus::connected;
+    });
+    connect(m_pTcpSocket, &QTcpSocket::disconnected, [&](){
+        // abort -> close -> disconnectFromHost
+        qDebug() << "Disconnected from server!";
+        m_connStatus = ConnStatus::unConnected;
+    });
+    connect(m_pTcpSocket, &QTcpSocket::readyRead, this, &ModuleBase::onRecvData);
 
     m_connStatus =     ConnStatus::unConnected;
     m_registerStatus = RegisterStatus::unRegister;
@@ -142,27 +156,6 @@ ModuleBase::~ModuleBase() {
     if (m_pModuleStatueTimer24 != nullptr)    delete m_pModuleStatueTimer24;
     if (m_pNPTimer28 != nullptr)              delete m_pNPTimer28;
 }
-
-void ModuleBase::moduleTCPConning() {
-    while (!m_pTcpSocket->waitForConnected(1000))
-    {
-        // qDebug() << "Attempting to connect...";
-        m_connStatus = ConnStatus::connecting;
-        m_pTcpSocket->connectToHost(serverAddress, serverPort);
-    }
-}
-
-void ModuleBase::moduleTCPConned() {
-    qDebug() << "Connected to host!";
-    m_connStatus = ConnStatus::connected;
-}
-
-void ModuleBase::moduleTCPDisconn() {
-    // abort -> close -> disconnectFromHost
-    qDebug() << "Disconnected from server!";
-    m_connStatus = ConnStatus::unConnected;
-}
-
 
 // 接收数据
 void ModuleBase::onReadCommData(qint16 pkgID, const QByteArray& buf) {
