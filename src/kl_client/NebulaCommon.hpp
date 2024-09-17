@@ -32,8 +32,9 @@ public:
     ~NebulaCommon();
     void sendUdpData();
     void sendDetectTarget2Ctl(const QByteArray& buf);
+    virtual void initUdp();
+    void startup();
 public slots:
-    void onRecvUdpData();
     
 signals:
     void signalSendDetectTarget2Ctl(OTargetMark0x822& oTargetMark0x822);

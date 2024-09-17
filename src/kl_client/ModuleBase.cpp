@@ -42,18 +42,19 @@ void readjsonArray(QString freq) {
 }
 
 ModuleBase::ModuleBase() {
+    // qDebug() << "this is ModuleBase";
     pkgsComm = {0x2, 0x4, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B};
     m_id = 0;
     m_iStampResult = 0;
     m_iN = 1;
 
     m_pTcpSocket =           new QTcpSocket(this);
-    m_pReconnectTimer =      new QTimer();
-    m_pRequestTimer03 =      new QTimer();
-    m_pModuleStateTimer21 =  new QTimer();
-    m_pCPTimer22 =           new QTimer();
-    m_pModuleStatueTimer24 = new QTimer();
-    m_pNPTimer28 =           new QTimer();
+    m_pReconnectTimer =      new QTimer(this);
+    m_pRequestTimer03 =      new QTimer(this);
+    m_pModuleStateTimer21 =  new QTimer(this);
+    m_pCPTimer22 =           new QTimer(this);
+    m_pModuleStatueTimer24 = new QTimer(this);
+    m_pNPTimer28 =           new QTimer(this);
 
     connect(m_pRequestTimer03,      &QTimer::timeout, this, &ModuleBase::sendRequestTime03);
     connect(m_pModuleStateTimer21,  &QTimer::timeout, this, &ModuleBase::sendModuleStatus21);
@@ -61,28 +62,8 @@ ModuleBase::ModuleBase() {
     connect(m_pModuleStatueTimer24, &QTimer::timeout, this, &ModuleBase::sendModuleStatus24);
     connect(m_pNPTimer28,           &QTimer::timeout, this, &ModuleBase::sendModuleCPStatus28);
 
-    connect(m_pReconnectTimer, &QTimer::timeout, [&](){
-        while (!m_pTcpSocket->waitForConnected(1000))
-        {
-            // qDebug() << "Attempting to connect...";
-            m_connStatus = ConnStatus::connecting;
-            m_pTcpSocket->connectToHost(serverAddress, serverPort);
-        }
-    });
-    connect(m_pTcpSocket, &QTcpSocket::connected, [&](){
-        qDebug() << "Connected to host!";
-        m_connStatus = ConnStatus::connected;
-    });
-    connect(m_pTcpSocket, &QTcpSocket::disconnected, [&](){
-        // abort -> close -> disconnectFromHost
-        qDebug() << "Disconnected from server!";
-        m_connStatus = ConnStatus::unConnected;
-    });
-    connect(m_pTcpSocket, &QTcpSocket::readyRead, this, &ModuleBase::onRecvData);
 
-    m_connStatus =     ConnStatus::unConnected;
-    m_registerStatus = RegisterStatus::unRegister;
-    m_timeStatus =     TimeStatus::unTime;
+    m_runStatus = RunStatus::unConnected;
     // 只需发送一次
     m_isSendRegister01 =          false;
     m_isSendModuleLocation05 =    false;
@@ -157,6 +138,26 @@ ModuleBase::~ModuleBase() {
     if (m_pNPTimer28 != nullptr)              delete m_pNPTimer28;
 }
 
+void ModuleBase::initTcp() {
+    connect(m_pReconnectTimer, &QTimer::timeout, [&](){
+        while (!m_pTcpSocket->waitForConnected(1000)) {
+            // qDebug() << "Attempting to connect...";
+            m_pTcpSocket->connectToHost(serverAddress, serverPort);
+        }
+        // qDebug() << "connect successfully";
+    });
+    connect(m_pTcpSocket, &QTcpSocket::connected, [&](){
+        qDebug() << "Connected to host!";
+        m_runStatus = RunStatus::connected;
+    });
+    connect(m_pTcpSocket, &QTcpSocket::disconnected, [&](){
+        // abort -> close -> disconnectFromHost
+        qDebug() << "Disconnected from server!";
+        m_runStatus = RunStatus::unConnected;
+    });
+    connect(m_pTcpSocket, &QTcpSocket::readyRead, this, &ModuleBase::onRecvData);
+}
+
 // 接收数据
 void ModuleBase::onReadCommData(qint16 pkgID, const QByteArray& buf) {
     switch (pkgID) {
@@ -217,7 +218,7 @@ void ModuleBase::recvRegister02(const QByteArray& buf) {
         case 0x40: qDebug() << "unknown error"; break;
         case 0x0: {
             m_genericHeader.moduleId = ServerRegister0x2.idxModule;
-            m_registerStatus = RegisterStatus::registered;
+            m_runStatus = RunStatus::registered;
             break;
         }
         default: {
@@ -288,7 +289,7 @@ void ModuleBase::recvRequestTime04(const QByteArray& buf) {
     quint64 timeStampReq = serverTimeControl0x4.time1;
     quint64 timeStampAns = serverTimeControl0x4.time2;
     reqAndResTime(timeStampReq, timeStampAns);
-    m_timeStatus = TimeStatus::timed;
+    m_runStatus = RunStatus::timed;
     /* ------------------------------------------------------------------------ */
     qDebug() << "recv 0x004:" << buf.toHex()
              << "pkgSize:"    << buf.length();
@@ -440,7 +441,7 @@ void ModuleBase::sendModuleStatus24() {
              .arg(m_oModuleStatus0x24.mode);
 }
 
-void ModuleBase::sendControlledOrder23(uint8_t code, quint16 pkgidx) {
+void ModuleBase::sendControlledOrder23(quint8 code, quint16 pkgidx) {
     quint8  len1 = HEADER_LEN;
     quint16 len2 = sizeof(OReqCtl0x23);
     quint64 timestamp = QDateTime::currentMSecsSinceEpoch();

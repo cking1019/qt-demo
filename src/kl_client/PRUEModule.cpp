@@ -68,49 +68,33 @@ void PRUEModule::startup() {
 
 // 状态机
 void PRUEModule::stateMachine() {
-    switch (m_connStatus)
+    switch (m_runStatus)
     {
-    case ConnStatus::unConnected:
+    case RunStatus::unConnected:
         if (!m_pReconnectTimer->isActive())                   m_pReconnectTimer->start(1000);
         if (m_isSendRegister01)                               m_isSendRegister01 = false;
-        if (m_registerStatus == RegisterStatus::registered)   m_registerStatus = RegisterStatus::unRegister;
+        if (m_runStatus == RunStatus::registered)   m_runStatus = RunStatus::unRegister;
         break;
-    case ConnStatus::connecting:
-        break;
-    case ConnStatus::connected:
+    case RunStatus::connected:
         if (m_pReconnectTimer->isActive())    m_pReconnectTimer->stop();
         if (!m_isSendRegister01)              sendRegister01();
         break;
-    default: 
-        break;
-    }
-    // 注册状态
-    switch (m_registerStatus)
-    {
-    case RegisterStatus::unRegister:
+    case RunStatus::unRegister:
         if (m_pRequestTimer03->isActive())        m_pRequestTimer03->stop();
         if (m_isSendModuleLocation05)             m_isSendModuleLocation05  = false;
         if (m_isSendModuleConfigure20)            m_isSendModuleConfigure20 = false;
         if (m_isSendInstalledBanSectorD01)        m_isSendInstalledBanSectorD01 = false;
         if (m_isSendPRUEFunctionD22)              m_isSendPRUEFunctionD22 = false;
-        if (m_timeStatus == TimeStatus::timed)    m_timeStatus = TimeStatus::unTime;
+        if (m_runStatus == RunStatus::timed)    m_runStatus = RunStatus::unTime;
         break;
-    case RegisterStatus::registering:
-        break;
-    case RegisterStatus::registered:
+    case RunStatus::registered:
         if (!m_pRequestTimer03->isActive())       m_pRequestTimer03->start(1000);
         if (!m_isSendModuleLocation05)            sendModuleLocation05();
         if (!m_isSendModuleConfigure20)           sendModuleFigure20();
         if (!m_isSendInstalledBanSectorD01)       sendInstalledBanSectorD01();
         if (!m_isSendPRUEFunctionD22)             sendPRUEFunctionD22();
         break;
-    default:
-        break;
-    }
-    // 对时状态
-    switch (m_timeStatus)
-    {
-    case TimeStatus::unTime: {
+    case RunStatus::unTime: {
         if (m_pModuleStateTimer21->isActive())        m_pModuleStateTimer21->stop();
         if (m_pCPTimer22->isActive())                 m_pCPTimer22->stop();
         if (m_pModuleStatueTimer24->isActive())       m_pModuleStatueTimer24->stop();
@@ -118,8 +102,7 @@ void PRUEModule::stateMachine() {
         if (m_pCurrentSettingTimerD21->isActive())    m_pCurrentSettingTimerD21->stop();
         break;
     }
-    case TimeStatus::timing: break;
-    case TimeStatus::timed:
+    case RunStatus::timed:
     {
         if (!m_pModuleStateTimer21->isActive())        m_pModuleStateTimer21->start(5000);
         if (!m_pCPTimer22->isActive())                 m_pCPTimer22->start(5000);
@@ -128,7 +111,7 @@ void PRUEModule::stateMachine() {
         if (!m_pCurrentSettingTimerD21->isActive())    m_pCurrentSettingTimerD21->start(60000);
         break;
     }
-    default:
+    default: 
         break;
     }
 }

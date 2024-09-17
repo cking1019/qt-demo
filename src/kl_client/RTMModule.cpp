@@ -3,11 +3,12 @@
 using namespace NEBULA;
 
 RTMModule::RTMModule(qint16 id) {
+    // qDebug() << "this is RTMModule";
     pkgsRTM = {0x561, 0x563, 0x564};
     m_id = id;
     m_pthread =             new QThread();
-    m_pStateMachineTimer =  new QTimer();
-    m_pSettingTimer823 =    new QTimer();
+    m_pStateMachineTimer =  new QTimer(this);
+    m_pSettingTimer823 =    new QTimer(this);
     m_isSendRTMFunction825 =      false;
     m_isSendForbiddenIRIList828 = false;
 
@@ -56,13 +57,12 @@ RTMModule::~RTMModule() {
     if (m_pSettingTimer823 == nullptr)         delete m_pSettingTimer823;
 }
 
+
 // 设备启动，开始与服务器建立连接
 void RTMModule::startup() {
+    initTcp();
     // 启动状态机定时器 
     m_pStateMachineTimer->start();
-    // auto p = new Worker();
-    // moveToThread(p);
-    // p->run();
     qDebug() << QString("The RTM Number %1 is running").arg(m_id);
 }
 
@@ -71,6 +71,7 @@ void RTMModule::onRecvData() {
     QByteArray buf;
     // if(m_pTcpSocket->waitForReadyRead()) {
         buf = m_pTcpSocket->readAll();
+        // qDebug() << buf.toHex();
     // }
     quint16 pkgID = 0;
     memcpy(&pkgID, buf.data() + 12, 2);
@@ -96,51 +97,35 @@ void RTMModule::processTask() {
 
 // 状态机,连接->注册->对时
 void RTMModule::stateMachine() {
-    // 调用子类的状态机
-    // 连接状态
-    switch (m_connStatus)
+    switch (m_runStatus)
     {
-    case ConnStatus::unConnected:
+    case RunStatus::unConnected:
         if (!m_pReconnectTimer->isActive())                   m_pReconnectTimer->start(1000);
         if (m_isSendRegister01)                               m_isSendRegister01 = false;
-        if (m_registerStatus == RegisterStatus::registered)   m_registerStatus = RegisterStatus::unRegister;
+
+        if (m_runStatus == RunStatus::registered)   m_runStatus = RunStatus::unRegister;
         break;
-    case ConnStatus::connecting:
-        break;
-    case ConnStatus::connected:
+    case RunStatus::connected:
         if (m_pReconnectTimer->isActive())    m_pReconnectTimer->stop();
         if (!m_isSendRegister01)              sendRegister01();
         break;
-    default: 
-        break;
-    }
-    // 注册状态
-    switch (m_registerStatus)
-    {
-    case RegisterStatus::unRegister:
+    case RunStatus::unRegister:
         if (m_pRequestTimer03->isActive())        m_pRequestTimer03->stop();
         if (m_isSendModuleLocation05)             m_isSendModuleLocation05  = false;
         if (m_isSendModuleConfigure20)            m_isSendModuleConfigure20 = false;
         if (m_isSendRTMFunction825)               m_isSendRTMFunction825 = false;
         if (m_isSendForbiddenIRIList828)          m_isSendForbiddenIRIList828 = false;
-        if (m_timeStatus == TimeStatus::timed)    m_timeStatus = TimeStatus::unTime;
+
+        if (m_runStatus == RunStatus::timed)    m_runStatus = RunStatus::unTime;
         break;
-    case RegisterStatus::registering:
-        break;
-    case RegisterStatus::registered:
+    case RunStatus::registered:
         if (!m_pRequestTimer03->isActive())       m_pRequestTimer03->start(1000);
         if (!m_isSendModuleLocation05)            sendModuleLocation05();
         if (!m_isSendModuleConfigure20)           sendModuleFigure20();
         if (!m_isSendRTMFunction825)              sendRTMFunction825();
         if (!m_isSendForbiddenIRIList828)         sendIRI828();
         break;
-    default:
-        break;
-    }
-    // 对时状态
-    switch (m_timeStatus)
-    {
-    case TimeStatus::unTime: {
+    case RunStatus::unTime: {
         if (m_pModuleStateTimer21->isActive())        m_pModuleStateTimer21->stop();
         if (m_pCPTimer22->isActive())                 m_pCPTimer22->stop();
         if (m_pModuleStatueTimer24->isActive())       m_pModuleStatueTimer24->stop();
@@ -148,8 +133,7 @@ void RTMModule::stateMachine() {
         if (m_pSettingTimer823->isActive())           m_pSettingTimer823->stop();
         break;
     }
-    case TimeStatus::timing: break;
-    case TimeStatus::timed:
+    case RunStatus::timed:
     {
         if (!m_pModuleStateTimer21->isActive())        m_pModuleStateTimer21->start(5000);
         if (!m_pCPTimer22->isActive())                 m_pCPTimer22->start(5000);
@@ -158,7 +142,7 @@ void RTMModule::stateMachine() {
         if (!m_pSettingTimer823->isActive())           m_pSettingTimer823->start(10000);
         break;
     }
-    default:
+    default: 
         break;
     }
 }
@@ -171,16 +155,17 @@ void RTMModule::recvRTMSetting561(const QByteArray& buf) {
     memcpy(&m_oSetting0x823, buf.data() + len1, len2);
     // 4 + 8 * n
     m_freqs823.clear();
-    QVector<FreqAndDFreq> m_freqs823Temp;
+    QVector<FreqAndDFreq> goodFreq;
+    QVector<FreqAndDFreq> badFreq;
     quint16 offset = len1 + len2;
     for(uint32_t i = 0; i < m_oSetting0x823.N; i++) {
         FreqAndDFreq item;
         memcpy(&item, buf.data() + offset, len3);
-        m_freqs823Temp.append(item);
+        goodFreq.append(item);
         offset += len3;
     }
     // 判断收到的频率是否满足要求
-    for(auto& item : m_freqs823Temp) {
+    for(auto& item : goodFreq) {
         bool flag = false;
         for(auto& itemFunc : rtmFuncFreq825) {
             if(item.freq - item.dfreq * 0.5 >= itemFunc.minFreqRTR && 
@@ -191,6 +176,7 @@ void RTMModule::recvRTMSetting561(const QByteArray& buf) {
         }
         // 接收满足功能要求的频率
         if(flag) m_freqs823.append(item);
+        else     badFreq.append(item);
     }
     /* ------------------------------------------------------------------------ */
     quint16 pkgIdx = 0;
@@ -199,7 +185,10 @@ void RTMModule::recvRTMSetting561(const QByteArray& buf) {
              << "pkgSize:"    << buf.length()
              << "N:"          << m_oSetting0x823.N
              << "pkgIdx:"     << pkgIdx;
-    sendControlledOrder23(0, pkgIdx);
+    quint8 code;
+    if(badFreq.isEmpty()) code = 0;
+    else code = 2;
+    sendControlledOrder23(code, pkgIdx);
     sendRTMSettings823();
 }
 
@@ -209,7 +198,6 @@ void RTMModule::sendRTMSettings823() {
     quint8 len2 = sizeof(OSetting0x823);
     qint32 len3 = m_freqs823.size() * sizeof(FreqAndDFreq);
     // 设置,默认初始化
-    m_oSetting0x823.N = 0;
     m_oSetting0x823.curAz = -1;
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x823;
@@ -320,6 +308,7 @@ void RTMModule::recvRequestIRI563(const QByteArray& buf) {
 }
 
 void RTMModule::sendTargetMarker822(OTargetMark0x822& m_oTargetMark0x822) {
+    qDebug() << "send 822";
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(OTargetMark0x822);
     qint64 reqTimestamp = QDateTime::currentMSecsSinceEpoch();

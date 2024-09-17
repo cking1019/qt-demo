@@ -14,10 +14,6 @@ NebulaCommon::NebulaCommon(qint16 id)
     clientPort = commCfg->value(QString("Detector%1/clientPort").arg(id)).toInt();
     qDebug() << QString("Module address is %1:%2").arg(clientAddress).arg(clientPort);
     
-    connect(m_pUdpSock2Nebula, &QUdpSocket::readyRead, this, &NebulaCommon::onRecvUdpData);
-
-    if(!m_pUdpSock2Nebula->bind(clientPort)) qDebug() << QString("UDP bind port %1 fali!!!").arg(clientPort);
-
     // QTimer* mTimer = new QTimer();
     // connect(mTimer, &QTimer::timeout, this, &NebulaCommon::sendUdpData);
     // mTimer->start(1000);
@@ -30,6 +26,34 @@ NebulaCommon::~NebulaCommon()
     
 }
 
+void NebulaCommon::initUdp() {
+    if(m_pUdpSock2Nebula->bind(QHostAddress::LocalHost, clientPort)) {
+        qDebug() << QString("udp bind port %1 successfully").arg(clientPort);
+        m_pUdpSock2Nebula->connectToHost(QHostAddress::LocalHost, nebulaPort);
+    } else {
+        qDebug() << QString("udp bind port %1 fail").arg(clientPort);
+    }
+    
+    connect(m_pUdpSock2Nebula, &QUdpSocket::readyRead, [&](){
+        while (m_pUdpSock2Nebula->hasPendingDatagrams()) {
+            QByteArray buf;
+            buf.resize(m_pUdpSock2Nebula->pendingDatagramSize());
+            QHostAddress sender;
+            quint16 senderPort;
+            m_pUdpSock2Nebula->readDatagram(buf.data(), buf.size(), &sender, &senderPort);
+            qDebug() << QString("Received UDP datagram from %1:%2, recv data:")
+                        .arg(sender.toString())
+                        .arg(senderPort)
+                        << buf.toHex();
+            sendDetectTarget2Ctl(buf);
+        }
+    });
+}
+
+void NebulaCommon::startup() {
+    initUdp();
+}
+
 void NebulaCommon::sendUdpData() {
     QString msg = "hello world";
     QByteArray buf = msg.toUtf8();
@@ -37,15 +61,6 @@ void NebulaCommon::sendUdpData() {
     if(len != -1) qDebug() << "data size:" << len;
 }
 
-void NebulaCommon::onRecvUdpData() {
-    while (m_pUdpSock2Nebula->hasPendingDatagrams()) {
-        QByteArray buf;
-        buf.resize(m_pUdpSock2Nebula->pendingDatagramSize());
-        qint64 len = m_pUdpSock2Nebula->readDatagram(buf.data(), buf.size());
-        qDebug() << buf.toHex();
-        sendDetectTarget2Ctl(buf);
-    }
-}
 
 void NebulaCommon::sendDetectTarget2Ctl(const QByteArray& buf) {
     qint16 len1 = sizeof(DetectHead);
@@ -65,6 +80,7 @@ void NebulaCommon::sendDetectTarget2Ctl(const QByteArray& buf) {
     oTargetMark0x822.timePel1 = reqTimestamp & 0xFFFFFFFF;
     oTargetMark0x822.timePel2 = (reqTimestamp >> 32) & 0xFFFFFFFF;
     emit signalSendDetectTarget2Ctl(oTargetMark0x822);
+    qDebug() << "emit signalSendDetectTarget2Ctl";
 }
 
 }

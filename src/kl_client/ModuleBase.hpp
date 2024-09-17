@@ -28,10 +28,7 @@ void readjsonArray(QString freq);
 
 namespace NEBULA {
 
-enum class ConnStatus{unConnected, connecting, connected};
-enum class RegisterStatus{unRegister, registering, registered};
-enum class TimeStatus{unTime, timing, timed};
-
+enum class RunStatus {unConnected, connected, unRegister, registered, unTime, timed};
 // 包头长度
 const qint8 HEADER_LEN = sizeof(GenericHeader);
 
@@ -43,6 +40,7 @@ class ModuleBase : public QObject {
 	virtual ~ModuleBase();
 	virtual void startup() = 0;
     virtual void onRecvData() = 0;
+    virtual void initTcp();
 	void reqAndResTime(quint64 time1, quint64 time2);
 
 	void sendRegister01();
@@ -55,7 +53,7 @@ class ModuleBase : public QObject {
     void sendModuleCPStatus28();
 	void sendModuleStatus24();
 
-	void sendControlledOrder23(uint8_t code, quint16 pkgId);
+	void sendControlledOrder23(quint8 code, quint16 pkgId);
 
 	void sendLogMsg25(QString msg);
 	void sendNote2Operator26(QString msg);
@@ -90,9 +88,7 @@ protected:
 	QString moduleCfg20;
 
 	// 连接、注册、对时
-	ConnStatus m_connStatus;
-	RegisterStatus m_registerStatus;
-	TimeStatus m_timeStatus;
+    RunStatus m_runStatus;
 
 	// 连接状态,此类协议不是定期发送，因此用bool类型判断是否已发送
 	bool m_isSendRegister01;
