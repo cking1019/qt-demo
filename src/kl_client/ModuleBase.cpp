@@ -36,112 +36,77 @@ void readjsonArray(QString freq) {
             innerList.append(innerValue.toInt());
             qDebug() << innerValue.toInt();
         }
-        
         qDebug() << innerList;
     }
 }
 
 ModuleBase::ModuleBase() {
-    // qDebug() << "this is ModuleBase";
     pkgsComm = {0x2, 0x4, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B};
     m_id = 0;
     m_iStampResult = 0;
     m_iN = 1;
 
-    m_pTcpSocket =           new QTcpSocket(this);
-    m_pReconnectTimer =      new QTimer(this);
-    m_pRequestTimer03 =      new QTimer(this);
-    m_pModuleStateTimer21 =  new QTimer(this);
-    m_pCPTimer22 =           new QTimer(this);
-    m_pModuleStatueTimer24 = new QTimer(this);
-    m_pNPTimer28 =           new QTimer(this);
+    m_pTcpSocket     = new QTcpSocket(this);
+    m_pReconnTimer   = new QTimer(this);
+    m_pReqTimer03    = new QTimer(this);
+    m_pStatusTimer21 = new QTimer(this);
+    m_pCPTimer22     = new QTimer(this);
+    m_pStatusTimer24 = new QTimer(this);
+    m_pNPTimer28     = new QTimer(this);
 
-    connect(m_pRequestTimer03,      &QTimer::timeout, this, &ModuleBase::sendRequestTime03);
-    connect(m_pModuleStateTimer21,  &QTimer::timeout, this, &ModuleBase::sendModuleStatus21);
-    connect(m_pCPTimer22,           &QTimer::timeout, this, &ModuleBase::sendModuleCPStatus22);
-    connect(m_pModuleStatueTimer24, &QTimer::timeout, this, &ModuleBase::sendModuleStatus24);
-    connect(m_pNPTimer28,           &QTimer::timeout, this, &ModuleBase::sendModuleCPStatus28);
-
+    connect(m_pReqTimer03,     &QTimer::timeout, this, &ModuleBase::sendRequestTime03);
+    connect(m_pStatusTimer21,  &QTimer::timeout, this, &ModuleBase::sendModuleStatus21);
+    connect(m_pCPTimer22,      &QTimer::timeout, this, &ModuleBase::sendModuleCPStatus22);
+    connect(m_pStatusTimer24,  &QTimer::timeout, this, &ModuleBase::sendModuleStatus24);
+    connect(m_pNPTimer28,      &QTimer::timeout, this, &ModuleBase::sendModuleCPStatus28);
 
     m_runStatus = RunStatus::unConnected;
     // 只需发送一次
-    m_isSendRegister01 =          false;
-    m_isSendModuleLocation05 =    false;
-    m_isSendModuleConfigure20 =   false;
+    m_isSendRegister01 = false;
+    m_isSendLocation05 = false;
+    m_isSendConf20     = false;
 
     m_ModuleGeoLocation0x5.typeData = 1;
-    m_ModuleGeoLocation0x5.isValid = 1;
-    m_ModuleGeoLocation0x5.xLat = 10;
-    m_ModuleGeoLocation0x5.yLong = 20;
-    m_ModuleGeoLocation0x5.zHeight = 30;
+    m_ModuleGeoLocation0x5.isValid  = 1;
+    m_ModuleGeoLocation0x5.xLat     = 10;
+    m_ModuleGeoLocation0x5.yLong    = 20;
+    m_ModuleGeoLocation0x5.zHeight  = 30;
 
-    m_oModuleStatus0x24.status = 1;
-    m_oModuleStatus0x24.work = 1;
-    m_oModuleStatus0x24.isRGDV = 1;  // 被控参数
-    m_oModuleStatus0x24.isRAF = 1;   // 被控参数
-    m_oModuleStatus0x24.isLocal = 0;
-    m_oModuleStatus0x24.isImit = 0;
-    m_oModuleStatus0x24.hasTP = 0;
-    m_oModuleStatus0x24.isTP = 0;
-    m_oModuleStatus0x24.isWP = 0;
+    m_oModuleStatus0x24.status    = 1;
+    m_oModuleStatus0x24.work      = 1;
+    m_oModuleStatus0x24.isRGDV    = 1;   // 被控参数
+    m_oModuleStatus0x24.isRAF     = 1;   // 被控参数
+    m_oModuleStatus0x24.isLocal   = 0;
+    m_oModuleStatus0x24.isImit    = 0;
+    m_oModuleStatus0x24.hasTP     = 0;
+    m_oModuleStatus0x24.isTP      = 0;
+    m_oModuleStatus0x24.isWP      = 0;
     m_oModuleStatus0x24.isTPValid = 0;
     m_oModuleStatus0x24.isWpValid = 0;
     m_oModuleStatus0x24.statusTwp = 0;
-    m_oModuleStatus0x24.mode = 0;
+    m_oModuleStatus0x24.mode      = 0;
 
     commCfgini = new QSettings(COMM_CFG, QSettings::IniFormat);
     serverAddress  = commCfgini->value("VOI/serverAddress").toString();
     serverPort     = commCfgini->value("VOI/serverPort").toInt();
-    moduleCfg20    = readJson(commCfgini->value("Detector/devconfig20").toString());
-    m_isDebugOut   = commCfgini->value("Detector/debugOut").toBool();
-
-    // 读取0x20配置信息
-    QJsonDocument jsonDocument = QJsonDocument::fromJson(moduleCfg20.toUtf8());
-    QVariantList list = jsonDocument.toVariant().toList();
-    for(int i = 0; i < list.count(); i++) {
-        // 读取0x20中的元素配置
-        OElemStatus0x21 item;
-        QVariantMap map = list[i].toMap();
-        item.IDElem = map["IDElem"].toInt();
-        m_vecOElemStatus0x21.append(item);
-        // 解析0x22cp参数
-        QVariantList cpList = map["Params"].toList();
-        for(int j = 0; j < cpList.count(); j++) {
-            QVariantMap map2 = cpList[j].toMap();
-            OCPStatus0x22 item;
-            item.IDParam = map2["IDParam"].toInt();
-            item.n_val = 2;
-            item.status = 4;
-            m_vecOCPStatus0x22.append(item);
-        }
-        // 解析0x28np参数
-        QVariantList npList = map["ConfigParam"].toList();
-        for(int j = 0; j < npList.count(); j++) {
-            QVariantMap map2 = npList[j].toMap();
-            CustomisedNP0x28 item;
-            item.IDParam = map2["IDConfigParam"].toInt();
-            item.np_v = 1;
-            item.size = 4;
-            m_vecCustomisedNP0x28.append(item);
-        }
-    }
+    m_isDebugOut   = commCfgini->value("Common/debugOut").toBool();
 }
 
 ModuleBase::~ModuleBase() {
-    if (m_pTcpSocket != nullptr)              delete m_pTcpSocket;
-    if (m_pReconnectTimer != nullptr)         delete m_pReconnectTimer;
+    if (m_pTcpSocket != nullptr)        delete m_pTcpSocket;
+    if (m_pReconnTimer != nullptr)      delete m_pReconnTimer;
 
-    if (m_pRequestTimer03 != nullptr)         delete m_pRequestTimer03;
-    if (m_pModuleStateTimer21 != nullptr)     delete m_pModuleStateTimer21;
-    if (m_pCPTimer22 != nullptr)              delete m_pCPTimer22;
-    if (m_pModuleStatueTimer24 != nullptr)    delete m_pModuleStatueTimer24;
-    if (m_pNPTimer28 != nullptr)              delete m_pNPTimer28;
+    if (m_pReqTimer03 != nullptr)       delete m_pReqTimer03;
+    if (m_pStatusTimer21 != nullptr)    delete m_pStatusTimer21;
+    if (m_pCPTimer22 != nullptr)        delete m_pCPTimer22;
+    if (m_pStatusTimer24 != nullptr)    delete m_pStatusTimer24;
+    if (m_pNPTimer28 != nullptr)        delete m_pNPTimer28;
 }
 
 void ModuleBase::initTcp() {
-    connect(m_pReconnectTimer, &QTimer::timeout, [&](){
+    connect(m_pReconnTimer, &QTimer::timeout, [&](){
         while (!m_pTcpSocket->waitForConnected(1000)) {
-            // qDebug() << "Attempting to connect...";
+            qDebug() << "Attempting to connect...";
             m_pTcpSocket->connectToHost(serverAddress, serverPort);
         }
         // qDebug() << "connect successfully";
@@ -298,7 +263,7 @@ void ModuleBase::recvRequestTime04(const QByteArray& buf) {
 void ModuleBase::sendModuleLocation05() {
     quint8 len1 = HEADER_LEN;
     quint8 len2 = sizeof(ModuleGeoLocation0x5);
-    m_isSendModuleLocation05 = true;
+    m_isSendLocation05 = true;
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x5;
     m_genericHeader.dataSize = len2;
@@ -326,7 +291,7 @@ void ModuleBase::recvRequestModuleFigure46(const QByteArray& buf) {
 void ModuleBase::sendModuleFigure20() {
     quint8  len1 = HEADER_LEN;
     quint16 len2 = moduleCfg20.length();
-    m_isSendModuleConfigure20 = true;
+    m_isSendConf20 = true;
     /* ------------------------------------------------------------------------ */
     m_genericHeader.packType = 0x20;
     m_genericHeader.dataSize = len2;

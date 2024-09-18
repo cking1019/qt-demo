@@ -10,12 +10,10 @@ class ModuleCore : public QObject
 {
 Q_OBJECT
  private:
-    QVector<RTMModule*> rtmVec;
-    QVector<PRUEModule*> prueVec;
+    QVector<QThread*> m_threadVec;
  public:
     ModuleCore(/* args */);
     ~ModuleCore();
-    void init();
 };
 
 }  // namespace NEBULA

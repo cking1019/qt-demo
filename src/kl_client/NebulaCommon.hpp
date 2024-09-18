@@ -37,7 +37,7 @@ public:
 public slots:
     
 signals:
-    void signalSendDetectTarget2Ctl(OTargetMark0x822& oTargetMark0x822);
+    void signalSendDetectTarget2Ctl(OTarget822& oTarget822);
 };
 }
 

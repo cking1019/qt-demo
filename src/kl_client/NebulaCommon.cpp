@@ -5,15 +5,14 @@ namespace NEBULA {
 NebulaCommon::NebulaCommon(qint16 id)
 {
     commCfg = new QSettings(COMM_CFG, QSettings::IniFormat);
+    commCfg->setIniCodec(QTextCodec::codecForName("utf-8"));
     m_pUdpSock2Nebula = new QUdpSocket(this);
 
-    commCfg->setIniCodec(QTextCodec::codecForName("utf-8"));
     nebulaAddress = commCfg->value("Nebula/nebulaAddress").toString();
-    nebulaPort = commCfg->value("Nebula/nebulaPort").toInt();
+    nebulaPort    = commCfg->value("Nebula/nebulaPort").toInt();
     clientAddress = commCfg->value(QString("Detector%1/clientAddress").arg(id)).toString();
-    clientPort = commCfg->value(QString("Detector%1/clientPort").arg(id)).toInt();
-    qDebug() << QString("Module address is %1:%2").arg(clientAddress).arg(clientPort);
-    
+    clientPort    = commCfg->value(QString("Detector%1/clientPort").arg(id)).toInt();
+    // qDebug() << QString("RTM address is %1:%2").arg(clientAddress).arg(clientPort);
     // QTimer* mTimer = new QTimer();
     // connect(mTimer, &QTimer::timeout, this, &NebulaCommon::sendUdpData);
     // mTimer->start(1000);
@@ -23,12 +22,11 @@ NebulaCommon::~NebulaCommon()
 {
     if(m_pUdpSock2Nebula != nullptr) delete m_pUdpSock2Nebula;
     if(commCfg != nullptr)           delete commCfg;
-    
 }
 
 void NebulaCommon::initUdp() {
     if(m_pUdpSock2Nebula->bind(QHostAddress::LocalHost, clientPort)) {
-        qDebug() << QString("udp bind port %1 successfully").arg(clientPort);
+        // qDebug() << QString("udp bind port %1 successfully").arg(clientPort);
         m_pUdpSock2Nebula->connectToHost(QHostAddress::LocalHost, nebulaPort);
     } else {
         qDebug() << QString("udp bind port %1 fail").arg(clientPort);
@@ -73,14 +71,13 @@ void NebulaCommon::sendDetectTarget2Ctl(const QByteArray& buf) {
     memcpy(&detectTargetData, buf.data() + len1, len2);
     memcpy(&detectHead, buf.data() + len1 + len2, len3);
 
-    OTargetMark0x822 oTargetMark0x822;
-    oTargetMark0x822.azim = detectTargetData.tDataAfter.tAzimuth;
-    oTargetMark0x822.freqMhz = detectTargetData.tDataAfter.tFrequency;
+    OTarget822 oTarget822;
+    oTarget822.azim = detectTargetData.tDataAfter.tAzimuth;
+    oTarget822.freqMhz = detectTargetData.tDataAfter.tFrequency;
     qint64 reqTimestamp = QDateTime::currentMSecsSinceEpoch();
-    oTargetMark0x822.timePel1 = reqTimestamp & 0xFFFFFFFF;
-    oTargetMark0x822.timePel2 = (reqTimestamp >> 32) & 0xFFFFFFFF;
-    emit signalSendDetectTarget2Ctl(oTargetMark0x822);
-    qDebug() << "emit signalSendDetectTarget2Ctl";
+    oTarget822.timePel1 = reqTimestamp & 0xFFFFFFFF;
+    oTarget822.timePel2 = (reqTimestamp >> 32) & 0xFFFFFFFF;
+    emit signalSendDetectTarget2Ctl(oTarget822);
 }
 
 }

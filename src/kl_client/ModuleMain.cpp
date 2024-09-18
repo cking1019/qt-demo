@@ -75,7 +75,6 @@ int main(int argc, char *argv[])
 
     // 启动模块单元控制器
     NEBULA::ModuleCore moduleCore;
-    moduleCore.init();
     
     return a.exec();
 }

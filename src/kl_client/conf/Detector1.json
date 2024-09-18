@@ -1,0 +1,50 @@
+[
+    {
+        "IDElem": 0,
+        "Name": "Detector",
+        "ShortName": "Detector",
+        "Params": [
+            {
+                "IDParam": 0,
+                "Name": "status",
+                "Type": 2,
+                "Template": [
+                    {
+                        "Value": 0,
+                        "Text": "OpenDevice"
+                    },
+                    {
+                        "Value": 1,
+                        "Text": "ParamInit"
+                    },
+                    {
+                        "Value": 2,
+                        "Text": "PrepareWork"
+                    }
+                ]
+            }
+        ],
+        "ConfigParam": [
+            {
+                "IDConfigParam": 0,
+                "NameConfig": "Open Unknow Target Detect",
+                "TypeConfig": 1,
+                "IsSave": true,
+                "Values": [
+                    "Open",
+                    "Close"
+                ]
+            },
+            {
+                "IDConfigParam": 1,
+                "NameConfig": "target type",
+                "TypeConfig": 1,
+                "IsSave": true,
+                "Values": [
+                    "Open",
+                    "Close"
+                ]
+            }
+        ]
+    }
+]

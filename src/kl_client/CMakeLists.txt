@@ -21,5 +21,6 @@ file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/release/conf/)
 add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_LIST_DIR}/conf/common.ini ${CMAKE_SOURCE_DIR}/release/conf/
-        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_LIST_DIR}/conf/Detect.json ${CMAKE_SOURCE_DIR}/release/conf/
+        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_LIST_DIR}/conf/Detector1.json ${CMAKE_SOURCE_DIR}/release/conf/
+        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_LIST_DIR}/conf/Jammer1.json ${CMAKE_SOURCE_DIR}/release/conf/
 )

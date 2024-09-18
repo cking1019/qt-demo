@@ -41,6 +41,7 @@ class ModuleBase : public QObject {
 	virtual void startup() = 0;
     virtual void onRecvData() = 0;
     virtual void initTcp();
+	
 	void reqAndResTime(quint64 time1, quint64 time2);
 
 	void sendRegister01();
@@ -92,16 +93,16 @@ protected:
 
 	// 连接状态,此类协议不是定期发送，因此用bool类型判断是否已发送
 	bool m_isSendRegister01;
-	bool m_isSendModuleLocation05;
-	bool m_isSendModuleConfigure20;
+	bool m_isSendLocation05;
+	bool m_isSendConf20;
 	
 
 	// 再次连接定时器器
-	QTimer* m_pReconnectTimer;
-	QTimer* m_pRequestTimer03;
+	QTimer* m_pReconnTimer;
+	QTimer* m_pReqTimer03;
 	
-	QTimer* m_pModuleStatueTimer24;
-	QTimer* m_pModuleStateTimer21;
+	QTimer* m_pStatusTimer24;
+	QTimer* m_pStatusTimer21;
 	QTimer* m_pCPTimer22;
 	QTimer* m_pNPTimer28;
 
@@ -122,8 +123,6 @@ protected:
 	qint64 m_iStampResult;
 	// 时间间隔
 	quint64 m_iN;
- signals:
-	void signals_msg();
 
  public slots:
 	// 接收服务器数据

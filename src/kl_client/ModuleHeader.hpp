@@ -259,7 +259,7 @@ struct ReqSettingCustomizedParam0x4B {
 
 // ==================RTM===========================================
 // 0x822，目标标记
-struct OTargetMark0x822
+struct OTarget822
 {
     uint32_t idxCeilVOI :16;
     uint32_t iReserve   :16;
@@ -309,7 +309,7 @@ struct RTMFuncFreq {
 };
 
 // 0x828,禁用IRI列表
-struct OSetBanIRIlist0x828 {
+struct OSetIRI0x828 {
     // IRI的数量
     uint32_t NIRI :8;
     uint32_t reserve :24;
