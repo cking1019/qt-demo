@@ -79,7 +79,7 @@ PRUEModule::PRUEModule(qint16 id) {
             OTrapFunc0xD22_2 freq;
             freq.minFreqREB = match.captured(1).toFloat();
             freq.maxFreqREB = match.captured(2).toFloat();
-            freq.maxDFreq = match.captured(3).toFloat();
+            freq.maxDFreq   = match.captured(3).toFloat();
             m_vecFuncD22.append(freq);
         }
     } 
@@ -90,8 +90,8 @@ PRUEModule::PRUEModule(qint16 id) {
 }
 
 PRUEModule::~PRUEModule() {
-    if (m_pStateMachineTimer == nullptr) delete m_pStateMachineTimer;
-    if (m_pSettingTimerD21 == nullptr)   delete m_pSettingTimerD21;
+    if (m_pStateMachineTimer != nullptr) delete m_pStateMachineTimer;
+    if (m_pSettingTimerD21 != nullptr)   delete m_pSettingTimerD21;
 }
 
 void PRUEModule::startup() {

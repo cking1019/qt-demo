@@ -214,8 +214,6 @@ struct ServerUpdate0x44 {
 struct Note2Oprator450x45 {
     uint32_t time1;
     uint32_t time2;
-    
-    // msg
 };
 
 // 0x48
@@ -256,9 +254,8 @@ struct ReqSettingCustomizedParam0x4B {
     uint32_t npVal   :32; // 如果20中传输了np value的可能值数组，那么设置为4
 };
 
-
 // ==================RTM===========================================
-// 0x822，目标标记
+// 0x822,目标标记
 struct OTarget822
 {
     uint32_t idxCeilVOI :16;
@@ -282,37 +279,35 @@ struct OTarget822
     float Pow_dBm;
     float SNR_dB;
 };
-
+//********************************** */
 // 0x823,RTM设置
 struct OSetting0x823 {
-    // 频段数量
-    uint32_t N    :8; 
+    uint32_t N       :8; 
     uint32_t reserve :24;
 
     float curAz;
 };
-
 // 0x825,RTM功能
 struct OFunc0x825 {
-    uint32_t isRotate   :1;
-    uint32_t maxTasks    :7;
-    uint32_t numDiap :8;
-    uint32_t n_Rezerv     :16;
+    uint32_t isRotate :1;
+    uint32_t maxTasks :7;
+    uint32_t numDiap  :8;
+    uint32_t n_Rezerv :16;
 
     float dAz;
     float dElev;
 };
-// RTM功能的所有最小最大频率
-struct RTMFuncFreq {
-    float minFreqRTR;
-    float maxFreqRTR;
-};
-
+//********************************** */
 // 0x828,禁用IRI列表
 struct OSetIRI0x828 {
     // IRI的数量
     uint32_t NIRI :8;
     uint32_t reserve :24;
+};
+
+struct RTMFuncFreq {
+    float minFreqRTR;
+    float maxFreqRTR;
 };
 
 // ==================PRUE===========================================
@@ -326,11 +321,13 @@ struct OTrapSettings0xD21 {
     float curEpsREB;
     float kGainREB;
 };
+// taskREB决定数量
 struct OTrapSettings0xD21_1 {
     float curFreq;
     float curPow;
     float curDFreq;
 };
+// taskGeo决定是否发送
 struct OTrapSettings0xD21_2 {
     uint32_t time1;
     uint32_t time2;
@@ -365,31 +362,7 @@ struct OTrapFunc0xD22_2 {
     float maxDFreq;
 };
 //********************************** */
-// 0xD01-0x201,发送已安装的辐射禁止扇区或接收设置辐射禁止扇区
-struct OTrapBanSectorD01 {
-    uint32_t time1;
-    uint32_t time2;
-
-    uint32_t num     :8;
-    uint32_t reserve :24;
-};
-struct OTrapBanSectorD01_1 {
-    uint32_t type       :1;
-    uint32_t isUse      :1;
-    uint32_t isUseEps   :1;
-    uint32_t isUseFrep  :1;
-    uint32_t reserve   :28;
-
-    float AzBegin;
-    float AzEnd;
-    float EpsBegin;
-    float EpsEnd;
-    float Freq;
-    float delFreq;
-};
-
-//********************************** */
-// 0x601,接收更改当前PRUE设置
+// 0x601,接收更改PRUE设置
 struct ORecvSetting0x601 {
     uint32_t N   :8;
     uint32_t taskREB :8;
@@ -399,10 +372,12 @@ struct ORecvSetting0x601 {
     float elevREB;
     float kGainREB;
 };
+// N字段决定数量
 struct FreqAndDFreq {
     float freq;
     float dfreq;
 };
+// taskREB=2or3发送
 struct NavigationInfluence601 {
     uint32_t flags;
     float latitude;
@@ -412,8 +387,31 @@ struct NavigationInfluence601 {
     float course;
 };
 //********************************** */
+// 0xD01-0x201,发送禁止干扰扇区或接收禁止干扰扇区
+struct OTrapBanSectorD01 {
+    uint32_t time1;
+    uint32_t time2;
 
-// 0x202,接收设置辐射禁止
+    uint32_t num     :8;
+    uint32_t reserve :24;
+};
+// num字段决定数量
+struct OTrapBanSectorD01_1 {
+    uint32_t type       :1;
+    uint32_t isUse      :1;
+    uint32_t isUseEps   :1;
+    uint32_t isUseFrep  :1;
+    uint32_t reserve    :28;
+
+    float AzBegin;
+    float AzEnd;
+    float EpsBegin;
+    float EpsEnd;
+    float Freq;
+    float delFreq;
+};
+//********************************** */
+// 0x202,接收干扰控制开关
 struct OTrapRadiationBan0x202 {
     uint32_t time1;
     uint32_t time2;

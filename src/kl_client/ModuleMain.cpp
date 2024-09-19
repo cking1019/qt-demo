@@ -3,8 +3,10 @@
 #include "NebulaCommon.hpp"
 #include "RTMModule.hpp"
 #include "PRUEModule.hpp"
-#include "ModuleCore.hpp"
 // using namespace CUR_NAMESPACE;
+using namespace NEBULA;
+
+QVector<QThread*> m_threadVec;
 
 // 写日志功能
 void MessWriteLog(QtMsgType type, const QMessageLogContext &context, const QString &msg)
@@ -52,29 +54,50 @@ void MessWriteLog(QtMsgType type, const QMessageLogContext &context, const QStri
     mutex.unlock();
 }
 
-// class MyApplication : public QCoreApplication {
-// public:
-//     using QCoreApplication::QCoreApplication;
-
-// protected:
-//     bool event(QEvent *event) override {
-//         if (event->type() == QEvent::ApplicationActivate) {
-//             qDebug() << "应用程序被激活";
-//         } else if (event->type() == QEvent::ApplicationDeactivate) {
-//             qDebug() << "应用程序失去焦点";
-//         }
-//         return QCoreApplication::event(event);
-//     }
-// };
-
-
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     qInstallMessageHandler(MessWriteLog);//安装消息处理程序
 
-    // 启动模块单元控制器
-    NEBULA::ModuleCore moduleCore;
+    auto commCfg = new QSettings(COMM_CFG, QSettings::IniFormat);
+    commCfg->setIniCodec(QTextCodec::codecForName("utf-8"));
+    qDebug() << QString("VOI    Server: %1:%2").arg(commCfg->value("VOI/serverAddress").toString())
+                                               .arg(commCfg->value("VOI/serverPort").toInt());
+    qDebug() << QString("Nebula Server: %1:%2").arg(commCfg->value("Nebula/nebulaAddress").toString())
+                                               .arg(commCfg->value("Nebula/nebulaPort").toInt());
     
+    // 侦测设备配置
+    for (qint16 id = 1; id <= commCfg->value("Common/DetectorNum").toInt(); id++) {
+        auto rtmModule = new RTMModule(id);
+        auto rtmNebula = new NebulaCommon(id);
+        auto *workerThreadTcp = new QThread();
+        auto *workerThreadUdp = new QThread();
+        rtmModule->moveToThread(workerThreadTcp);
+        rtmNebula->moveToThread(workerThreadUdp);
+
+        // Qt::BlockingQueuedConnection，槽函数会在信号发射的线程上阻塞执行，直到槽函数执行完毕。
+        QObject::connect(rtmNebula, &NebulaCommon::signalSendDetectTarget2Ctl, rtmModule, &RTMModule::sendTarget822, Qt::BlockingQueuedConnection);
+        QObject::connect(workerThreadTcp, &QThread::started, rtmModule, &RTMModule::startup);
+        QObject::connect(workerThreadUdp, &QThread::started, rtmNebula, &NebulaCommon::startup);
+        m_threadVec.append(workerThreadTcp);
+        m_threadVec.append(workerThreadUdp);
+    }
+
+    // 干扰设备配置
+    for (qint16 id = 1; id <= commCfg->value("Common/JammerNum").toInt(); id++) {
+        auto prueModule = new PRUEModule(id);
+        // auto rtmNebula = new NebulaCommon(id);
+        auto *workerThreadTcp = new QThread();
+        prueModule->moveToThread(workerThreadTcp);
+        QObject::connect(workerThreadTcp, &QThread::started, prueModule, &PRUEModule::startup);
+        m_threadVec.append(workerThreadTcp);
+    }
+
+    for(auto& item : m_threadVec) 
+    {
+        item->start();
+        QThread::msleep(1000);
+    }
+
     return a.exec();
 }

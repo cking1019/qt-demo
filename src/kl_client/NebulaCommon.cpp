@@ -39,10 +39,7 @@ void NebulaCommon::initUdp() {
             QHostAddress sender;
             quint16 senderPort;
             m_pUdpSock2Nebula->readDatagram(buf.data(), buf.size(), &sender, &senderPort);
-            qDebug() << QString("Received UDP datagram from %1:%2, recv data:")
-                        .arg(sender.toString())
-                        .arg(senderPort)
-                        << buf.toHex();
+            qDebug() << QString("Received UDP datagram from %1:%2, recv data:").arg(sender.toString()).arg(senderPort)<< buf.toHex();
             sendDetectTarget2Ctl(buf);
         }
     });

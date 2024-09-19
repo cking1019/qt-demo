@@ -104,18 +104,18 @@ ModuleBase::~ModuleBase() {
 }
 
 void ModuleBase::initTcp() {
-    connect(m_pReconnTimer, &QTimer::timeout, [&](){
-        while (!m_pTcpSocket->waitForConnected(1000)) {
-            qDebug() << "Attempting to connect...";
+    connect(m_pReconnTimer, &QTimer::timeout, [=](){
+        while (!m_pTcpSocket->waitForConnected()) {
+            // qDebug() << "Attempting to connect...";
             m_pTcpSocket->connectToHost(serverAddress, serverPort);
         }
         // qDebug() << "connect successfully";
     });
-    connect(m_pTcpSocket, &QTcpSocket::connected, [&](){
+    connect(m_pTcpSocket, &QTcpSocket::connected, [=](){
         qDebug() << "Connected to host!";
         m_runStatus = RunStatus::connected;
     });
-    connect(m_pTcpSocket, &QTcpSocket::disconnected, [&](){
+    connect(m_pTcpSocket, &QTcpSocket::disconnected, [=](){
         // abort -> close -> disconnectFromHost
         qDebug() << "Disconnected from server!";
         m_runStatus = RunStatus::unConnected;
