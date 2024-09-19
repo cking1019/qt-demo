@@ -49,11 +49,12 @@ elseif (WIN32)
     message(STATUS "build in Windows")
 endif ()
 
-find_package(Qt5 COMPONENTS Core Network REQUIRED)
+find_package(Qt5 COMPONENTS Core Network Gui Widgets REQUIRED)
 
 add_subdirectory(src/kl_client)
 add_subdirectory(src/kl_test)
+add_subdirectory(src/kl_ui)
 
 add_custom_target(${PROJECT_NAME} ALL 
-                    DEPENDS Nebula.RelayModuleCK Nebula.test 
+                    DEPENDS Nebula.RelayModuleCK Nebula.test Nebula.ui
                     COMMENT "cmake is building target")
