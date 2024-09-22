@@ -35,7 +35,7 @@ RTMModule::RTMModule(qint16 id) {
             QVariantMap map2 = cpList[j].toMap();
             OCPStatus0x22 item;
             item.IDParam = map2["IDParam"].toInt();
-            item.n_val = 2;
+            item.n_val  = 2;
             item.status = 4;
             m_vecOCPStatus0x22.append(item);
         }
@@ -51,12 +51,12 @@ RTMModule::RTMModule(qint16 id) {
         }
     }
     // 设置823
-    m_oSetting0x823.N     = 0;
+    m_oSetting0x823.N     =  0;
     m_oSetting0x823.curAz = -1;
     m_freqs823 = {};
     // 功能825
-    m_oFunc0x825.isRotate = 0;
-    m_oFunc0x825.maxTasks = 6;
+    m_oFunc0x825.isRotate =  0;
+    m_oFunc0x825.maxTasks =  6;
     m_oFunc0x825.dAz      = -1;
     m_oFunc0x825.dElev    = -1;
     m_vecFunc825 = {};
@@ -79,8 +79,8 @@ RTMModule::RTMModule(qint16 id) {
 }
 
 RTMModule::~RTMModule() {
-    if (m_pStateMachineTimer == nullptr)       delete m_pStateMachineTimer;
-    if (m_pSettingTimer823 == nullptr)         delete m_pSettingTimer823;
+    delete m_pStateMachineTimer;
+    delete m_pSettingTimer823;
 }
 
 // 设备启动，开始与服务器建立连接
@@ -99,7 +99,8 @@ void RTMModule::onRecvData() {
     // }
     // 非阻塞
     if(m_pTcpSocket->bytesAvailable() > 0) {
-        buf = m_pTcpSocket->read(m_pTcpSocket->bytesAvailable());
+        buf = m_pTcpSocket->readAll();
+        // buf = m_pTcpSocket->read(m_pTcpSocket->bytesAvailable());
     }
     quint16 pkgID = 0;
     memcpy(&pkgID, buf.data() + 12, 2);

@@ -5,7 +5,7 @@ message(STATUS "源码路径：${CMAKE_CURRENT_SOURCE_DIR}")
 
 # 关闭控制台显示
 if(WIN32)
-    set(CMAKE_WIN32_EXECUTABLE true)
+    # set(CMAKE_WIN32_EXECUTABLE true)
 endif()
 
 include_directories(

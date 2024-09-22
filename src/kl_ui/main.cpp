@@ -5,39 +5,40 @@
 #include <QFormLayout>
 #include <QtDebug>
 #include <QMessageBox>
-
+#include "ui_login.h"
+#include "ui_stuwin.h"
+using namespace Ui;
 
 int main(int argc, char *argv[])
 {
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication a(argc, argv);
-    QWidget window;
-    window.resize(720, 480);
-    window.setWindowTitle("Login Window");
 
-    QLineEdit *usernameEdit = new QLineEdit(&window);
-    QLineEdit *passwordEdit = new QLineEdit(&window);
-    passwordEdit->setEchoMode(QLineEdit::Password);
+    QMainWindow widget;
+    MainWindow ui_mainWindow;
+    ui_mainWindow.setupUi(&widget);
 
-    QPushButton *loginButton = new QPushButton("Login", &window);
-    QObject::connect(loginButton, &QPushButton::clicked, [&](){
-        QString username = usernameEdit->text();
-        QString password = passwordEdit->text();
+    QWidget formWidget;
+    Form ui_subWindow;
+    ui_subWindow.setupUi(&formWidget);
+
+    // ui_mainWindow.setupUi(&widget);
+    QObject::connect(ui_mainWindow.loginBtn, &QPushButton::clicked, [&](){
+        QString username = ui_mainWindow.accountEd->text();
+        QString password = ui_mainWindow.passwdEd->text();
 
         if(username == "admin" && password == "123456") {
-            QMessageBox::information(&window, "Login", "Login successful!");
+            QMessageBox::information(&widget, "Login", "Login successful!");
+            formWidget.setWindowTitle("student windows");
+            formWidget.show();
         } else {
-            QMessageBox::critical(&window, "Login", "Invalid username or password.");
-        }
+            QMessageBox::critical(&widget, "Login", "Invalid username or password.");
+        }}
+    );
+    QObject::connect(ui_mainWindow.registerBtn, &QPushButton::clicked, [&](){
+        qDebug() << "regesiter";
     });
-
-    QFormLayout *layout = new QFormLayout;
-    layout->addRow("Username:", usernameEdit);
-    layout->addRow("Password:", passwordEdit);
-    layout->addWidget(loginButton);
-
-    window.setLayout(layout);
-
-    window.show();
+    
+    widget.show();
     return a.exec();
 }

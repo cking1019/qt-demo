@@ -12,16 +12,12 @@ NebulaCommon::NebulaCommon(qint16 id)
     nebulaPort    = commCfg->value("Nebula/nebulaPort").toInt();
     clientAddress = commCfg->value(QString("Detector%1/clientAddress").arg(id)).toString();
     clientPort    = commCfg->value(QString("Detector%1/clientPort").arg(id)).toInt();
-    // qDebug() << QString("RTM address is %1:%2").arg(clientAddress).arg(clientPort);
-    // QTimer* mTimer = new QTimer();
-    // connect(mTimer, &QTimer::timeout, this, &NebulaCommon::sendUdpData);
-    // mTimer->start(1000);
 }
 
 NebulaCommon::~NebulaCommon()
 {
-    if(m_pUdpSock2Nebula != nullptr) delete m_pUdpSock2Nebula;
-    if(commCfg != nullptr)           delete commCfg;
+    delete m_pUdpSock2Nebula;
+    delete commCfg;
 }
 
 void NebulaCommon::initUdp() {

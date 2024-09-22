@@ -90,8 +90,8 @@ PRUEModule::PRUEModule(qint16 id) {
 }
 
 PRUEModule::~PRUEModule() {
-    if (m_pStateMachineTimer != nullptr) delete m_pStateMachineTimer;
-    if (m_pSettingTimerD21 != nullptr)   delete m_pSettingTimerD21;
+    delete m_pStateMachineTimer;
+    delete m_pSettingTimerD21;
 }
 
 void PRUEModule::startup() {

@@ -93,14 +93,13 @@ ModuleBase::ModuleBase() {
 }
 
 ModuleBase::~ModuleBase() {
-    if (m_pTcpSocket != nullptr)        delete m_pTcpSocket;
-    if (m_pReconnTimer != nullptr)      delete m_pReconnTimer;
-
-    if (m_pReqTimer03 != nullptr)       delete m_pReqTimer03;
-    if (m_pStatusTimer21 != nullptr)    delete m_pStatusTimer21;
-    if (m_pCPTimer22 != nullptr)        delete m_pCPTimer22;
-    if (m_pStatusTimer24 != nullptr)    delete m_pStatusTimer24;
-    if (m_pNPTimer28 != nullptr)        delete m_pNPTimer28;
+    delete m_pTcpSocket;
+    delete m_pReconnTimer;
+    delete m_pReqTimer03;
+    delete m_pStatusTimer21;
+    delete m_pCPTimer22;
+    delete m_pStatusTimer24;
+    delete m_pNPTimer28;
 }
 
 void ModuleBase::initTcp() {
@@ -126,14 +125,14 @@ void ModuleBase::initTcp() {
 // 接收数据
 void ModuleBase::onReadCommData(qint16 pkgID, const QByteArray& buf) {
     switch (pkgID) {
-        case 0x02: recvRegister02(buf); break;
-        case 0x04: recvRequestTime04(buf); break;
-        case 0x45: recvNote4Operator45(buf); break;
+        case 0x02: recvRegister02(buf);            break;
+        case 0x04: recvRequestTime04(buf);         break;
+        case 0x45: recvNote4Operator45(buf);       break;
         case 0x46: recvRequestModuleFigure46(buf); break;
-        case 0x48: recvRadioAndSatellite48(buf); break;
-        case 0x49: recvSettingTime49(buf); break;
-        case 0x4A: recvModuleLocation4A(buf); break;
-        case 0x4B: recvCustomizedParam4B(buf); break;
+        case 0x48: recvRadioAndSatellite48(buf);   break;
+        case 0x49: recvSettingTime49(buf);         break;
+        case 0x4A: recvModuleLocation4A(buf);      break;
+        case 0x4B: recvCustomizedParam4B(buf);     break;
         default: break;
     }
 }
@@ -175,12 +174,12 @@ void ModuleBase::recvRegister02(const QByteArray& buf) {
     m_genericHeader.moduleId = ServerRegister0x2.idxModule;
     switch (ServerRegister0x2.errorConnect) {
         case 0x1:  sendLogMsg25("execeed the limited number of same type device"); break;
-        case 0x2:  sendLogMsg25("try to reconnect same device"); break;
-        case 0x4:  sendLogMsg25("don't support the device type"); break;
-        case 0x8:  sendLogMsg25("don't support the prototal version"); break;
-        case 0x10: sendLogMsg25("module id is not be supported"); break;
+        case 0x2:  sendLogMsg25("try to reconnect same device");                   break;
+        case 0x4:  sendLogMsg25("don't support the device type");                  break;
+        case 0x8:  sendLogMsg25("don't support the prototal version");             break;
+        case 0x10: sendLogMsg25("module id is not be supported");                  break;
         case 0x20:
-        case 0x40: qDebug() << "unknown error"; break;
+        case 0x40: qDebug() << "unknown error";                                    break;
         case 0x0: {
             m_genericHeader.moduleId = ServerRegister0x2.idxModule;
             m_runStatus = RunStatus::registered;
@@ -190,9 +189,9 @@ void ModuleBase::recvRegister02(const QByteArray& buf) {
             qDebug("fail to register");
         }
     }
-    qDebug() << "recv 0x002:" << buf.toHex()
-             << "pkgSize:"    << buf.length()
-             << "moduleID: "  << QString::number(ServerRegister0x2.idxModule, 16)
+    qDebug() << "recv 0x002:"   << buf.toHex()
+             << "pkgSize:"      << buf.length()
+             << "moduleID: "    << QString::number(ServerRegister0x2.idxModule, 16)
              << "m_connStatus:" << QString::number(ServerRegister0x2.errorConnect, 16);
 }
 
@@ -217,7 +216,7 @@ void ModuleBase::sendRequestTime03() {
     m_pTcpSocket->flush();
     /* ------------------------------------------------------------------------ */
     qDebug() << "send 0x003:" << buf.toHex()
-             << "pkgSize:"   << buf.length();
+             << "pkgSize:"    << buf.length();
 }
 
 // 对时
@@ -306,8 +305,8 @@ void ModuleBase::sendModuleFigure20() {
     m_pTcpSocket->flush();
     /* ------------------------------------------------------------------------ */
     qDebug() << "send 0x020:" << buf.toHex()
-             << "pkgSize:"   << buf.length()
-             << "json msg:"  << moduleCfg20;
+             << "pkgSize:"    << buf.length()
+             << "json msg:"   << moduleCfg20;
 }
 
 void ModuleBase::sendModuleStatus21() {
@@ -370,7 +369,7 @@ void ModuleBase::sendModuleCPStatus22() {
     m_pTcpSocket->flush();
     /* ------------------------------------------------------------------------ */
     qDebug() << "send 0x022:" << buf.toHex()
-             << "pkgSize:"   << buf.length();
+             << "pkgSize:"    << buf.length();
     for(auto& item : m_vecOCPStatus0x22) {
         qDebug() << QString("IDParam=%1, size=%2, n_val=%3").arg(item.IDParam).arg(item.size).arg(item.n_val);
     }

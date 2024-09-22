@@ -20,11 +20,11 @@ class RTMModule : public ModuleBase {
     // 设置
     void recvSetting561(const QByteArray& buf);
     void sendSetting823();
-    // 禁止扫描频率设置
-    void recvSettingIRI564(const QByteArray& buf);
-    void sendIRI828();
     // 功能
     void sendFunc825();
+    // 干扰频率
+    void recvSettingIRI564(const QByteArray& buf);
+    void sendIRI828();
     // 调用828
     void recvReqIRI563(const QByteArray& buf);
 
