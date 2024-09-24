@@ -49,7 +49,7 @@ elseif (WIN32)
     message(STATUS "build in Windows")
 endif ()
 
-find_package(Qt5 COMPONENTS Core Network Gui Widgets REQUIRED)
+find_package(Qt5 COMPONENTS Core Network Gui Widgets Sql REQUIRED)
 
 add_subdirectory(src/kl_client)
 add_subdirectory(src/kl_test)

@@ -5,8 +5,14 @@
 #include <QFormLayout>
 #include <QtDebug>
 #include <QMessageBox>
+#include <QDate>
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QSqlError>
 #include "ui_login.h"
 #include "ui_stuwin.h"
+#include "Login.hpp"
+#include "MainWin.hpp"
 using namespace Ui;
 
 int main(int argc, char *argv[])
@@ -14,31 +20,23 @@ int main(int argc, char *argv[])
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication a(argc, argv);
 
-    QMainWindow widget;
-    MainWindow ui_mainWindow;
-    ui_mainWindow.setupUi(&widget);
+    QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
+    db.setHostName("192.168.72.128");
+    db.setPort(3306);
+    db.setDatabaseName("test");
+    db.setUserName("root");
+    db.setPassword("123456");
 
-    QWidget formWidget;
-    Form ui_subWindow;
-    ui_subWindow.setupUi(&formWidget);
+    if (!db.open()) {
+        qDebug() << "Error: Unable to open database";
+    } else {
+        qDebug() << "Connected to database";
+    }
 
-    // ui_mainWindow.setupUi(&widget);
-    QObject::connect(ui_mainWindow.loginBtn, &QPushButton::clicked, [&](){
-        QString username = ui_mainWindow.accountEd->text();
-        QString password = ui_mainWindow.passwdEd->text();
+    Login login;
+    MainWin mainWin;
+    login.show();
+    mainWin.show();
 
-        if(username == "admin" && password == "123456") {
-            QMessageBox::information(&widget, "Login", "Login successful!");
-            formWidget.setWindowTitle("student windows");
-            formWidget.show();
-        } else {
-            QMessageBox::critical(&widget, "Login", "Invalid username or password.");
-        }}
-    );
-    QObject::connect(ui_mainWindow.registerBtn, &QPushButton::clicked, [&](){
-        qDebug() << "regesiter";
-    });
-    
-    widget.show();
     return a.exec();
 }
