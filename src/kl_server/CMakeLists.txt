@@ -1,4 +1,4 @@
-project(server)
+project(Nebula.server)
 message("==================================================")
 message("正在构建："${PROJECT_NAME})
 message("构建目录: "${CMAKE_CURRENT_BINARY_DIR})

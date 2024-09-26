@@ -54,7 +54,8 @@ find_package(Qt5 COMPONENTS Core Network Gui Widgets Sql REQUIRED)
 add_subdirectory(src/kl_client)
 add_subdirectory(src/kl_test)
 add_subdirectory(src/kl_ui)
+add_subdirectory(src/kl_server)
 
 add_custom_target(${PROJECT_NAME} ALL 
-                    DEPENDS Nebula.RelayModuleCK Nebula.test Nebula.ui
+                    DEPENDS Nebula.RelayModuleCK Nebula.test Nebula.ui Nebula.server
                     COMMENT "cmake is building target")
