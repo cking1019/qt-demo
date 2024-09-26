@@ -3,7 +3,7 @@
 Login::Login(QMainWindow* parent) : QMainWindow(parent) {
     mainWindow.setupUi(this);
 
-    QObject::connect(mainWindow.loginBtn, &QPushButton::clicked, this, Login::loginBtn);
+    QObject::connect(mainWindow.loginBtn, &QPushButton::clicked, this, &Login::loginBtn);
 }
 
 Login::~Login() {
