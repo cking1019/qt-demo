@@ -2,7 +2,7 @@
 #define _STUWIN_H_
 #include <QWidget>
 #include <QDate>
-#include "ui_stuwin.h"
+#include "ui/ui_MainWin.hpp"
 
 class MainWin : public QWidget
 {

@@ -7,17 +7,6 @@
 QTcpServer* tcpServer = new QTcpServer();
 QList<QTcpSocket*> tcpSocks;
 
-// 定时发送数据
-void sendData2RTM() {
-    QTimer* pSend2clientTimer = new QTimer();
-    QObject::connect(pSend2clientTimer, &QTimer::timeout, [=](){
-        for(auto c : tcpSocks) {
-            c->write("Hello! I am VOI tcpServer.");
-        }
-    });
-    pSend2clientTimer->start(1000);
-}
-
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
@@ -59,7 +48,6 @@ int main(int argc, char *argv[])
         }
     });
     qTimer->start(1000);
-
     
     return app.exec();
 }

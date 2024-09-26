@@ -1,20 +1,21 @@
 #include "login.hpp"
 
 Login::Login(QMainWindow* parent) : QMainWindow(parent) {
-    mainWindow.setupUi(this);
-
-    QObject::connect(mainWindow.loginBtn, &QPushButton::clicked, this, &Login::loginBtn);
+    loginWin.setupUi(this);
+    QObject::connect(loginWin.loginBtn, &QPushButton::clicked, this, &Login::loginBtn);
 }
 
 Login::~Login() {
 }
 
 void Login::loginBtn() {
-    QString username = mainWindow.accountEd->text();
-    QString password = mainWindow.passwdEd->text();
+    QString username = loginWin.accountEd->text();
+    QString password = loginWin.passwdEd->text();
 
     if(username == "admin" && password == "123456") {
-        QMessageBox::information(this, "Login", "Login successful!");
+        // QMessageBox::information(this, "Login", "Login successful!");
+        mainWin.show();
+        close();
     } else {
         QMessageBox::critical(this, "Login", "Invalid username or password.");
     }

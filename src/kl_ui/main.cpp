@@ -9,8 +9,6 @@
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlError>
-#include "ui_login.h"
-#include "ui_stuwin.h"
 #include "Login.hpp"
 #include "MainWin.hpp"
 using namespace Ui;
@@ -34,9 +32,9 @@ int main(int argc, char *argv[])
     }
 
     Login login;
-    MainWin mainWin;
     login.show();
-    mainWin.show();
+    // MainWin mainWin;
+    // mainWin.show();
 
     return a.exec();
 }

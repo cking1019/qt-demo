@@ -1,13 +1,13 @@
 /********************************************************************************
-** Form generated from reading UI file 'stuwin.ui'
+** Form generated from reading UI file 'MainWin.ui'
 **
 ** Created by: Qt User Interface Compiler version 5.15.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
 
-#ifndef UI_STUWIN_H
-#define UI_STUWIN_H
+#ifndef UI_MAINWIN_H
+#define UI_MAINWIN_H
 
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
@@ -111,4 +111,4 @@ namespace Ui {
 
 QT_END_NAMESPACE
 
-#endif // UI_STUWIN_H
+#endif // UI_MAINWIN_H
