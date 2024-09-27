@@ -1,9 +1,7 @@
 project(Nebula.server)
-message("==================================================")
-message("正在构建："${PROJECT_NAME})
-message("构建目录: "${CMAKE_CURRENT_BINARY_DIR})
-message("源码路径："${CMAKE_CURRENT_SOURCE_DIR})
-message("==================================================")
+message(STATUS "正在构建：${PROJECT_NAME}")
+message(STATUS "构建目录: ${CMAKE_CURRENT_BINARY_DIR}")
+message(STATUS "源码路径：${CMAKE_CURRENT_SOURCE_DIR}")
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}

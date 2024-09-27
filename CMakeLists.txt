@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
-set (CMAKE_C_COMPILER "D:/dev/lang/mingw64/bin/gcc.exe")
-set (CMAKE_CXX_COMPILER "D:/dev/lang/mingw64/bin/g++.exe")
+# set (CMAKE_C_COMPILER "D:/dev/lang/mingw64/bin/gcc.exe")
+# set (CMAKE_CXX_COMPILER "D:/dev/lang/mingw64/bin/g++.exe")
 
 project(Nebula.North)
 
@@ -10,19 +10,10 @@ message(STATUS "CMake命令: ${CMAKE_COMMAND}")
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
-# 使得QMessageLogContext组件生效
-# add_definitions(-DQT_MESSAGELOGCONTEXT)
+# 添加预处理，防止在release模式下，输出的日志信息不显示文件名，行号等信息
+add_definitions(-DQT_MESSAGELOGCONTEXT)
 
-set(ENV{QT_VERSION_NUM} "5.15.1")
-message(STATUS "QT_VERSION_NUM is: $ENV{QT_VERSION_NUM}")
-# Linux下配置Qt非apt安装的Qt环境，不然找不到Qt模块
-if (DEFINED ENV{QT_VERSION_NUM})
-    set(QT_VERSION $ENV{QT_VERSION_NUM} CACHE INTERNAL "Qt5 version")
-else ()
-    set(QT_VERSION $ENV{QT_VERSION_NUM} CACHE INTERNAL "Qt5 version")
-endif ()
-
-
+set(QT_VERSION, "5.15.1")
 # Linux下环境配置
 if (UNIX)
     set(QT_PLATFORM gcc_64 CACHE INTERNAL "Qt5 platform")
@@ -32,23 +23,13 @@ if (UNIX)
     message(STATUS "build in Linux")
 # Window下环境配置
 elseif (WIN32)
-    if (MSVC)
-        if (CMAKE_CL_64)
-            set(QT_PLATFORM msvc2019_64 CACHE INTERNAL "Qt5 platform")
-        else ()
-            set(QT_PLATFORM msvc2019 CACHE INTERNAL "Qt5 platform")
-        endif ()
-        set(Qt5_SDK_DIR "C:/Qt/${QT_VERSION}/${QT_PLATFORM}" CACHE INTERNAL "Qt5 sdk dir")
-        message(STATUS "build with msvc Qt ${Qt5_SDK_DIR}")
-        set(Qt5_DIR "${Qt5_SDK_DIR}/lib/cmake/Qt5" CACHE INTERNAL "Qt5 cmake dir")
-    else ()
-        set(Qt5_SDK_DIR "D:/dev/Qt5.15.1" CACHE INTERNAL "Qt5 sdk dir")
-        message(STATUS "build with MinGW Qt ${Qt5_SDK_DIR}")
-        set(Qt5_DIR "${Qt5_SDK_DIR}/lib/cmake/Qt5" CACHE INTERNAL "Qt5 cmake dir")
-    endif()
+    set(Qt5_SDK_DIR "D:/dev/Qt5.15.1" CACHE INTERNAL "Qt5 sdk dir")
+    set(Qt5_DIR "${Qt5_SDK_DIR}/lib/cmake/Qt5" CACHE INTERNAL "Qt5 cmake dir")
+    message(STATUS "build with MinGW Qt ${Qt5_SDK_DIR}")
     message(STATUS "build in Windows")
 endif ()
 
+# 寻找动态库
 find_package(Qt5 COMPONENTS Core Network Gui Widgets Sql REQUIRED)
 
 add_subdirectory(src/kl_client)
@@ -56,6 +37,7 @@ add_subdirectory(src/kl_test)
 add_subdirectory(src/kl_ui)
 add_subdirectory(src/kl_server)
 
-add_custom_target(${PROJECT_NAME} ALL 
-                    DEPENDS Nebula.RelayModuleCK Nebula.test Nebula.ui Nebula.server
-                    COMMENT "cmake is building target")
+# add_custom_target(${PROJECT_NAME} ALL 
+#                     DEPENDS 
+#                     Nebula.RelayModuleCK Nebula.test Nebula.ui Nebula.server
+#                     COMMENT "cmake is building target")

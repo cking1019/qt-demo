@@ -1,14 +1,14 @@
-#include "login.hpp"
+#include "loginWin.hpp"
 
-Login::Login(QMainWindow* parent) : QMainWindow(parent) {
+LoginWin::LoginWin(QMainWindow* parent) : QMainWindow(parent) {
     loginWin.setupUi(this);
-    QObject::connect(loginWin.loginBtn, &QPushButton::clicked, this, &Login::loginBtn);
+    QObject::connect(loginWin.loginBtn, &QPushButton::clicked, this, &LoginWin::loginBtn);
 }
 
-Login::~Login() {
+LoginWin::~LoginWin() {
 }
 
-void Login::loginBtn() {
+void LoginWin::loginBtn() {
     QString username = loginWin.accountEd->text();
     QString password = loginWin.passwdEd->text();
 

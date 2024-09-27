@@ -5,15 +5,15 @@
 #include "MainWin.hpp"
 #include "ui/ui_Login.hpp"
 
-class Login : public QMainWindow
+class LoginWin : public QMainWindow
 {
 Q_OBJECT
 private:
     Ui::MainWindow loginWin;
     MainWin mainWin;
 public:
-    Login(QMainWindow* parent = nullptr);
-    ~Login();
+    LoginWin(QMainWindow* parent = nullptr);
+    ~LoginWin();
 public slots:
     void loginBtn();
 };

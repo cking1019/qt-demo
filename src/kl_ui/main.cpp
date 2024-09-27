@@ -9,7 +9,7 @@
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlError>
-#include "Login.hpp"
+#include "LoginWin.hpp"
 #include "MainWin.hpp"
 using namespace Ui;
 
@@ -31,8 +31,8 @@ int main(int argc, char *argv[])
         qDebug() << "Connected to database";
     }
 
-    Login login;
-    login.show();
+    LoginWin loginWin;
+    loginWin.show();
     // MainWin mainWin;
     // mainWin.show();
 
