@@ -1,8 +1,13 @@
 cmake_minimum_required(VERSION 3.10)
+project(Nebula.North)
+
 # set (CMAKE_C_COMPILER "D:/dev/lang/mingw64/bin/gcc.exe")
 # set (CMAKE_CXX_COMPILER "D:/dev/lang/mingw64/bin/g++.exe")
-
-project(Nebula.North)
+# string(ASCII 27 Esc)
+# set(R "${Esc}[0;31m")   #红色
+# set(E "${Esc}[m" )        #结束颜色设置
+# set(B "${Esc}[1;34m")     #蓝色高亮
+# set(RB "${Esc}[1;31;40m") #红色字体黑色背景
 
 message(STATUS "正在构建: ${PROJECT_NAME}")
 message(STATUS "CMake命令: ${CMAKE_COMMAND}")
@@ -37,7 +42,5 @@ add_subdirectory(src/kl_test)
 add_subdirectory(src/kl_ui)
 add_subdirectory(src/kl_server)
 
-# add_custom_target(${PROJECT_NAME} ALL 
-#                     DEPENDS 
-#                     Nebula.RelayModuleCK Nebula.test Nebula.ui Nebula.server
-#                     COMMENT "cmake is building target")
+add_custom_target(${PROJECT_NAME} ALL 
+                    DEPENDS Nebula.RelayModuleCK Nebula.test Nebula.ui Nebula.server)

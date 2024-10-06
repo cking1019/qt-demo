@@ -96,7 +96,7 @@ protected:
 	bool m_isSendLocation05;
 	bool m_isSendConf20;
 	
-
+    
 	// 再次连接定时器器
 	QTimer* m_pReconnTimer;
 	QTimer* m_pReqTimer03;

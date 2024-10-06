@@ -4,12 +4,7 @@ message(STATUS "构建目录: ${CMAKE_CURRENT_BINARY_DIR}")
 message(STATUS "源码路径：${CMAKE_CURRENT_SOURCE_DIR}")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(PRUE)
-include_directories(Nebula)
-
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR} srcs)
-aux_source_directory(PRUE src)
-aux_source_directory(Nebula src)
 
 add_executable(${PROJECT_NAME} ${srcs})
 target_link_libraries(${PROJECT_NAME}
